@@ -14,9 +14,11 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.                           *
  ****************************************************************************************/
 
+@file:Suppress("SpellCheckingInspection")
+
 package com.ichi2.utils
 
-import java.util.Random
+import java.util.*
 
 object NoteFieldDecorator {
     private val random = Random()
@@ -40,7 +42,7 @@ object NoteFieldDecorator {
         "avpbynf-enbhy",
         "Neguhe-Zvypuvbe",
         "zvxruneql",
-        "qnivq-nyyvfba-1",
+        "qnivq-nyyvfba",
         "vavwh",
         "uffz",
         "syreqn",
@@ -55,16 +57,17 @@ object NoteFieldDecorator {
         "qzvgel-gvzbsrri",
         "inabfgra",
         "unacvatpuvarfr",
-        "jro5atnl"
+        "jro5atnl",
+        "FuevquneTbry",
+        "Nxfunl0701"
     )
 
-    @JvmStatic
     fun aplicaHuevo(fieldText: String?): String? {
         val revuelto = huevoRevuelto(fieldText)
         for (huevo in huevoOpciones) {
             if (huevo.equals(revuelto, ignoreCase = true)) {
                 val decoration = huevoDecorations[getRandomIndex(huevoDecorations.size)]
-                return String.format("%s%s %s %s%s", decoration, decoration, fieldText, decoration, decoration)
+                return "$decoration$decoration $fieldText $decoration$decoration"
             }
         }
         return fieldText
@@ -81,10 +84,13 @@ object NoteFieldDecorator {
         val revuelto = StringBuilder()
         for (i in 0 until huevo.length) {
             var c = huevo[i]
-            if (c >= 'a' && c <= 'm') c += 13.toChar().code
-            else if (c >= 'A' && c <= 'M') c += 13.toChar().code
-            else if (c >= 'n' && c <= 'z') c -= 13.toChar().code
-            else if (c >= 'N' && c <= 'Z') c -= 13.toChar().code
+            if (c >= 'a' && c <= 'm') {
+                c += 13.toChar().code
+            } else if (c >= 'A' && c <= 'M') {
+                c += 13.toChar().code
+            } else if (c >= 'n' && c <= 'z') {
+                c -= 13.toChar().code
+            } else if (c >= 'N' && c <= 'Z') c -= 13.toChar().code
             revuelto.append(c)
         }
         return revuelto.toString()

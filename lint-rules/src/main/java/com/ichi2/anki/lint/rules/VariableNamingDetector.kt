@@ -14,6 +14,8 @@
  *  this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+@file:Suppress("UnstableApiUsage")
+
 package com.ichi2.anki.lint.rules
 
 import com.android.tools.lint.client.api.UElementHandler
@@ -30,9 +32,7 @@ import org.jetbrains.uast.UVariable
 
 class VariableNamingDetector : Detector(), Detector.UastScanner {
 
-    override fun getApplicableUastTypes(): List<Class<out UElement>>? {
-        return listOf(UVariable::class.java)
-    }
+    override fun getApplicableUastTypes() = listOf(UVariable::class.java)
 
     private fun reportVariable(context: JavaContext, node: UVariable) {
         context.report(
@@ -62,7 +62,6 @@ class VariableNamingDetector : Detector(), Detector.UastScanner {
 
     companion object {
         private val IMPLEMENTATION = Implementation(VariableNamingDetector::class.java, JAVA_FILE_SCOPE)
-        @JvmField
         val ISSUE = Issue.create(
             id = "VariableNamingDetector",
             briefDescription = "Variable name should not use field prefixes.",

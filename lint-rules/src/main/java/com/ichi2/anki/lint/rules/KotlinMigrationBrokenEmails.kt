@@ -14,6 +14,8 @@
  *  this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+@file:Suppress("UnstableApiUsage")
+
 package com.ichi2.anki.lint.rules
 
 import com.android.tools.lint.detector.api.*
@@ -21,19 +23,16 @@ import com.google.common.annotations.Beta
 import com.google.common.annotations.VisibleForTesting
 import com.ichi2.anki.lint.utils.Constants
 import org.jetbrains.uast.UClass
-import org.jetbrains.uast.UElement
 import java.util.*
 import java.util.regex.Pattern
 
 @Beta
 class KotlinMigrationBrokenEmails : Detector(), SourceCodeScanner {
-    override fun getApplicableUastTypes(): List<Class<out UElement?>>? {
-        return listOf(UClass::class.java)
-    }
+    override fun getApplicableUastTypes() = listOf(UClass::class.java)
 
     override fun afterCheckFile(context: Context) {
         val contents = context.getContents()
-        if (contents == null || !BAD_KOLTIN_MIGRATION_PATTERN.matcher(contents).find()) {
+        if (contents == null || !BAD_KOTLIN_MIGRATION_PATTERN.matcher(contents).find()) {
             return
         }
 
@@ -56,7 +55,7 @@ class KotlinMigrationBrokenEmails : Detector(), SourceCodeScanner {
 
     companion object {
         /** Java -> Kotlin converts <http:// to <http:></http:>// */
-        private val BAD_KOLTIN_MIGRATION_PATTERN = Pattern.compile(Pattern.quote("<http:></http:>"))
+        private val BAD_KOTLIN_MIGRATION_PATTERN = Pattern.compile(Pattern.quote("<http:></http:>"))
 
         @VisibleForTesting
         val ID = "KotlinMigrationBrokenEmails"
@@ -67,7 +66,6 @@ class KotlinMigrationBrokenEmails : Detector(), SourceCodeScanner {
             "Check all comments to see if this also affected emails.\n" +
             "This can be fixed before conversion by changing the comments from /** to /* if appropriate"
         private val implementation = Implementation(KotlinMigrationBrokenEmails::class.java, EnumSet.of(Scope.JAVA_FILE, Scope.TEST_SOURCES))
-        @JvmField
         val ISSUE: Issue = Issue.create(
             ID,
             DESCRIPTION,

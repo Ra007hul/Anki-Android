@@ -23,12 +23,16 @@ import android.view.MenuItem
 import android.view.MotionEvent
 import android.view.View
 import android.widget.LinearLayout
+import com.ichi2.libanki.utils.TimeManager
 import timber.log.Timber
 import java.io.FileNotFoundException
 
 /**
- * Drawer actvity will allow user to draw image on empty activity
+ * Activity allowing the user to draw an image to be added the collection
+ *
  * user can use all basic whiteboard functionally and can save image from this activity.
+ *
+ * To access this screen: Add/Edit Note - Attachment - Add Image - Drawing
  */
 class DrawingActivity : AnkiActivity() {
     private lateinit var mColorPalette: LinearLayout
@@ -39,6 +43,7 @@ class DrawingActivity : AnkiActivity() {
             return
         }
         super.onCreate(savedInstanceState)
+        setTitle(R.string.drawing)
         setContentView(R.layout.activity_drawing)
         enableToolbar()
         mColorPalette = findViewById(R.id.whiteboard_editor)
@@ -71,7 +76,7 @@ class DrawingActivity : AnkiActivity() {
 
     private fun finishWithSuccess() {
         try {
-            val savedWhiteboardFileName = mWhiteboard.saveWhiteboard(col.time)
+            val savedWhiteboardFileName = mWhiteboard.saveWhiteboard(TimeManager.time)
             val resultData = Intent()
             resultData.putExtra(EXTRA_RESULT_WHITEBOARD, savedWhiteboardFileName)
             setResult(RESULT_OK, resultData)

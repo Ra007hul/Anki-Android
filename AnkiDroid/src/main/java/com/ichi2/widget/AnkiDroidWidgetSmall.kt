@@ -24,6 +24,7 @@ import android.os.IBinder
 import android.util.TypedValue
 import android.view.View
 import android.widget.RemoteViews
+import androidx.core.content.edit
 import com.ichi2.anki.AnkiDroidApp
 import com.ichi2.anki.IntentHandler
 import com.ichi2.anki.R
@@ -31,6 +32,7 @@ import com.ichi2.anki.analytics.UsageAnalytics
 import com.ichi2.compat.CompatHelper
 import com.ichi2.utils.KotlinCleanup
 import timber.log.Timber
+import kotlin.math.sqrt
 
 class AnkiDroidWidgetSmall : AppWidgetProvider() {
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
@@ -42,7 +44,7 @@ class AnkiDroidWidgetSmall : AppWidgetProvider() {
         super.onEnabled(context)
         Timber.d("SmallWidget: Widget enabled")
         val preferences = AnkiDroidApp.getSharedPrefs(context)
-        preferences.edit().putBoolean("widgetSmallEnabled", true).commit()
+        preferences.edit(commit = true) { putBoolean("widgetSmallEnabled", true) }
         UsageAnalytics.sendAnalyticsEvent(this.javaClass.simpleName, "enabled")
     }
 
@@ -50,7 +52,7 @@ class AnkiDroidWidgetSmall : AppWidgetProvider() {
         super.onDisabled(context)
         Timber.d("SmallWidget: Widget disabled")
         val preferences = AnkiDroidApp.getSharedPrefs(context)
-        preferences.edit().putBoolean("widgetSmallEnabled", false).commit()
+        preferences.edit(commit = true) { putBoolean("widgetSmallEnabled", false) }
         UsageAnalytics.sendAnalyticsEvent(this.javaClass.simpleName, "disabled")
     }
 
@@ -69,8 +71,6 @@ class AnkiDroidWidgetSmall : AppWidgetProvider() {
                 .updateAppWidget(ComponentName(context, AnkiDroidWidgetSmall::class.java), buildUpdate(context, true))
         }
 
-        @KotlinCleanup("Fill in the Deprecated annotation below")
-        @Deprecated("")
         override fun onStart(intent: Intent, startId: Int) {
             Timber.i("SmallWidget: OnStart")
             val updateViews = buildUpdate(this, true)
@@ -84,7 +84,7 @@ class AnkiDroidWidgetSmall : AppWidgetProvider() {
         private fun buildUpdate(context: Context, updateDueDecksNow: Boolean): RemoteViews {
             Timber.d("buildUpdate")
             val updateViews = RemoteViews(context.packageName, R.layout.widget_small)
-            val mounted = AnkiDroidApp.isSdCardMounted()
+            val mounted = AnkiDroidApp.isSdCardMounted
             if (!mounted) {
                 updateViews.setViewVisibility(R.id.widget_due, View.INVISIBLE)
                 updateViews.setViewVisibility(R.id.widget_eta, View.INVISIBLE)
@@ -99,10 +99,10 @@ class AnkiDroidWidgetSmall : AppWidgetProvider() {
                             if (action != null && action == Intent.ACTION_MEDIA_MOUNTED) {
                                 Timber.d("mMountReceiver - Action = Media Mounted")
                                 if (remounted) {
-                                    WidgetStatus.update(AnkiDroidApp.getInstance())
+                                    WidgetStatus.update(AnkiDroidApp.instance)
                                     remounted = false
                                     if (mMountReceiver != null) {
-                                        AnkiDroidApp.getInstance().unregisterReceiver(mMountReceiver)
+                                        AnkiDroidApp.instance.unregisterReceiver(mMountReceiver)
                                     }
                                 } else {
                                     remounted = true
@@ -113,7 +113,7 @@ class AnkiDroidWidgetSmall : AppWidgetProvider() {
                     val iFilter = IntentFilter()
                     iFilter.addAction(Intent.ACTION_MEDIA_MOUNTED)
                     iFilter.addDataScheme("file")
-                    AnkiDroidApp.getInstance().registerReceiver(mMountReceiver, iFilter)
+                    AnkiDroidApp.instance.registerReceiver(mMountReceiver, iFilter)
                 }
             } else {
                 // If we do not have a cached version, always update.
@@ -133,14 +133,14 @@ class AnkiDroidWidgetSmall : AppWidgetProvider() {
                     } else {
                         updateViews.setViewVisibility(R.id.ankidroid_widget_small_finish_layout, View.INVISIBLE)
                         updateViews.setViewVisibility(R.id.widget_due, View.VISIBLE)
-                        updateViews.setTextViewText(R.id.widget_due, Integer.toString(mDueCardsCount))
+                        updateViews.setTextViewText(R.id.widget_due, mDueCardsCount.toString())
                         updateViews.setContentDescription(R.id.widget_due, context.resources.getQuantityString(R.plurals.widget_cards_due, mDueCardsCount, mDueCardsCount))
                     }
                     if (eta <= 0 || mDueCardsCount <= 0) {
                         updateViews.setViewVisibility(R.id.widget_eta, View.INVISIBLE)
                     } else {
                         updateViews.setViewVisibility(R.id.widget_eta, View.VISIBLE)
-                        updateViews.setTextViewText(R.id.widget_eta, Integer.toString(eta))
+                        updateViews.setTextViewText(R.id.widget_eta, eta.toString())
                         updateViews.setContentDescription(R.id.widget_eta, context.resources.getQuantityString(R.plurals.widget_eta, eta, eta))
                     }
                 }
@@ -151,8 +151,10 @@ class AnkiDroidWidgetSmall : AppWidgetProvider() {
             val ankiDroidIntent = Intent(context, IntentHandler::class.java)
             ankiDroidIntent.action = Intent.ACTION_MAIN
             ankiDroidIntent.addCategory(Intent.CATEGORY_LAUNCHER)
-            val pendingAnkiDroidIntent = CompatHelper.getCompat().getImmutableActivityIntent(
-                context, 0, ankiDroidIntent,
+            val pendingAnkiDroidIntent = CompatHelper.compat.getImmutableActivityIntent(
+                context,
+                0,
+                ankiDroidIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT
             )
             updateViews.setOnClickPendingIntent(R.id.ankidroid_widget_small_button, pendingAnkiDroidIntent)
@@ -190,11 +192,11 @@ class AnkiDroidWidgetSmall : AppWidgetProvider() {
                 if (width / height > 0.8) {
                     horizontal = (((width - height * 0.8) / 2 + 4) * scale + 0.5f).toInt()
                     vertical = (4 * scale + 0.5f).toInt()
-                    text = (Math.sqrt(height * 0.8 / width) * 18).toFloat()
+                    text = (sqrt(height * 0.8 / width) * 18).toFloat()
                 } else {
                     vertical = (((height - width * 1.25) / 2 + 4) * scale + 0.5f).toInt()
                     horizontal = (4 * scale + 0.5f).toInt()
-                    text = (Math.sqrt(width * 1.25 / height) * 18).toFloat()
+                    text = (sqrt(width * 1.25 / height) * 18).toFloat()
                 }
                 updateViews.setTextViewTextSize(R.id.widget_due, TypedValue.COMPLEX_UNIT_SP, text)
                 updateViews.setTextViewTextSize(R.id.widget_eta, TypedValue.COMPLEX_UNIT_SP, text)

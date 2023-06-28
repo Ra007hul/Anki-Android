@@ -19,21 +19,28 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.view.KeyEvent
 import androidx.annotation.VisibleForTesting
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.edit
+import androidx.core.os.LocaleListCompat
 import com.ichi2.anki.AnkiDroidApp
+import com.ichi2.anki.cardviewer.Gesture
 import com.ichi2.anki.cardviewer.ViewerCommand
+import com.ichi2.anki.noteeditor.CustomToolbarButton
+import com.ichi2.anki.reviewer.Binding
 import com.ichi2.anki.reviewer.Binding.Companion.keyCode
 import com.ichi2.anki.reviewer.CardSide
 import com.ichi2.anki.reviewer.FullScreenMode
 import com.ichi2.anki.reviewer.MappableBinding
-import com.ichi2.anki.web.CustomSyncServer
+import com.ichi2.libanki.Consts
+import com.ichi2.utils.HashUtil.HashSetInit
 import timber.log.Timber
+import java.util.*
+import kotlin.collections.ArrayList
 
 private typealias VersionIdentifier = Int
 private typealias LegacyVersionIdentifier = Long
 
 object PreferenceUpgradeService {
-    @JvmStatic
     fun upgradePreferences(context: Context?, previousVersionCode: LegacyVersionIdentifier): Boolean =
         upgradePreferences(AnkiDroidApp.getSharedPrefs(context), previousVersionCode)
 
@@ -53,7 +60,7 @@ object PreferenceUpgradeService {
      * Typically because the app has been run for the first time, or the preferences
      * have been deleted
      */
-    @JvmStatic
+    @JvmStatic // reqired for mockito for now
     fun setPreferencesUpToDate(preferences: SharedPreferences) {
         Timber.i("Marking preferences as up to date")
         PreferenceUpgrade.setPreferenceToLatestVersion(preferences)
@@ -71,12 +78,16 @@ object PreferenceUpgradeService {
         companion object {
             /** A version code where the value doesn't matter as we're not using the result */
             private const val IGNORED_LEGACY_VERSION_CODE = 0L
+            const val upgradeVersionPrefKey = "preferenceUpgradeVersion"
 
             /** Returns all instances of preference upgrade classes */
             internal fun getAllInstances(legacyPreviousVersionCode: LegacyVersionIdentifier) = sequence<PreferenceUpgrade> {
                 yield(LegacyPreferenceUpgrade(legacyPreviousVersionCode))
-                yield(UpgradeVolumeButtonsToBindings())
-                yield(RemoveLegacyMediaSyncUrl())
+                yield(UpdateNoteEditorToolbarPrefs())
+                yield(UpgradeGesturesToControls())
+                yield(UpgradeDayAndNightThemes())
+                yield(UpgradeFetchMedia())
+                yield(UpgradeAppLocale())
             }
 
             /** Returns a list of preference upgrade classes which have not been applied */
@@ -95,11 +106,11 @@ object PreferenceUpgradeService {
             }
 
             internal fun getPreferenceVersion(preferences: SharedPreferences) =
-                preferences.getInt("preferenceUpgradeVersion", 0)
+                preferences.getInt(upgradeVersionPrefKey, 0)
 
             internal fun setPreferenceVersion(preferences: SharedPreferences, versionIdentifier: VersionIdentifier) {
                 Timber.i("upgrading preference version to '$versionIdentifier'")
-                preferences.edit { putInt("preferenceUpgradeVersion", versionIdentifier) }
+                preferences.edit { putInt(upgradeVersionPrefKey, versionIdentifier) }
             }
 
             /** Returns the collection of all preference version numbers */
@@ -128,7 +139,7 @@ object PreferenceUpgradeService {
                 // clear all prefs if super old version to prevent any errors
                 if (previousVersionCode < 20300130) {
                     Timber.i("Old version of Anki - Clearing preferences")
-                    preferences.edit().clear().apply()
+                    preferences.edit { clear() }
                 }
                 // when upgrading from before 2.5alpha35
                 if (previousVersionCode < 20500135) {
@@ -136,13 +147,17 @@ object PreferenceUpgradeService {
                     // Card zooming behaviour was changed the preferences renamed
                     val oldCardZoom = preferences.getInt("relativeDisplayFontSize", 100)
                     val oldImageZoom = preferences.getInt("relativeImageSize", 100)
-                    preferences.edit().putInt("cardZoom", oldCardZoom).apply()
-                    preferences.edit().putInt("imageZoom", oldImageZoom).apply()
-                    if (!preferences.getBoolean("useBackup", true)) {
-                        preferences.edit().putInt("backupMax", 0).apply()
+                    preferences.edit {
+                        putInt("cardZoom", oldCardZoom)
+                        putInt("imageZoom", oldImageZoom)
                     }
-                    preferences.edit().remove("useBackup").apply()
-                    preferences.edit().remove("intentAdditionInstantAdd").apply()
+                    if (!preferences.getBoolean("useBackup", true)) {
+                        preferences.edit { putInt("backupMax", 0) }
+                    }
+                    preferences.edit {
+                        remove("useBackup")
+                        remove("intentAdditionInstantAdd")
+                    }
                 }
                 FullScreenMode.upgradeFromLegacyPreference(preferences)
             }
@@ -163,52 +178,6 @@ object PreferenceUpgradeService {
             }
         }
 
-        @VisibleForTesting
-        internal class UpgradeVolumeButtonsToBindings : PreferenceUpgrade(2) {
-            override fun upgrade(preferences: SharedPreferences) {
-                upgradeVolumeGestureToKeyBind(preferences, "gestureVolumeUp", KeyEvent.KEYCODE_VOLUME_UP)
-                upgradeVolumeGestureToKeyBind(preferences, "gestureVolumeDown", KeyEvent.KEYCODE_VOLUME_DOWN)
-            }
-
-            @VisibleForTesting
-            internal fun upgradeVolumeGestureToKeyBind(preferences: SharedPreferences, oldGesturePreferenceKey: String, volumeKeyCode: Int) {
-                Timber.d("Replacing gesture '%s' with binding", oldGesturePreferenceKey)
-
-                // This exists as a user may have mapped "volume down" to "UNDO".
-                // Undo already exists as a key binding, and we don't want to trash this during an upgrade
-                if (!preferences.contains(oldGesturePreferenceKey)) {
-                    Timber.v("No preference to upgrade")
-                    return
-                }
-
-                try {
-                    replaceGestureWithBinding(preferences, oldGesturePreferenceKey, volumeKeyCode)
-                } finally {
-                    Timber.v("removing pref key: '%s'", oldGesturePreferenceKey)
-                    // remove the old key
-                    preferences.edit { remove(oldGesturePreferenceKey) }
-                }
-            }
-
-            private fun replaceGestureWithBinding(preferences: SharedPreferences, oldGesturePreferenceKey: String, volumeKeyCode: Int) {
-                // the preference should be set, but if it's null, then we have nothing to do
-                val gesture = preferences.getString(oldGesturePreferenceKey, "0") ?: return
-                // If the preference doesn't map (for example: it was removed), then nothing to do
-                val asInt = gesture.toIntOrNull() ?: return
-                val command = ViewerCommand.fromInt(asInt) ?: return
-
-                if (command == ViewerCommand.COMMAND_NOTHING) {
-                    return
-                }
-
-                Timber.i("Moving preference from '%s' to '%s'", oldGesturePreferenceKey, command.preferenceKey)
-
-                // add to the binding_COMMANDNAME preference
-                val binding = MappableBinding(keyCode(volumeKeyCode), MappableBinding.Screen.Reviewer(CardSide.BOTH))
-                command.addBindingAtEnd(preferences, binding)
-            }
-        }
-
         fun performUpgrade(preferences: SharedPreferences) {
             Timber.i("Running preference upgrade: ${this.javaClass.simpleName}")
             upgrade(preferences)
@@ -219,16 +188,222 @@ object PreferenceUpgradeService {
         protected abstract fun upgrade(preferences: SharedPreferences)
 
         /**
-         * msync is a legacy URL which does not use the hostnum for load balancing
-         * It was the default value in the "custom sync server" preference
+         * update toolbar buttons with new preferences, when button text empty or null then it adds the index as button text
          */
-        internal class RemoveLegacyMediaSyncUrl : PreferenceUpgrade(3) {
+        internal class UpdateNoteEditorToolbarPrefs : PreferenceUpgrade(4) {
             override fun upgrade(preferences: SharedPreferences) {
-                val mediaSyncUrl = CustomSyncServer.getMediaSyncUrl(preferences) ?: return
-                if (mediaSyncUrl.startsWith("https://msync.ankiweb.net")) {
-                    preferences.edit { remove(CustomSyncServer.PREFERENCE_CUSTOM_MEDIA_SYNC_URL) }
+                val buttons = getNewToolbarButtons(preferences)
+
+                // update prefs
+                preferences.edit {
+                    remove("note_editor_custom_buttons")
+                    putStringSet("note_editor_custom_buttons", CustomToolbarButton.toStringSet(buttons))
+                }
+            }
+
+            private fun getNewToolbarButtons(preferences: SharedPreferences): ArrayList<CustomToolbarButton> {
+                // get old toolbar prefs
+                val set = preferences.getStringSet("note_editor_custom_buttons", HashSetInit<String>(0)) as Set<String?>
+                // new list with buttons size
+                val buttons = ArrayList<CustomToolbarButton>(set.size)
+
+                // parse fields with separator
+                for (s in set) {
+                    val fields = s!!.split(Consts.FIELD_SEPARATOR.toRegex(), CustomToolbarButton.KEEP_EMPTY_ENTRIES.coerceAtLeast(0)).toTypedArray()
+                    if (fields.size != 3) {
+                        continue
+                    }
+
+                    val index: Int = try {
+                        fields[0].toInt()
+                    } catch (e: Exception) {
+                        Timber.w(e)
+                        continue
+                    }
+
+                    // add new button with the index + 1 as button text
+                    val visualIndex: Int = index + 1
+                    val buttonText = visualIndex.toString()
+
+                    // fields 1 is prefix, fields 2 is suffix
+                    buttons.add(CustomToolbarButton(index, buttonText, fields[1], fields[2]))
+                }
+                return buttons
+            }
+        }
+
+        internal class UpgradeGesturesToControls : PreferenceUpgrade(5) {
+            val oldCommandValues = mapOf(
+                Pair(1, ViewerCommand.SHOW_ANSWER),
+                Pair(2, ViewerCommand.FLIP_OR_ANSWER_EASE1),
+                Pair(3, ViewerCommand.FLIP_OR_ANSWER_EASE2),
+                Pair(4, ViewerCommand.FLIP_OR_ANSWER_EASE3),
+                Pair(5, ViewerCommand.FLIP_OR_ANSWER_EASE4),
+                Pair(6, ViewerCommand.FLIP_OR_ANSWER_RECOMMENDED),
+                Pair(7, ViewerCommand.FLIP_OR_ANSWER_BETTER_THAN_RECOMMENDED),
+                Pair(8, ViewerCommand.UNDO),
+                Pair(9, ViewerCommand.EDIT),
+                Pair(10, ViewerCommand.MARK),
+                Pair(12, ViewerCommand.BURY_CARD),
+                Pair(13, ViewerCommand.SUSPEND_CARD),
+                Pair(14, ViewerCommand.DELETE),
+                Pair(16, ViewerCommand.PLAY_MEDIA),
+                Pair(17, ViewerCommand.EXIT),
+                Pair(18, ViewerCommand.BURY_NOTE),
+                Pair(19, ViewerCommand.SUSPEND_NOTE),
+                Pair(20, ViewerCommand.TOGGLE_FLAG_RED),
+                Pair(21, ViewerCommand.TOGGLE_FLAG_ORANGE),
+                Pair(22, ViewerCommand.TOGGLE_FLAG_GREEN),
+                Pair(23, ViewerCommand.TOGGLE_FLAG_BLUE),
+                Pair(38, ViewerCommand.TOGGLE_FLAG_PINK),
+                Pair(39, ViewerCommand.TOGGLE_FLAG_TURQUOISE),
+                Pair(40, ViewerCommand.TOGGLE_FLAG_PURPLE),
+                Pair(24, ViewerCommand.UNSET_FLAG),
+                Pair(30, ViewerCommand.PAGE_UP),
+                Pair(31, ViewerCommand.PAGE_DOWN),
+                Pair(32, ViewerCommand.TAG),
+                Pair(33, ViewerCommand.CARD_INFO),
+                Pair(34, ViewerCommand.ABORT_AND_SYNC),
+                Pair(35, ViewerCommand.RECORD_VOICE),
+                Pair(36, ViewerCommand.REPLAY_VOICE),
+                Pair(37, ViewerCommand.TOGGLE_WHITEBOARD),
+                Pair(44, ViewerCommand.CLEAR_WHITEBOARD),
+                Pair(45, ViewerCommand.CHANGE_WHITEBOARD_PEN_COLOR),
+                Pair(41, ViewerCommand.SHOW_HINT),
+                Pair(42, ViewerCommand.SHOW_ALL_HINTS),
+                Pair(43, ViewerCommand.ADD_NOTE)
+            )
+
+            override fun upgrade(preferences: SharedPreferences) {
+                upgradeGestureToBinding(preferences, "gestureSwipeUp", Gesture.SWIPE_UP)
+                upgradeGestureToBinding(preferences, "gestureSwipeDown", Gesture.SWIPE_DOWN)
+                upgradeGestureToBinding(preferences, "gestureSwipeLeft", Gesture.SWIPE_LEFT)
+                upgradeGestureToBinding(preferences, "gestureSwipeRight", Gesture.SWIPE_RIGHT)
+                upgradeGestureToBinding(preferences, "gestureLongclick", Gesture.LONG_TAP)
+                upgradeGestureToBinding(preferences, "gestureDoubleTap", Gesture.DOUBLE_TAP)
+                upgradeGestureToBinding(preferences, "gestureTapTopLeft", Gesture.TAP_TOP_LEFT)
+                upgradeGestureToBinding(preferences, "gestureTapTop", Gesture.TAP_TOP)
+                upgradeGestureToBinding(preferences, "gestureTapTopRight", Gesture.TAP_TOP_RIGHT)
+                upgradeGestureToBinding(preferences, "gestureTapLeft", Gesture.TAP_LEFT)
+                upgradeGestureToBinding(preferences, "gestureTapCenter", Gesture.TAP_CENTER)
+                upgradeGestureToBinding(preferences, "gestureTapRight", Gesture.TAP_RIGHT)
+                upgradeGestureToBinding(preferences, "gestureTapBottomLeft", Gesture.TAP_BOTTOM_LEFT)
+                upgradeGestureToBinding(preferences, "gestureTapBottom", Gesture.TAP_BOTTOM)
+                upgradeGestureToBinding(preferences, "gestureTapBottomRight", Gesture.TAP_BOTTOM_RIGHT)
+                upgradeVolumeGestureToBinding(preferences, "gestureVolumeUp", KeyEvent.KEYCODE_VOLUME_UP)
+                upgradeVolumeGestureToBinding(preferences, "gestureVolumeDown", KeyEvent.KEYCODE_VOLUME_DOWN)
+            }
+
+            private fun upgradeVolumeGestureToBinding(preferences: SharedPreferences, oldGesturePreferenceKey: String, volumeKeyCode: Int) {
+                upgradeBinding(preferences, oldGesturePreferenceKey, keyCode(volumeKeyCode))
+            }
+
+            private fun upgradeGestureToBinding(preferences: SharedPreferences, oldGesturePreferenceKey: String, gesture: Gesture) {
+                upgradeBinding(preferences, oldGesturePreferenceKey, Binding.gesture(gesture))
+            }
+
+            @VisibleForTesting
+            internal fun upgradeBinding(preferences: SharedPreferences, oldGesturePreferenceKey: String, binding: Binding) {
+                Timber.d("Replacing gesture '%s' with binding", oldGesturePreferenceKey)
+
+                // This exists as a user may have mapped "volume down" to "UNDO".
+                // Undo already exists as a key binding, and we don't want to trash this during an upgrade
+                if (!preferences.contains(oldGesturePreferenceKey)) {
+                    Timber.v("No preference to upgrade")
+                    return
+                }
+
+                try {
+                    replaceBinding(preferences, oldGesturePreferenceKey, binding)
+                } finally {
+                    Timber.v("removing pref key: '%s'", oldGesturePreferenceKey)
+                    // remove the old key
+                    preferences.edit { remove(oldGesturePreferenceKey) }
+                }
+            }
+
+            private fun replaceBinding(preferences: SharedPreferences, oldGesturePreferenceKey: String, binding: Binding) {
+                // the preference should be set, but if it's null, then we have nothing to do
+                val pref = preferences.getString(oldGesturePreferenceKey, "0") ?: return
+                // If the preference doesn't map (for example: it was removed), then nothing to do
+                val asInt = pref.toIntOrNull() ?: return
+                val command = oldCommandValues[asInt] ?: return
+
+                Timber.i("Moving preference from '%s' to '%s'", oldGesturePreferenceKey, command.preferenceKey)
+
+                // add to the binding_COMMANDNAME preference
+                val mappableBinding = MappableBinding(binding, MappableBinding.Screen.Reviewer(CardSide.BOTH))
+                command.addBindingAtEnd(preferences, mappableBinding)
+            }
+        }
+        internal class UpgradeDayAndNightThemes : PreferenceUpgrade(6) {
+            override fun upgrade(preferences: SharedPreferences) {
+                val dayTheme = preferences.getString("dayTheme", "0")
+                val nightTheme = preferences.getString("nightTheme", "0")
+
+                preferences.edit {
+                    if (dayTheme == "1") { // plain
+                        putString("dayTheme", "2")
+                    } else { // light
+                        putString("dayTheme", "1")
+                    }
+                    if (nightTheme == "1") { // dark
+                        putString("nightTheme", "4")
+                    } else { // black
+                        putString("nightTheme", "3")
+                    }
+                    remove("invertedColors")
                 }
             }
         }
+
+        internal class UpgradeFetchMedia : PreferenceUpgrade(9) {
+            override fun upgrade(preferences: SharedPreferences) {
+                val fetchMediaSwitch = preferences.getBoolean(RemovedPreferences.SYNC_FETCHES_MEDIA, true)
+                val status = if (fetchMediaSwitch) "always" else "never"
+                preferences.edit {
+                    remove(RemovedPreferences.SYNC_FETCHES_MEDIA)
+                    putString("syncFetchMedia", status)
+                }
+            }
+        }
+
+        internal class UpgradeAppLocale : PreferenceUpgrade(10) {
+            override fun upgrade(preferences: SharedPreferences) {
+                fun getLocale(localeCode: String): Locale {
+                    // Language separators are '_' or '-' at different times in display/resource fetch
+                    val locale: Locale = if (localeCode.contains("_") || localeCode.contains("-")) {
+                        try {
+                            val localeParts = localeCode.split("[_-]".toRegex(), 2).toTypedArray()
+                            Locale(localeParts[0], localeParts[1])
+                        } catch (e: ArrayIndexOutOfBoundsException) {
+                            Timber.w(e, "getLocale variant split fail, using code '%s' raw.", localeCode)
+                            Locale(localeCode)
+                        }
+                    } else {
+                        Locale(localeCode) // guaranteed to be non null
+                    }
+                    return locale
+                }
+                // 1. upgrade value from `locale.toString()` to `locale.toLanguageTag()`,
+                // because the new API uses language tags
+                val languagePrefValue = preferences.getString("language", "")!!
+                val languageTag = if (languagePrefValue.isNotEmpty()) {
+                    getLocale(languagePrefValue).toLanguageTag()
+                } else {
+                    null
+                }
+                preferences.edit {
+                    putString("language", languageTag ?: "")
+                }
+                // 2. Set the locale with the new AndroidX API
+                val localeList = LocaleListCompat.forLanguageTags(languageTag)
+                AppCompatDelegate.setApplicationLocales(localeList)
+            }
+        }
     }
+}
+
+object RemovedPreferences {
+    const val SYNC_FETCHES_MEDIA = "syncFetchesMedia"
 }

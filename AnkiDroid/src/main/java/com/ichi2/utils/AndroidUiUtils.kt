@@ -25,7 +25,6 @@ import android.view.inputmethod.InputMethodManager
 import androidx.core.content.ContextCompat
 
 object AndroidUiUtils {
-    @JvmStatic
     fun isRunningOnTv(context: Context?): Boolean {
         val uiModeManager = ContextCompat.getSystemService(context!!, UiModeManager::class.java)
             ?: return false
@@ -38,7 +37,6 @@ object AndroidUiUtils {
      * @param view The EditText which requires the focus to be set.
      * @param window The window where the view is present.
      */
-    @JvmStatic
     fun setFocusAndOpenKeyboard(view: View, window: Window) {
         view.requestFocus()
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
@@ -47,14 +45,15 @@ object AndroidUiUtils {
     /**
      * Focuses on View and opens the soft keyboard.
      * @param view The View which requires the focus to be set (typically an EditText).
+     * @param runnable The Optional Runnable that will be executed at the end.
      */
-    @JvmStatic
-    fun setFocusAndOpenKeyboard(view: View) {
+    fun setFocusAndOpenKeyboard(view: View, runnable: Runnable? = null) {
         //  Required on some Android 9, 10 devices to show keyboard: https://stackoverflow.com/a/7784904
         view.postDelayed({
             view.requestFocus()
             val imm = view.context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
             imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
+            runnable?.run()
         }, 200)
     }
 }

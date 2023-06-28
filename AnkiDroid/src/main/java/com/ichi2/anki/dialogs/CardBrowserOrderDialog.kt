@@ -17,9 +17,9 @@
 package com.ichi2.anki.dialogs
 
 import android.app.Dialog
+import android.content.DialogInterface
 import android.os.Bundle
-import com.afollestad.materialdialogs.MaterialDialog
-import com.afollestad.materialdialogs.MaterialDialog.ListCallbackSingleChoice
+import androidx.appcompat.app.AlertDialog
 import com.ichi2.anki.CardBrowser
 import com.ichi2.anki.R
 import com.ichi2.anki.analytics.AnalyticsDialogFragment
@@ -27,8 +27,7 @@ import com.ichi2.anki.analytics.AnalyticsDialogFragment
 class CardBrowserOrderDialog : AnalyticsDialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         super.onCreate(savedInstanceState)
-        val res = resources
-        val items = res.getStringArray(R.array.card_browser_order_labels)
+        val items = resources.getStringArray(R.array.card_browser_order_labels)
         // Set sort order arrow
         for (i in items.indices) {
             if (i != CardBrowser.CARD_ORDER_NONE && i == requireArguments().getInt("order")) {
@@ -39,27 +38,26 @@ class CardBrowserOrderDialog : AnalyticsDialogFragment() {
                 }
             }
         }
-        return MaterialDialog.Builder(requireActivity())
-            .title(res.getString(R.string.card_browser_change_display_order_title))
-            .content(res.getString(R.string.card_browser_change_display_order_reverse))
-            .items(*items)
-            .itemsCallbackSingleChoice(requireArguments().getInt("order"), mOrderDialogListener!!)
-            .build()
+
+        return AlertDialog.Builder(requireContext())
+            .setTitle(R.string.card_browser_change_display_order_title)
+            .setSingleChoiceItems(items, requireArguments().getInt("order"), orderSingleChoiceDialogListener)
+            .create()
     }
 
     companion object {
-        private var mOrderDialogListener: ListCallbackSingleChoice? = null
-        @JvmStatic
+        private var orderSingleChoiceDialogListener: DialogInterface.OnClickListener? = null
+
         fun newInstance(
             order: Int,
             isOrderAsc: Boolean,
-            orderDialogListener: ListCallbackSingleChoice?
+            orderSingleChoiceDialogListener: DialogInterface.OnClickListener
         ): CardBrowserOrderDialog {
             val f = CardBrowserOrderDialog()
             val args = Bundle()
             args.putInt("order", order)
             args.putBoolean("isOrderAsc", isOrderAsc)
-            mOrderDialogListener = orderDialogListener
+            this.orderSingleChoiceDialogListener = orderSingleChoiceDialogListener
             f.arguments = args
             return f
         }

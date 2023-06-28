@@ -18,35 +18,32 @@ package com.ichi2.anki.web
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.ichi2.anki.customSyncBase
 import timber.log.Timber
 
 object CustomSyncServer {
-    const val PREFERENCE_CUSTOM_SYNC_BASE = "syncBaseUrl"
-    const val PREFERENCE_CUSTOM_MEDIA_SYNC_URL = "syncMediaUrl"
-    const val PREFERENCE_ENABLE_CUSTOM_SYNC_SERVER = "useCustomSyncServer"
-
-    @JvmStatic
-    fun getMediaSyncUrl(preferences: SharedPreferences): String? {
-        return preferences.getString(PREFERENCE_CUSTOM_MEDIA_SYNC_URL, null)
+    // Used by legacy syncing code
+    fun getCollectionSyncUrlIfSetAndEnabledOrNull(preferences: SharedPreferences): String? {
+        return joinedUrl(preferences, "sync")
     }
 
-    @JvmStatic
-    fun getSyncBaseUrl(preferences: SharedPreferences): String? {
-        return getSyncBaseUrlOrDefault(preferences, null)
+    // Used by legacy syncing code
+    fun getMediaSyncUrlIfSetAndEnabledOrNull(preferences: SharedPreferences): String? {
+        return joinedUrl(preferences, "msync")
     }
 
-    @JvmStatic
-    fun getSyncBaseUrlOrDefault(userPreferences: SharedPreferences, defaultValue: String?): String? {
-        return userPreferences.getString(PREFERENCE_CUSTOM_SYNC_BASE, defaultValue)
+    private fun joinedUrl(preferences: SharedPreferences, suffix: String): String? {
+        return customSyncBase(preferences)?.let {
+            val sep = if (it.last() != '/') {
+                "/"
+            } else {
+                ""
+            }
+            "${it}${sep}$suffix/"
+        }
     }
 
-    @JvmStatic
-    fun isEnabled(userPreferences: SharedPreferences): Boolean {
-        return userPreferences.getBoolean(PREFERENCE_ENABLE_CUSTOM_SYNC_SERVER, false)
-    }
-
-    @JvmStatic
-    fun handleSyncServerPreferenceChange(context: Context?) {
+    fun handleSyncServerPreferenceChange(context: Context) {
         Timber.i("Sync Server Preferences updated.")
         // #4921 - if any of the preferences change, we should reset the HostNum.
         // This is because different servers use different HostNums for data mappings.

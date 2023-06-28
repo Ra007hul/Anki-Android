@@ -16,8 +16,8 @@
 
 package com.ichi2.libanki
 
-import com.ichi2.utils.JSONArray
-import com.ichi2.utils.JSONObject
+import org.json.JSONArray
+import org.json.JSONObject
 
 class Config(configStr: String) : ConfigManager() {
     override var json = JSONObject(configStr)
@@ -56,6 +56,10 @@ class Config(configStr: String) : ConfigManager() {
     }
 
     override fun put(key: String, value: JSONObject) {
+        json.put(key, value)
+    }
+
+    override fun put(key: String, value: Any?) {
         json.put(key, value)
     }
 

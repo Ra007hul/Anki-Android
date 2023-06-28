@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="UnusedResources">
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="UnusedResources,DuplicateCrowdInStrings">
 
     <!-- App themes
         These compat themes are just copies of the parent themes here, but some attributes are
@@ -29,6 +29,18 @@
         <item name="android:maxWidth">280dp</item>
     </style>
 
+    <style name="OverflowMenuStyle" parent="Widget.MaterialComponents.PopupMenu.Overflow">
+        <item name="android:popupBackground">@drawable/bg_popup</item>
+    </style>
+
+    <style name="PopupMenuStyle" parent="Widget.MaterialComponents.PopupMenu">
+        <item name="android:popupBackground">@drawable/bg_popup</item>
+    </style>
+
+    <style name="SpinnerStyle" parent="Widget.AppCompat.Spinner">
+        <item name="android:popupBackground">@drawable/bg_popup</item>
+    </style>
+
     <style name="TextStyleMedium">
         <item name="android:textStyle">bold</item>
     </style>
@@ -36,14 +48,15 @@
     <!--  Material Design-style persistent footer button -->
     <style name="FooterButtonBase">
         <item name="android:layout_height">48dp</item>
-        <item name="android:textAllCaps">true</item>
         <item name="android:textSize">14sp</item>
         <item name="android:typeface">sans</item>
         <item name="android:gravity">center</item>
         <item name="android:layout_gravity">center_vertical</item>
         <item name="android:singleLine">true</item>
     </style>
-    <style name="FooterButton" parent="FooterButtonBase"/>
+    <style name="FooterButton" parent="FooterButtonBase">
+        <item name="android:fontFamily">@string/font_fontFamily_medium</item>
+    </style>
 
     <style name="FooterButtonNextTime">
         <item name="android:layout_width">match_parent</item>
@@ -57,10 +70,11 @@
 
     <style name="FooterButtonEaseTextBase" parent="FooterButtonNextTime">
         <item name="android:textSize">14sp</item>
-        <item name="android:textAllCaps">true</item>
         <item name="android:typeface">sans</item>
     </style>
-    <style name="FooterButtonEaseText" parent="FooterButtonEaseTextBase" />
+    <style name="FooterButtonEaseText" parent="FooterButtonEaseTextBase" >
+        <item name="android:fontFamily">@string/font_fontFamily_medium</item>
+    </style>
 
     <!-- Styles for each of the 4 answer buttons -->
     <!-- Ease text -->
@@ -90,11 +104,6 @@
         <item name="android:textColor">?attr/easyButtonTextColor</item>
     </style>
 
-
-    <style name="FloatingActionsMenu">
-        <item name="fab_labelsPosition">left</item>
-    </style>
-
     <!-- FAB menu items -->
     <style name="menu_labels_style">
         <item name="android:background">?attr/fab_item_background</item>
@@ -109,19 +118,56 @@
         <item name="android:textColorSecondary">@color/white</item>
         <!-- Overflow menu style -->
         <item name="popupTheme">@style/ActionBar.Popup</item>
+        <item name="iconColor">@color/white</item>
+    </style>
+
+    <style name="NoBackgroundButton" parent="@style/Widget.MaterialComponents.Button.UnelevatedButton">
+        <item name="android:letterSpacing">0</item>
+        <item name="backgroundTint">@android:color/transparent</item>
+        <item name="android:foreground">?android:selectableItemBackground</item>
+        <item name="android:focusable">true</item>
     </style>
 
     <!-- For all other action bar popups like overflow menu (except spinner dropdown in Lollipop). -->
     <style name="ActionBar.Popup" parent="Base.ThemeOverlay.AppCompat.ActionBar">
-        <item name="android:drawSelectorOnTop">true</item>
+        <item name="android:drawSelectorOnTop">false</item>
         <item name="android:textColorPrimary">?attr/actionBarPopupTextColor</item>
         <item name="android:textColorSecondary">?attr/actionBarPopupTextColor</item>
         <item name="android:colorBackground">?attr/popupBackgroundColor</item>
     </style>
 
-    <style name="LargeButtonStyle">
-        <item name="colorButtonNormal">?attr/largeButtonBackgroundColor</item>
+    <style name="TabLayoutStyle" parent="Widget.Material3.TabLayout">
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.TabLayout</item>
+        <item name="tabTextAppearance">@style/TextAppearance.Material3.LabelLarge</item>
+        <item name="tabIndicator">@drawable/tab_layout_indicator_floating_pill</item>
+        <item name="tabIndicatorHeight">14dp</item>
+    </style>
+    <style name="ThemeOverlay.App.TabLayout" parent="">
+        <item name="colorSurface">?attr/tabLayoutBackgroundColor</item> <!-- Background -->
+        <item name="colorPrimary">@color/white</item> <!-- Selected text color -->
+        <item name="colorOnSurfaceVariant">#cfff</item> <!-- Not selected text color -->
+    </style>
+
+    <style name="LargeFilledButtonStyle" parent="@style/Widget.Material3.Button">
+        <item name="android:textAppearance">?android:textAppearanceMedium</item>
+        <item name="android:padding">12dp</item>
         <item name="android:textColor">?attr/largeButtonTextColor</item>
+        <item name="backgroundTint">?attr/largeButtonBackgroundColor</item>
+    </style>
+
+    <style name="BottomNavigationViewStyle" parent="@style/Widget.Material3.BottomNavigationView">
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.BottomNavigationView</item>
+        <item name="elevation">0dp</item> <!-- Prevent slight changes of surface color -->
+    </style>
+    <style name="ThemeOverlay.App.BottomNavigationView" parent="">
+        <item name="colorPrimary">#afff</item> <!-- Ripple & other things -->
+        <item name="colorSecondaryContainer">#fff</item> <!-- Selected item indicator -->
+        <item name="colorOnSecondaryContainer">?attr/tabLayoutBackgroundColor</item> <!-- Active icon -->
+        <item name="colorSurface">?attr/tabLayoutBackgroundColor</item> <!-- Container background -->
+        <item name="colorOnSurface">#fff</item> <!-- Active icon -->
+        <item name="colorOnSurfaceVariant">#fff</item> <!-- Inactive icon & label -->
+        <item name="textAppearanceTitleSmall">@style/TextAppearance.Material3.TitleSmall</item>
+        <item name="textAppearanceLabelLarge">@style/TextAppearance.Material3.LabelLarge</item>
     </style>
 
     <style name="card_info_data">
@@ -146,7 +192,6 @@
         <item name="android:layout_height">48dp</item>
     </style>
 
-
     <style name="reviewer_whiteboard_editor_button_style">
         <item name="android:layout_height">40dp</item>
         <item name="android:layout_width">40dp</item>
@@ -164,6 +209,40 @@
 
     <style name="custom_material_dialog_content">
         <!--<item name="android:textColor">?attr/md_content_color</item>-->
-        <item name="android:textSize">@dimen/md_content_textsize</item>
+        <item name="android:textSize">@dimen/md_message_textsize</item>
+    </style>
+
+    <!-- Filter Bottom sheet -->
+    <style name="CustomBottomSheetStyle" parent="Widget.Design.BottomSheet.Modal">
+        <item name="android:background">@drawable/rounded_bottom_sheet</item>
+    </style>
+
+    <!-- Snackbars -->
+    <style name="SnackbarStyle" parent="Widget.MaterialComponents.Snackbar">
+        <item name="android:backgroundTint">?attr/snackbarBackgroundTintColor</item>
+        <!-- Material snackbar sets button text color by layering its current text color, set with
+             android:textColor below, over surface color with the alpha set by this attribute.
+             Since the app doesn't use material theming, let's disable this color blending.
+             TODO Remove if the app moves to material theming. -->
+        <item name="actionTextColorAlpha">1.0</item>
+    </style>
+    <style name="SnackbarButtonStyle" parent="Widget.MaterialComponents.Button.TextButton.Snackbar">
+        <item name="android:textColor">?attr/snackbarButtonTextColor</item>
+        <!-- Material buttons have some letter spacing added, but since no other components
+             in the app use material theming, let's remove it for the sake of consistency.
+             TODO Remove if the app moves to material theming. -->
+        <item name="android:letterSpacing">0</item>
+    </style>
+    <style name="SliderLabelStyle" parent="Widget.MaterialComponents.Tooltip">
+        <item name="android:textColor">?attr/sliderLabelTextColor</item>
+    </style>
+
+    <style name="SliderStyle" parent="Base.Widget.MaterialComponents.Slider">
+        <item name="trackColorActive">@color/slider_active_track_color</item>
+        <item name="trackColorInactive">@color/slider_inactive_track_color</item>
+        <item name="haloColor">@color/slider_halo_color</item>
+        <item name="thumbColor">@color/slider_thumb_color</item>
+        <item name="labelStyle">@style/SliderLabelStyle</item>
+        <item name="tickVisible">false</item>
     </style>
 </resources>

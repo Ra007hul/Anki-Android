@@ -18,16 +18,16 @@ package com.ichi2.anki.noteeditor
 
 import android.content.Context
 import android.os.Bundle
-import android.util.Pair
-import android.util.SparseArray
 import android.view.View
 import com.ichi2.anki.FieldEditLine
 import com.ichi2.anki.NoteEditor
 import com.ichi2.anki.R
+import com.ichi2.compat.CompatHelper.Companion.getSparseParcelableArrayCompat
 import com.ichi2.libanki.Model
 import com.ichi2.libanki.Models
-import com.ichi2.utils.JSONObject
+import com.ichi2.utils.KotlinCleanup
 import com.ichi2.utils.MapUtil.getKeyByValue
+import org.json.JSONObject
 import java.util.*
 
 /** Responsible for recreating EditFieldLines after NoteEditor operations
@@ -91,7 +91,7 @@ class FieldState private constructor(private val editor: NoteEditor) {
         return editLines
     }
 
-    private fun getFields(type: FieldChangeType): Array<Array<String?>> {
+    private fun getFields(type: FieldChangeType): Array<Array<String>> {
         if (type.type == Type.REFRESH_WITH_MAP) {
             val items = editor.fieldsFromSelectedNote
             val fMapNew = Models.fieldMap(type.newModel!!)
@@ -112,7 +112,7 @@ class FieldState private constructor(private val editor: NoteEditor) {
         if (customViewIds == null || viewHierarchyState == null) {
             return
         }
-        val views = viewHierarchyState["android:views"] as SparseArray<*>? ?: return
+        val views = viewHierarchyState.getSparseParcelableArrayCompat<View.BaseSavedState>("android:views") ?: return
         val important: MutableList<View.BaseSavedState> = ArrayList(customViewIds.size)
         for (i in customViewIds) {
             important.add(views[i!!] as View.BaseSavedState)
@@ -126,7 +126,6 @@ class FieldState private constructor(private val editor: NoteEditor) {
         var newModel: Model? = null
 
         companion object {
-            @JvmStatic
             fun refreshWithMap(newModel: Model?, modelChangeFieldMap: Map<Int, Int>?, replaceNewlines: Boolean): FieldChangeType {
                 val typeClass = FieldChangeType(Type.REFRESH_WITH_MAP, replaceNewlines)
                 typeClass.newModel = newModel
@@ -134,27 +133,23 @@ class FieldState private constructor(private val editor: NoteEditor) {
                 return typeClass
             }
 
-            @JvmStatic
             fun refresh(replaceNewlines: Boolean): FieldChangeType {
-                return frotype(Type.REFRESH, replaceNewlines)
+                return fromType(Type.REFRESH, replaceNewlines)
             }
 
-            @JvmStatic
             fun refreshWithStickyFields(replaceNewlines: Boolean): FieldChangeType {
-                return frotype(Type.CLEAR_KEEP_STICKY, replaceNewlines)
+                return fromType(Type.CLEAR_KEEP_STICKY, replaceNewlines)
             }
 
-            @JvmStatic
             fun changeFieldCount(replaceNewlines: Boolean): FieldChangeType {
-                return frotype(Type.CHANGE_FIELD_COUNT, replaceNewlines)
+                return fromType(Type.CHANGE_FIELD_COUNT, replaceNewlines)
             }
 
-            @JvmStatic
             fun onActivityCreation(replaceNewlines: Boolean): FieldChangeType {
-                return frotype(Type.INIT, replaceNewlines)
+                return fromType(Type.INIT, replaceNewlines)
             }
 
-            private fun frotype(type: Type, replaceNewlines: Boolean): FieldChangeType {
+            private fun fromType(type: Type, replaceNewlines: Boolean): FieldChangeType {
                 return FieldChangeType(type, replaceNewlines)
             }
         }
@@ -169,12 +164,12 @@ class FieldState private constructor(private val editor: NoteEditor) {
             return oldFields.size > 2
         }
 
-        @JvmStatic
         fun fromEditor(editor: NoteEditor): FieldState {
             return FieldState(editor)
         }
 
-        private fun fromFieldMap(context: Context, oldFields: Array<Array<String>>, fMapNew: Map<String, Pair<Int, JSONObject>>, modelChangeFieldMap: Map<Int, Int>?): Array<Array<String?>> {
+        @KotlinCleanup("speed - no need for arrayOfNulls")
+        private fun fromFieldMap(context: Context, oldFields: Array<Array<String>>, fMapNew: Map<String, Pair<Int, JSONObject>>, modelChangeFieldMap: Map<Int, Int>?): Array<Array<String>> {
             // Build array of label/values to provide to field EditText views
             val fields = Array(fMapNew.size) { arrayOfNulls<String>(2) }
             for (fname in fMapNew.keys) {
@@ -201,7 +196,7 @@ class FieldState private constructor(private val editor: NoteEditor) {
                     fields[i][1] = ""
                 }
             }
-            return fields
+            return fields.map { it.requireNoNulls() }.toTypedArray()
         }
     }
 }

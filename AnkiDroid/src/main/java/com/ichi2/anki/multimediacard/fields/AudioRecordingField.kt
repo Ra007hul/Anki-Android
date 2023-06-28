@@ -6,29 +6,12 @@ package com.ichi2.anki.multimediacard.fields
  */
 
 class AudioRecordingField : AudioField() {
-    override fun getType(): EFieldType {
-        return EFieldType.AUDIO_RECORDING
-    }
+    override val type: EFieldType = EFieldType.AUDIO_RECORDING
 
-    override fun isModified(): Boolean {
-        return thisModified
-    }
+    override val isModified: Boolean
+        get() = thisModified
 
-    override fun setHasTemporaryMedia(hasTemporaryMedia: Boolean) {
-        currentHasTemporaryMedia = hasTemporaryMedia
-    }
-
-    override fun hasTemporaryMedia(): Boolean {
-        return currentHasTemporaryMedia
-    }
-
-    override fun getName(): String? {
-        return currentName
-    }
-
-    override fun setName(name: String) {
-        currentName = name
-    }
+    override var name: String? = null
 
     companion object {
         private const val serialVersionUID = 5033819217738174719L

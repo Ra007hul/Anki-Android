@@ -15,81 +15,102 @@
  */
 package com.ichi2.utils
 
+import android.app.Activity
 import android.content.ClipData
 import android.content.ClipDescription
 import android.content.ClipboardManager
+import android.content.Context
 import android.net.Uri
 import androidx.annotation.CheckResult
+import androidx.annotation.StringRes
+import com.ichi2.anki.UIUtils.showThemedToast
+import com.ichi2.anki.snackbar.canProperlyShowSnackbars
+import com.ichi2.anki.snackbar.showSnackbar
+import timber.log.Timber
 
 object ClipboardUtil {
     // JPEG is sent via pasted content
-    @JvmField
     val IMAGE_MIME_TYPES = arrayOf("image/gif", "image/png", "image/jpg", "image/jpeg")
 
-    @JvmStatic
     fun hasImage(clipboard: ClipboardManager?): Boolean {
-        if (clipboard == null) {
-            return false
-        }
-        if (!clipboard.hasPrimaryClip()) {
-            return false
-        }
-        val primaryClip = clipboard.primaryClip
-        return hasImage(primaryClip!!.description)
+        return clipboard
+            ?.takeIf { it.hasPrimaryClip() }
+            ?.primaryClip
+            ?.let { hasImage(it.description) }
+            ?: false
     }
 
-    @JvmStatic
     fun hasImage(description: ClipDescription?): Boolean {
-        if (description == null) {
-            return false
-        }
-        for (mimeType in IMAGE_MIME_TYPES) {
-            if (description.hasMimeType(mimeType)) {
-                return true
-            }
-        }
+        return description
+            ?.run { IMAGE_MIME_TYPES.any { hasMimeType(it) } }
+            ?: false
+    }
+
+    private fun getFirstItem(clipboard: ClipboardManager?) = clipboard
+        ?.takeIf { it.hasPrimaryClip() }
+        ?.primaryClip
+        ?.takeIf { it.itemCount > 0 }
+        ?.getItemAt(0)
+
+    fun getImageUri(clipboard: ClipboardManager?): Uri? {
+        return getFirstItem(clipboard)?.uri
+    }
+
+    @CheckResult
+    fun getText(clipboard: ClipboardManager?): CharSequence? {
+        return getFirstItem(clipboard)?.text
+    }
+
+    @CheckResult
+    fun getPlainText(clipboard: ClipboardManager?, context: Context): CharSequence? {
+        return getFirstItem(clipboard)?.coerceToText(context)
+    }
+
+    @CheckResult
+    fun getDescriptionLabel(clipboard: ClipData?): CharSequence? {
+        return clipboard
+            ?.description
+            ?.label
+    }
+}
+
+/**
+ * Copies the provided text to the clipboard (truncated if necessary)
+ * @return `true` if the clipboard is modified. `false` otherwise
+ */
+fun Context.copyToClipboard(text: String): Boolean {
+    val clipboardManager = this.getSystemService(Activity.CLIPBOARD_SERVICE) as? ClipboardManager
+    if (clipboardManager == null) {
+        Timber.w("Failed to obtain ClipboardManager")
         return false
     }
 
-    @JvmStatic
-    fun getImageUri(clipboard: ClipboardManager?): Uri? {
-        if (clipboard == null) {
-            return null
-        }
-        if (!clipboard.hasPrimaryClip()) {
-            return null
-        }
-        val primaryClip = clipboard.primaryClip
-        return if (primaryClip!!.itemCount == 0) {
-            null
-        } else primaryClip.getItemAt(0).uri
-    }
+    clipboardManager.setPrimaryClip(
+        ClipData.newPlainText(
+            "${VersionUtils.appName} v${VersionUtils.pkgVersionName}",
+            text
+        )
+    )
+    return true
+}
 
-    @JvmStatic
-    @CheckResult
-    fun getText(clipboard: ClipboardManager?): CharSequence? {
-        if (clipboard == null) {
-            return null
-        }
-        if (!clipboard.hasPrimaryClip()) {
-            return null
-        }
-        val data = clipboard.primaryClip
-        if (data!!.itemCount == 0) {
-            return null
-        }
-        val i = data.getItemAt(0)
-        return i.text
-    }
+/**
+ * Copy given [text] to the clipboard,
+ * and show either a snackbar, if possible, or a toast, with the success or failure message.
+ *
+ * @see copyToClipboard
+ */
+fun Context.copyToClipboardAndShowConfirmation(
+    text: String,
+    @StringRes successMessageId: Int,
+    @StringRes failureMessageId: Int
+) {
+    val successfullyCopied = copyToClipboard(text)
 
-    @JvmStatic
-    @CheckResult
-    fun getDescriptionLabel(clip: ClipData?): CharSequence? {
-        if (clip == null) {
-            return null
-        }
-        return if (clip.description == null) {
-            null
-        } else clip.description.label
+    val confirmationMessage = if (successfullyCopied) successMessageId else failureMessageId
+
+    when (this is Activity && this.canProperlyShowSnackbars()) {
+        true -> showSnackbar(confirmationMessage)
+        false -> showThemedToast(this, confirmationMessage, true)
     }
 }

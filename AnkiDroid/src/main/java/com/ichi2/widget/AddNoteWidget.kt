@@ -23,7 +23,6 @@ import com.ichi2.anki.NoteEditor
 import com.ichi2.anki.R
 import com.ichi2.anki.analytics.UsageAnalytics
 import com.ichi2.compat.CompatHelper
-import com.ichi2.utils.KotlinCleanup
 import timber.log.Timber
 
 class AddNoteWidget : AppWidgetProvider() {
@@ -32,12 +31,8 @@ class AddNoteWidget : AppWidgetProvider() {
         UsageAnalytics.sendAnalyticsEvent(this.javaClass.simpleName, "enabled")
     }
 
-    @KotlinCleanup(
-        "onEnabled being called from onDisabled," +
-            "inspect the validity of this and put a comment with explanation"
-    )
     override fun onDisabled(context: Context) {
-        super.onEnabled(context)
+        super.onDisabled(context)
         UsageAnalytics.sendAnalyticsEvent(this.javaClass.simpleName, "disabled")
     }
 
@@ -47,7 +42,7 @@ class AddNoteWidget : AppWidgetProvider() {
         val remoteViews = RemoteViews(context.packageName, R.layout.widget_add_note)
         val intent = Intent(context, NoteEditor::class.java)
         intent.putExtra(NoteEditor.EXTRA_CALLER, NoteEditor.CALLER_DECKPICKER)
-        val pendingIntent = CompatHelper.getCompat().getImmutableActivityIntent(context, 0, intent, 0)
+        val pendingIntent = CompatHelper.compat.getImmutableActivityIntent(context, 0, intent, 0)
         remoteViews.setOnClickPendingIntent(R.id.widget_add_note_button, pendingIntent)
         appWidgetManager.updateAppWidget(appWidgetIds, remoteViews)
     }

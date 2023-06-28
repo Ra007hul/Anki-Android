@@ -18,9 +18,9 @@ package com.ichi2.anki.reviewer
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.text.TextUtils
 import androidx.annotation.CheckResult
 import com.ichi2.anki.R
+import com.ichi2.anki.cardviewer.Gesture
 import com.ichi2.anki.cardviewer.ViewerCommand
 import timber.log.Timber
 import java.util.*
@@ -45,10 +45,10 @@ class MappableBinding(val binding: Binding, private val screen: Screen) {
         val otherMappableBinding = other as MappableBinding
 
         val otherBinding = otherMappableBinding.binding
-        val bindingEquals = binding.getKeycode() == otherBinding.getKeycode() &&
-            binding.getUnicodeCharacter() == otherBinding.getUnicodeCharacter() &&
-            binding.getGesture() == otherBinding.getGesture() &&
-            modifierEquals(otherBinding.getModifierKeys())
+        val bindingEquals = binding.keycode == otherBinding.keycode &&
+            binding.unicodeCharacter == otherBinding.unicodeCharacter &&
+            binding.gesture == otherBinding.gesture &&
+            modifierEquals(otherBinding.modifierKeys)
 
         if (!bindingEquals) {
             return false
@@ -59,21 +59,23 @@ class MappableBinding(val binding: Binding, private val screen: Screen) {
 
     override fun hashCode(): Int {
         // don't include the modifierKeys or mSide
-        return Objects.hash(binding.getKeycode(), binding.getUnicodeCharacter(), binding.getGesture(), screen.prefix)
+        return Objects.hash(binding.keycode, binding.unicodeCharacter, binding.gesture, screen.prefix)
     }
 
     private fun modifierEquals(keys: Binding.ModifierKeys?): Boolean {
         // equals allowing subclasses
-        val thisKeys = binding.getModifierKeys()
+        val thisKeys = binding.modifierKeys
         if (thisKeys === keys) {
             return true
         }
         // one is null
         return if (keys == null || thisKeys == null) {
             false
-        } else (thisKeys.shiftMatches(true) == keys.shiftMatches(true) || thisKeys.shiftMatches(false) == keys.shiftMatches(false)) &&
-            (thisKeys.ctrlMatches(true) == keys.ctrlMatches(true) || thisKeys.ctrlMatches(false) == keys.ctrlMatches(false)) &&
-            (thisKeys.altMatches(true) == keys.altMatches(true) || thisKeys.altMatches(false) == keys.altMatches(false))
+        } else {
+            (thisKeys.shiftMatches(true) == keys.shiftMatches(true) || thisKeys.shiftMatches(false) == keys.shiftMatches(false)) &&
+                (thisKeys.ctrlMatches(true) == keys.ctrlMatches(true) || thisKeys.ctrlMatches(false) == keys.ctrlMatches(false)) &&
+                (thisKeys.altMatches(true) == keys.altMatches(true) || thisKeys.altMatches(false) == keys.altMatches(false))
+        }
 
         // Perf: Could get a slight improvement if we check that both instances are not subclasses
 
@@ -156,10 +158,14 @@ class MappableBinding(val binding: Binding, private val screen: Screen) {
         const val PREF_SEPARATOR = '|'
 
         @CheckResult
-        fun fromGesture(b: Binding): MappableBinding = MappableBinding(b, Screen.Reviewer(CardSide.BOTH))
+        fun fromGesture(gesture: Gesture): MappableBinding = MappableBinding(Binding(gesture), Screen.Reviewer(CardSide.BOTH))
 
         @CheckResult
-        fun List<MappableBinding>.toPreferenceString(): String = "1/" + TextUtils.join(PREF_SEPARATOR.toString(), this.mapNotNull { it.toPreferenceString() })
+        fun fromGestureBinding(b: Binding): MappableBinding = MappableBinding(b, Screen.Reviewer(CardSide.BOTH))
+
+        @CheckResult
+        fun List<MappableBinding>.toPreferenceString(): String = this.mapNotNull { it.toPreferenceString() }
+            .joinToString(prefix = "1/", separator = PREF_SEPARATOR.toString())
 
         @Suppress("UNUSED_PARAMETER")
         @CheckResult
@@ -181,9 +187,9 @@ class MappableBinding(val binding: Binding, private val screen: Screen) {
 
         @CheckResult
         fun fromPreferenceString(string: String?): MutableList<MappableBinding> {
-            if (TextUtils.isEmpty(string)) return ArrayList()
+            if (string.isNullOrEmpty()) return ArrayList()
             try {
-                val version = string!!.takeWhile { x -> x != '/' }
+                val version = string.takeWhile { x -> x != '/' }
                 val remainder = string.substring(version.length + 1) // skip the /
                 if (version != "1") {
                     Timber.w("cannot handle version '$version'")
@@ -197,14 +203,12 @@ class MappableBinding(val binding: Binding, private val screen: Screen) {
         }
 
         @CheckResult
-        @JvmStatic
         fun fromPreference(prefs: SharedPreferences, command: ViewerCommand): MutableList<MappableBinding> {
             val value = prefs.getString(command.preferenceKey, null) ?: return command.defaultValue.toMutableList()
             return fromPreferenceString(value)
         }
 
         @CheckResult
-        @JvmStatic
         fun allMappings(prefs: SharedPreferences): MutableList<Pair<ViewerCommand, MutableList<MappableBinding>>> {
             return ViewerCommand.values().map {
                 Pair(it, fromPreference(prefs, it))

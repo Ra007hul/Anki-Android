@@ -28,10 +28,6 @@ import com.ichi2.utils.ContentResolverUtil.getFileName
 import com.ichi2.utils.FileUtil.getFileNameAndExtension
 import timber.log.Timber
 import java.io.*
-import java.lang.Exception
-import java.lang.NullPointerException
-import java.util.*
-import kotlin.Throws
 
 /**
  * RegisterMediaForWebView is used for registering media in temp path,
@@ -43,7 +39,7 @@ class MediaRegistration(private val context: Context) {
     private val mPastedImageCache = HashMap<String, String?>()
 
     /**
-     * Loads an image into the collection.media folder and returns a HTML reference
+     * Loads an image into the collection.media directory and returns a HTML reference
      * @param uri The uri of the image to load
      * @return HTML referring to the loaded image
      */
@@ -54,7 +50,7 @@ class MediaRegistration(private val context: Context) {
         val fd = openInputStreamWithURI(uri)
         val fileNameAndExtension = getFileNameAndExtension(filename)
         fileName = if (checkFilename(fileNameAndExtension!!)) {
-            String.format("%s-name", fileNameAndExtension.key)
+            "${fileNameAndExtension.key}-name"
         } else {
             fileNameAndExtension.key
         }
@@ -62,16 +58,16 @@ class MediaRegistration(private val context: Context) {
         var bytesWritten: Long
         openInputStreamWithURI(uri).use { copyFd ->
             // no conversion to jpg in cases of gif and jpg and if png image with alpha channel
-            if (shouldConvertToJPG(fileNameAndExtension.value, copyFd!!)) {
+            if (shouldConvertToJPG(fileNameAndExtension.value, copyFd)) {
                 clipCopy = File.createTempFile(fileName, ".jpg")
-                bytesWritten = CompatHelper.getCompat().copyFile(fd, clipCopy.absolutePath)
+                bytesWritten = CompatHelper.compat.copyFile(fd, clipCopy.absolutePath)
                 // return null if jpg conversion false.
                 if (!convertToJPG(clipCopy)) {
                     return null
                 }
             } else {
                 clipCopy = File.createTempFile(fileName, fileNameAndExtension.value)
-                bytesWritten = CompatHelper.getCompat().copyFile(fd, clipCopy.absolutePath)
+                bytesWritten = CompatHelper.compat.copyFile(fd, clipCopy.absolutePath)
             }
         }
         val tempFilePath = clipCopy.absolutePath
@@ -87,14 +83,14 @@ class MediaRegistration(private val context: Context) {
             return null
         }
         val field = ImageField()
-        field.setHasTemporaryMedia(true)
-        field.imagePath = tempFilePath
+        field.hasTemporaryMedia = true
+        field.extraImagePathRef = tempFilePath
         return field.formattedValue
     }
 
     @Throws(FileNotFoundException::class)
-    private fun openInputStreamWithURI(uri: Uri): InputStream? {
-        return context.contentResolver.openInputStream(uri)
+    private fun openInputStreamWithURI(uri: Uri): InputStream {
+        return context.contentResolver.openInputStream(uri)!!
     }
 
     private fun convertToJPG(file: File): Boolean {
@@ -106,7 +102,7 @@ class MediaRegistration(private val context: Context) {
             }
         } catch (e: IOException) {
             Timber.w("MediaRegistration : Unable to convert file to png format")
-            AnkiDroidApp.sendExceptionReport(e, "Unable to convert file to png format")
+            CrashReportService.sendExceptionReport(e, "Unable to convert file to png format")
             showThemedToast(context, context.resources.getString(R.string.multimedia_editor_png_paste_error, e.message), true)
             return false
         }
@@ -151,7 +147,7 @@ class MediaRegistration(private val context: Context) {
             null
         } catch (e: Exception) {
             // NOTE: This is happy path coding which works on Android 9.
-            AnkiDroidApp.sendExceptionReport("File is invalid issue:8880", "RegisterMediaForWebView:onImagePaste URI of file:$uri")
+            CrashReportService.sendExceptionReport("File is invalid issue:8880", "RegisterMediaForWebView:onImagePaste URI of file:$uri")
             Timber.w(e, "Failed to paste image")
             showThemedToast(context, context.getString(R.string.multimedia_editor_something_wrong), false)
             null
@@ -167,7 +163,7 @@ class MediaRegistration(private val context: Context) {
         Timber.i("Adding media to collection: %s", imagePath)
         val f = File(imagePath)
         return try {
-            CollectionHelper.getInstance().getCol(context).media.addFile(f)
+            CollectionHelper.instance.getCol(context)!!.media.addFile(f)
             true
         } catch (e: IOException) {
             Timber.w(e, "Failed to add file")

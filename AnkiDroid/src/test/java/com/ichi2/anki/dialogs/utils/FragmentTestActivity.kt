@@ -23,7 +23,7 @@ import com.ichi2.anki.RobolectricTest.Companion.advanceRobolectricLooperWithSlee
 class FragmentTestActivity : AnkiActivity() {
     var lastUrlOpened: String? = null
         private set
-    var lastShownDialogFragment: DialogFragment? = null
+    lateinit var lastShownDialogFragment: DialogFragment
         private set
 
     override fun openUrl(url: Uri) {
@@ -31,7 +31,7 @@ class FragmentTestActivity : AnkiActivity() {
         super.openUrl(url)
     }
 
-    override fun showDialogFragment(newFragment: DialogFragment?) {
+    override fun showDialogFragment(newFragment: DialogFragment) {
         super.showDialogFragment(newFragment)
         lastShownDialogFragment = newFragment
         // Note: I saw a potential solution for this sleeping on StackOverflow - can't find the code again.

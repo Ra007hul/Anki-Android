@@ -20,7 +20,6 @@ import android.content.SharedPreferences
 import android.view.Menu
 import android.view.MenuItem
 import androidx.annotation.IdRes
-import com.ichi2.anki.Lookup
 import com.ichi2.anki.R
 import com.ichi2.themes.Themes
 import com.ichi2.utils.HashUtil.HashMapInit
@@ -60,13 +59,9 @@ class ActionButtonStatus(private val reviewerUi: ReviewerUi) {
         setupButton(preferences, R.id.action_delete, "customButtonDelete", SHOW_AS_ACTION_NEVER)
         setupButton(preferences, R.id.action_toggle_mic_tool_bar, "customButtonToggleMicToolBar", SHOW_AS_ACTION_NEVER)
         setupButton(preferences, R.id.action_toggle_whiteboard, "customButtonEnableWhiteboard", SHOW_AS_ACTION_NEVER)
+        setupButton(preferences, R.id.action_toggle_stylus, "customButtonToggleStylus", SHOW_AS_ACTION_IF_ROOM)
         setupButton(preferences, R.id.action_save_whiteboard, "customButtonSaveWhiteboard", SHOW_AS_ACTION_NEVER)
         setupButton(preferences, R.id.action_change_whiteboard_pen_color, "customButtonWhiteboardPenColor", SHOW_AS_ACTION_IF_ROOM)
-        if (!Lookup.isAvailable) {
-            mCustomButtons[R.id.action_search_dictionary] = MENU_DISABLED
-        } else {
-            setupButton(preferences, R.id.action_search_dictionary, "customButtonLookup", SHOW_AS_ACTION_NEVER)
-        }
     }
 
     private fun setupButton(preferences: SharedPreferences, @IdRes resourceId: Int, preferenceName: String, showAsActionType: Int) {
@@ -84,7 +79,7 @@ class ActionButtonStatus(private val reviewerUi: ReviewerUi) {
                 }
                 item.setShowAsAction(value)
                 val icon = item.icon
-                item.isEnabled = !reviewerUi.isControlBlocked()
+                item.isEnabled = !reviewerUi.isControlBlocked
                 if (icon != null) {
                     /* Ideally, we want to give feedback to users that
                     buttons are disabled.  However, some actions are
@@ -111,6 +106,10 @@ class ActionButtonStatus(private val reviewerUi: ReviewerUi) {
 
     fun hideWhiteboardIsDisabled(): Boolean {
         return mCustomButtons[R.id.action_hide_whiteboard] == MENU_DISABLED
+    }
+
+    fun toggleStylusIsDisabled(): Boolean {
+        return mCustomButtons[R.id.action_toggle_stylus] == MENU_DISABLED
     }
 
     fun clearWhiteboardIsDisabled(): Boolean {

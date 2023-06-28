@@ -33,6 +33,7 @@ abstract class TagManager {
      */
     @RustCleanup("Tags.java only")
     abstract fun load(json: String)
+
     @RustCleanup("Tags.java only")
     abstract fun flush()
 
@@ -43,15 +44,19 @@ abstract class TagManager {
 
     /** Given a list of tags, add any missing ones to tag registry. */
     fun register(tags: Iterable<String>) = register(tags, null)
+
     /** Given a list of tags, add any missing ones to tag registry. */
     fun register(tags: Iterable<String>, usn: Int? = null) = register(tags, usn, false)
+
     /** Given a list of tags, add any missing ones to tag registry.
      * @param clear_first Whether to clear the tags in the database before registering the provided tags
      * */
     abstract fun register(tags: Iterable<String>, usn: Int? = null, clear_first: Boolean = false)
     abstract fun all(): List<String>
+
     /** Add any missing tags from notes to the tags list. The old list is cleared first */
     fun registerNotes() = registerNotes(null)
+
     /**
      * Add any missing tags from notes to the tags list.
      * @param nids The old list is cleared first if this is null
@@ -59,39 +64,26 @@ abstract class TagManager {
     abstract fun registerNotes(nids: kotlin.collections.Collection<Long>? = null)
 
     abstract fun allItems(): Iterable<TagUsnTuple>
+
     @RustCleanup("Tags.java only")
     abstract fun save()
+
     /**
      * byDeck returns the tags of the cards in the deck
      * @param did the deck id
      * @param children whether to include the deck's children
      * @return a list of the tags
      */
-    abstract fun byDeck(did: Long, children: Boolean = false): List<String>
+    abstract fun byDeck(did: DeckId, children: Boolean = false): List<String>
 
     /*
     * Bulk addition/removal from notes
     * ***********************************************************
     */
 
-    /**
-     * FIXME: This method must be fixed before it is used. See note below.
-     * Add/remove tags in bulk. TAGS is space-separated.
-     *
-     * @param ids The cards to tag.
-     * @param tags List of tags to add/remove. They are space-separated.
-     */
-    fun bulkAdd(ids: List<Long>, tags: String) = bulkAdd(ids, tags, true)
-    /**
-     * FIXME: This method must be fixed before it is used. Its behaviour is currently incorrect.
-     * This method is currently unused in AnkiDroid so it will not cause any errors in its current state.
-     *
-     * @param ids The cards to tag.
-     * @param tags List of tags to add/remove. They are space-separated.
-     * @param add True/False to add/remove.
-     */
+    /* Legacy signature, currently only used by unit tests. New code in TagsV16
+      takes two args. */
     abstract fun bulkAdd(ids: List<Long>, tags: String, add: Boolean = true)
-    fun bulkRem(ids: List<Long>, tags: String) = bulkAdd(ids, tags, false)
 
     /*
      * String-based utilities
@@ -100,6 +92,7 @@ abstract class TagManager {
 
     /** Parse a string and return a list of tags. */
     abstract fun split(tags: String): MutableList<String>
+
     /** Join tags into a single string, with leading and trailing spaces. */
     abstract fun join(tags: kotlin.collections.Collection<String>): String
 
@@ -114,6 +107,7 @@ abstract class TagManager {
     /** Strip duplicates, adjust case to match existing tags, and sort. */
     @RustCleanup("List, not Collection")
     abstract fun canonify(tagList: List<String>): java.util.AbstractSet<String>
+
     /** @return True if TAG is in TAGS. Ignore case. */
     abstract fun inList(tag: String, tags: Iterable<String>): Boolean
 
@@ -136,5 +130,8 @@ abstract class TagManager {
 
     /** Whether any tags have a usn of -1 */
     @RustCleanup("not optimised")
-    open fun minusOneValue(): Boolean = allItems().any { it.usn == -1 }
+    open fun minusOneValue(): Boolean {
+        TODO("obsolete when moving to backend for sync")
+//        allItems().any { it.usn == -1 }
+    }
 }

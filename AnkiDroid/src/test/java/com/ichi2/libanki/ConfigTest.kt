@@ -18,9 +18,9 @@ package com.ichi2.libanki
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.ichi2.anki.RobolectricTest
-import com.ichi2.utils.JSONObject
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
+import org.json.JSONObject
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -43,10 +43,7 @@ class ConfigTest : RobolectricTest() {
         // empty
         assertThat("no key - false", col.has_config_not_null("aa"), equalTo(false))
 
-        val json = col.conf
-        json.put("aa", JSONObject.NULL)
-        col.conf = json
-
+        col.set_config("aa", JSONObject.NULL)
         assertThat("has key but null - false", col.has_config_not_null("aa"), equalTo(false))
 
         col.set_config("aa", "bb")
@@ -60,9 +57,7 @@ class ConfigTest : RobolectricTest() {
     fun get_config_uses_default() {
         assertThat(col.get_config("hello", 1L), equalTo(1L))
 
-        val json = col.conf
-        json.put("hello", JSONObject.NULL)
-        col.conf = json
+        col.set_config("hello", JSONObject.NULL)
 
         assertThat(col.get_config("hello", 1L), equalTo(1L))
     }

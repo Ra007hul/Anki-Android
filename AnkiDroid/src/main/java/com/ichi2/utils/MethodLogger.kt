@@ -51,7 +51,6 @@ object MethodLogger {
     /**
      * Logs the method being called.
      */
-    @JvmStatic
     fun log() {
         logInternal("")
     }
@@ -92,7 +91,7 @@ object MethodLogger {
         val caller = stack[logInternalIndex + 2]
         val callerClass = caller.className
         val callerMethod = caller.methodName
-        if (TextUtils.isEmpty(message)) {
+        if (message.isEmpty()) {
             Timber.d("called: %s.%s()", callerClass, callerMethod)
         } else {
             Timber.d("called: %s.%s(): %s", callerClass, callerMethod, message)

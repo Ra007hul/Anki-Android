@@ -39,7 +39,8 @@ import timber.log.Timber
  *
  * Currently used by [GesturePicker]
  */
-class GestureDisplay @JvmOverloads
+class GestureDisplay
+@JvmOverloads // fixes: Error inflating class com.ichi2.ui.GestureDisplay
 constructor(context: Context, attributeSet: AttributeSet? = null, defStyleAttr: Int = 0) :
     ConstraintLayout(context, attributeSet, defStyleAttr) {
 
@@ -82,13 +83,6 @@ constructor(context: Context, attributeSet: AttributeSet? = null, defStyleAttr: 
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean = mDetector.onTouchEvent(event) || super.onTouchEvent(event)
-
-    /** Ensures that this View is square (height = width) */
-    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        super.onMeasure(widthMeasureSpec, widthMeasureSpec)
-        val width = measuredWidth
-        setMeasuredDimension(width, width)
-    }
 
     fun getGesture() = mGesture
 

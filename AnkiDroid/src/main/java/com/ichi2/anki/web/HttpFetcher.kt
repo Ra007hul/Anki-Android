@@ -50,7 +50,6 @@ object HttpFetcher {
      * @param fakeUserAgent true if we should issue "fake" User-Agent header 'Mozilla/5.0' for compatibility
      * @return OkHttpClient.Builder ready for use or further configuration
      */
-    @JvmStatic
     fun getOkHttpBuilder(fakeUserAgent: Boolean): OkHttpClient.Builder {
         val clientBuilder = OkHttpClient.Builder()
         Tls12SocketFactory.enableTls12OnPreLollipop(clientBuilder)
@@ -85,8 +84,6 @@ object HttpFetcher {
         return clientBuilder
     }
 
-    @JvmStatic
-    @JvmOverloads
     fun fetchThroughHttp(address: String?, encoding: String? = "utf-8"): String {
         Timber.d("fetching %s", address)
         var response: Response? = null
@@ -117,14 +114,10 @@ object HttpFetcher {
             Timber.d(e, "Failed with an exception")
             "FAILED with exception: " + e.message
         } finally {
-            @KotlinCleanup("response?.body?.close()")
-            if (response?.body != null) {
-                response.body!!.close()
-            }
+            response?.body?.close()
         }
     }
 
-    @JvmStatic
     fun downloadFileToSdCard(UrlToFile: String, context: Context, prefix: String?): String {
         var str = downloadFileToSdCardMethod(UrlToFile, context, prefix, "GET")
         if (str.startsWith("FAIL")) {
@@ -133,7 +126,6 @@ object HttpFetcher {
         return str
     }
 
-    @JvmStatic
     private fun downloadFileToSdCardMethod(UrlToFile: String, context: Context, prefix: String?, method: String): String {
         var response: Response? = null
         return try {
@@ -151,17 +143,14 @@ object HttpFetcher {
             response = client.newCall(request).execute()
             val file = File.createTempFile(prefix!!, extension, context.cacheDir)
             val inputStream = response.body!!.byteStream()
-            CompatHelper.getCompat().copyFile(inputStream, file.canonicalPath)
+            CompatHelper.compat.copyFile(inputStream, file.canonicalPath)
             inputStream.close()
             file.absolutePath
         } catch (e: Exception) {
             Timber.w(e)
             "FAILED " + e.message
         } finally {
-            @KotlinCleanup("response?.body?.close()")
-            if (response?.body != null) {
-                response.body!!.close()
-            }
+            response?.body?.close()
         }
     }
 }

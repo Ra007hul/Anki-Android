@@ -16,7 +16,6 @@
 
 package com.ichi2.anki
 
-import com.ichi2.utils.KotlinCleanup
 import java.util.*
 
 object LanguageUtils {
@@ -29,14 +28,8 @@ object LanguageUtils {
      * Returns a Locale object constructed from an empty string if the input string is null, empty
      * or contains more than 3 fields separated by underscores.
      */
-    @JvmStatic
-    @KotlinCleanup("localeCodeStr")
-    fun localeFromStringIgnoringScriptAndExtensions(localeCodeStr: String?): Locale {
-        var localeCode = localeCodeStr
-        if (localeCode == null) {
-            return Locale("")
-        }
-        localeCode = stripScriptAndExtensions(localeCode)
+    fun localeFromStringIgnoringScriptAndExtensions(localeCodeStr: String): Locale {
+        val localeCode = stripScriptAndExtensions(localeCodeStr)
         val fields = localeCode.split("_".toRegex()).toTypedArray()
         return when (fields.size) {
             1 -> Locale(fields[0])
@@ -46,13 +39,16 @@ object LanguageUtils {
         }
     }
 
-    @KotlinCleanup("localeCodeStr")
+    /**
+     * @return if app is using a RTL language
+     */
+    fun appLanguageIsRTL(): Boolean {
+        val directionality = Character.getDirectionality(Locale.getDefault().displayName[0])
+        return directionality == Character.DIRECTIONALITY_RIGHT_TO_LEFT || directionality == Character.DIRECTIONALITY_RIGHT_TO_LEFT_ARABIC
+    }
+
     private fun stripScriptAndExtensions(localeCodeStr: String): String {
-        var localeCode = localeCodeStr
-        val hashPos = localeCode.indexOf('#')
-        if (hashPos >= 0) {
-            localeCode = localeCode.substring(0, hashPos)
-        }
-        return localeCode
+        val hashPos = localeCodeStr.indexOf('#')
+        return if (hashPos >= 0) localeCodeStr.substring(0, hashPos) else localeCodeStr
     }
 }

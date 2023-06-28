@@ -22,15 +22,16 @@
 
 package com.ichi2.libanki
 
-import BackendProto.Backend
 import com.ichi2.libanki.TemplateManager.PartiallyRenderedCard.Companion.av_tags_to_native
+import com.ichi2.libanki.backend.BackendUtils
+import com.ichi2.libanki.backend.model.toBackendNote
 import com.ichi2.libanki.utils.append
 import com.ichi2.libanki.utils.len
-import com.ichi2.utils.StringUtil
+import com.ichi2.utils.deepClone
 import net.ankiweb.rsdroid.RustCleanup
 import net.ankiweb.rsdroid.exceptions.BackendTemplateException
+import org.json.JSONObject
 import timber.log.Timber
-import java.util.*
 
 private typealias Union<A, B> = Pair<A, B>
 private typealias TemplateReplacementList = MutableList<Union<str?, TemplateManager.TemplateReplacement?>>
@@ -52,17 +53,17 @@ class TemplateManager {
     data class TemplateReplacement(val field_name: str, var current_text: str, val filters: List<str>)
     data class PartiallyRenderedCard(val qnodes: TemplateReplacementList, val anodes: TemplateReplacementList) {
         companion object {
-            fun from_proto(out: Backend.RenderCardOut): PartiallyRenderedCard {
+            fun from_proto(out: anki.card_rendering.RenderCardResponse): PartiallyRenderedCard {
                 val qnodes = nodes_from_proto(out.questionNodesList)
                 val anodes = nodes_from_proto(out.answerNodesList)
 
                 return PartiallyRenderedCard(qnodes, anodes)
             }
 
-            fun nodes_from_proto(nodes: List<Backend.RenderedTemplateNode>): TemplateReplacementList {
+            fun nodes_from_proto(nodes: List<anki.card_rendering.RenderedTemplateNode>): TemplateReplacementList {
                 val results: TemplateReplacementList = mutableListOf()
                 for (node in nodes) {
-                    if (node.valueCase == Backend.RenderedTemplateNode.ValueCase.TEXT) {
+                    if (node.valueCase == anki.card_rendering.RenderedTemplateNode.ValueCase.TEXT) {
                         results.append(Pair(node.text, null))
                     } else {
                         results.append(
@@ -71,7 +72,7 @@ class TemplateManager {
                                 TemplateReplacement(
                                     field_name = node.replacement.fieldName,
                                     current_text = node.replacement.currentText,
-                                    filters = node.replacement.filtersList,
+                                    filters = node.replacement.filtersList
                                 )
                             )
                         )
@@ -81,9 +82,9 @@ class TemplateManager {
                 return results
             }
 
-            fun av_tag_to_native(tag: Backend.AVTag): AvTag {
+            fun av_tag_to_native(tag: anki.card_rendering.AVTag): AvTag {
                 val value = tag.valueCase
-                return if (value == Backend.AVTag.ValueCase.SOUND_OR_VIDEO) {
+                return if (value == anki.card_rendering.AVTag.ValueCase.SOUND_OR_VIDEO) {
                     SoundOrVideoTag(filename = tag.soundOrVideo)
                 } else {
                     TTSTag(
@@ -91,12 +92,12 @@ class TemplateManager {
                         lang = tag.tts.lang,
                         voices = tag.tts.voicesList,
                         otherArgs = tag.tts.otherArgsList,
-                        speed = tag.tts.speed,
+                        speed = tag.tts.speed
                     )
                 }
             }
 
-            fun av_tags_to_native(tags: List<Backend.AVTag>): List<AvTag> {
+            fun av_tags_to_native(tags: List<anki.card_rendering.AVTag>): List<AvTag> {
                 return tags.map { av_tag_to_native(it) }.toList()
             }
         }
@@ -113,7 +114,7 @@ class TemplateManager {
         note: Note,
         browser: bool = false,
         notetype: NoteType? = null,
-        template: Dict<str, str>? = null,
+        template: JSONObject? = null,
         fill_empty: bool = false
     ) {
 
@@ -123,10 +124,10 @@ class TemplateManager {
         internal var _card: Card = card
         internal var _note: Note = note
         internal var _browser: bool = browser
-        internal var _template: Dict<str, str>? = template
+        internal var _template: JSONObject? = template
         internal var _fill_empty: bool = fill_empty
         private var _fields: Dict<str, str>? = null
-        private var _note_type: NoteType = notetype ?: note.model()
+        internal var _note_type: NoteType = notetype ?: note.model()
 
         /**
          * if you need to store extra state to share amongst rendering
@@ -143,8 +144,8 @@ class TemplateManager {
                 note: Note,
                 card: Card,
                 notetype: NoteType,
-                template: Dict<str, str>,
-                fill_empty: bool,
+                template: JSONObject,
+                fill_empty: bool
             ): TemplateRenderContext {
                 return TemplateRenderContext(
                     note.col,
@@ -152,7 +153,7 @@ class TemplateManager {
                     note,
                     notetype = notetype,
                     template = template,
-                    fill_empty = fill_empty,
+                    fill_empty = fill_empty
                 )
             }
         }
@@ -163,15 +164,15 @@ class TemplateManager {
             Timber.w(".fields() is obsolete, use .note() or .card()")
             if (_fields == null) {
                 // fields from note
-                val fields = _note.items().map { Pair(it[0], it[1]) }.toMap().toMutableMap()
+                val fields = _note.items().map { Pair(it[0]!!, it[1]!!) }.toMap().toMutableMap()
 
                 // add (most) special fields
-                fields["Tags"] = StringUtil.strip(_note.stringTags())
+                fields["Tags"] = _note.stringTags().trim()
                 fields["Type"] = _note_type.name
                 fields["Deck"] = _col.decks.name(_card.oDid or _card.did)
-                fields["Subdeck"] = Decks.basename(fields["Deck"])
+                fields["Subdeck"] = Decks.basename(fields["Deck"]!!)
                 if (_template != null) {
-                    fields["Card"] = _template!!["name"]
+                    fields["Card"] = _template!!["name"] as String
                 } else {
                     fields["Card"] = ""
                 }
@@ -212,38 +213,52 @@ class TemplateManager {
                     question_text = e.localizedMessage ?: e.toString(),
                     answer_text = e.localizedMessage ?: e.toString(),
                     question_av_tags = emptyList(),
-                    answer_av_tags = emptyList(),
+                    answer_av_tags = emptyList()
                 )
             }
 
             val qtext = apply_custom_filters(partial.qnodes, this, front_side = null)
-            val qout = extract_av_tags(text = qtext, question_side = true)
+            val qout = col().backend.extractAVTags(text = qtext, questionSide = true)
+            var qoutText = qout.text
 
             val atext = apply_custom_filters(partial.anodes, this, front_side = qout.text)
-            val aout = extract_av_tags(text = atext, question_side = false)
-
-            val output = TemplateRenderOutput(
-                question_text = qout.text,
-                answer_text = aout.text,
-                question_av_tags = av_tags_to_native(qout.avTagsList),
-                answer_av_tags = av_tags_to_native(aout.avTagsList),
-                css = note_type().getString("css"),
-            )
+            val aout = col().backend.extractAVTags(text = atext, questionSide = false)
+            var aoutText = aout.text
 
             if (!_browser) {
-                // hooks.card_did_render(output, self)
+                val svg = _note_type.optBoolean("latexsvg", false)
+                qoutText = LaTeX.mungeQA(qout.text, _col, svg)
+                aoutText = LaTeX.mungeQA(aout.text, _col, svg)
             }
+
+            val output = TemplateRenderOutput(
+                question_text = qoutText,
+                answer_text = aoutText,
+                question_av_tags = av_tags_to_native(qout.avTagsList),
+                answer_av_tags = av_tags_to_native(aout.avTagsList),
+                css = note_type().getString("css")
+            )
 
             return output
         }
 
         @RustCleanup("Remove when DroidBackend supports named arguments")
-        private fun extract_av_tags(text: str, question_side: Boolean) =
-            col().backend.extract_av_tags(text, question_side)
-
         fun _partially_render(): PartiallyRenderedCard {
-            val out: Backend.RenderCardOut = _col.backend.renderCardForTemplateManager(this)
-            return PartiallyRenderedCard.from_proto(out)
+            val proto = col().newBackend.run {
+                if (_template != null) {
+                    // card layout screen
+                    backend.renderUncommittedCardLegacy(
+                        _note.toBackendNote(),
+                        _card.ord,
+                        BackendUtils.to_json_bytes(_template!!.deepClone()),
+                        _fill_empty
+                    )
+                } else {
+                    // existing card (eg study mode)
+                    backend.renderExistingCard(_card.id, _browser)
+                }
+            }
+            return PartiallyRenderedCard.from_proto(proto)
         }
 
         /** Stores the rendered templates and extracted AV tags. */
@@ -254,10 +269,8 @@ class TemplateManager {
             @get:JvmName("getAnswerText")
             @set:JvmName("setAnswerText")
             var answer_text: str,
-            @RustCleanup("make non-null")
-            val question_av_tags: List<AvTag>?,
-            @RustCleanup("make non-null")
-            val answer_av_tags: List<AvTag>?,
+            val question_av_tags: List<AvTag>,
+            val answer_av_tags: List<AvTag>,
             val css: str = ""
         ) {
 
@@ -266,7 +279,7 @@ class TemplateManager {
         }
 
         @RustCleanup("legacy")
-        fun templates_for_card(card: Card, browser: bool): Tuple<str, str> {
+        fun templates_for_card(card: Card, browser: bool): Pair<str, str> {
             val template = card.template()
             var a: String? = null
             var q: String? = null

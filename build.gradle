@@ -4,24 +4,43 @@ import org.gradle.internal.jvm.Jvm
 
 buildscript {
     // The version for the Kotlin plugin and dependencies
-    ext.kotlin_version = '1.6.10'
-    ext.lint_version = '30.0.4'
-    ext.acra_version = '5.7.0'
+    ext.kotlin_version = '1.8.22'
+    ext.lint_version = '30.4.2' // 31.0.1 stopped running lint checks in CI
+    ext.acra_version = '5.10.1'
+    ext.ankidroid_backend_version = '0.1.21-anki2.1.61'
+    ext.hamcrest_version = '2.2'
+    ext.junit_version = '5.9.3'
+    ext.coroutines_version = '1.7.1'
+    ext.fragments_version = "1.6.0"
+    ext.espresso_version = '3.5.1'
+    ext.androidx_test_version = '1.5.0'
+    ext.androidx_test_junit_version = '1.1.5'
+    ext.robolectric_version = '4.10.3'
 
     repositories {
         google()
         maven {
             url "https://plugins.gradle.org/m2/"
         }
+        maven { url 'https://jitpack.io' }
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.0.4'
+        classpath 'com.android.tools.build:gradle:7.4.2'
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
-        classpath "app.brant:amazonappstorepublisher:0.1.0"
+        classpath "com.github.BrantApps.gradle-amazon-app-store-publisher:amazonappstorepublisher:master-SNAPSHOT"
 
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath "org.jlleitschuh.gradle:ktlint-gradle:10.2.1"
+        classpath "org.jlleitschuh.gradle:ktlint-gradle:11.4.1"
+    }
+    configurations.all {
+        resolutionStrategy.eachDependency { details ->
+            if (details.requested.group == 'org.jetbrains.kotlinx'
+                    && details.requested.name.contains('kotlinx-serialization-runtime')
+                    && details.requested.version.contains('0.11.0')) {
+                details.useVersion "0.14.0"
+            }
+        }
     }
 }
 
@@ -33,14 +52,75 @@ allprojects {
     apply plugin: "org.jlleitschuh.gradle.ktlint"
 }
 
+Properties localProperties = new Properties()
+if (project.rootProject.file('local.properties').exists()) {
+    localProperties.load(project.rootProject.file('local.properties').newDataInputStream())
+}
+Boolean fatalWarnings = !(localProperties['fatal_warnings'] == "false")
+
+// Here we extract per-module "best practices" settings to a single top-level evaluation
+subprojects {
+    afterEvaluate { project ->
+
+        if (project.hasProperty('android')) {
+            project.android.testOptions.unitTests {
+                includeAndroidResources = true
+            }
+            project.android.testOptions.unitTests.all {
+                // tell backend to avoid rollover time, and disable interval fuzzing
+                environment "ANKI_TEST_MODE", "1"
+
+                useJUnitPlatform()
+                testLogging {
+                    events "failed", "skipped"
+                    showStackTraces = true
+                    exceptionFormat = "full"
+                }
+
+                maxParallelForks = gradleTestMaxParallelForks
+                forkEvery = 40
+                systemProperties['junit.jupiter.execution.parallel.enabled'] = true
+                systemProperties['junit.jupiter.execution.parallel.mode.default'] = "concurrent"
+            }
+        }
+
+        /**
+         Kotlin allows concrete function implementations inside interfaces.
+         For those to work when Kotlin compilation targets the JVM backend, you have to enable the interoperability via
+         'freeCompilerArgs' in your gradle file, and you have to choose one of the appropriate '-Xjvm-default' modes.
+
+         https://kotlinlang.org/docs/java-to-kotlin-interop.html#default-methods-in-interfaces
+
+         and we used "all" because we don't have downstream consumers
+         https://docs.gradle.org/current/userguide/task_configuration_avoidance.html
+
+         Related to ExperimentalCoroutinesApi: this opt-in is added to enable usage of experimental
+            coroutines API, this targets all project modules with the exception of the "api" module,
+            which doesn't use coroutines so the annotation isn't not available. This would normally
+            result in a warning but we treat warnings as errors.
+            (see https://youtrack.jetbrains.com/issue/KT-28777/Using-experimental-coroutines-api-causes-unresolved-dependency)
+        */
+        tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+            kotlinOptions {
+                allWarningsAsErrors = fatalWarnings
+                def compilerArgs = ['-Xjvm-default=all']
+                if (project.name != "api") {
+                    compilerArgs += ['-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi']
+                }
+                freeCompilerArgs = compilerArgs
+            }
+        }
+    }
+}
+
 ext {
 
     jvmVersion = Jvm.current().javaVersion.majorVersion
-    if (jvmVersion != "11" && jvmVersion != "14" && jvmVersion != "16") {
+    if (jvmVersion != "11" && jvmVersion != "17" && jvmVersion != "18") {
         println "\n\n\n"
         println "**************************************************************************************************************"
         println "\n\n\n"
-        println "ERROR: AnkiDroid builds with JVM version 11, 14, or 16."
+        println "ERROR: AnkiDroid builds with JVM version 11, 17 or 18."
         println "  Incompatible major version detected: '" + jvmVersion + "'"
         println "\n\n\n"
         println "**************************************************************************************************************"
@@ -53,11 +133,25 @@ ext {
     // allows for universal APKs to be generated
     universalApkEnabled = "true" == System.getProperty("universal-apk", "false")
 
-    // Virtualized Environment like CI may report host CPU counts vs guest, but runs 2 cores
-    // everyone else gets 50% of cores to account for SMT which doesn't help this workload
-    gradleTestMaxParallelForks = 1
-    if (!ciBuild) {
+    if (System.getProperty("os.name") == "Mac OS X") {
+        // macOS reports hardware cores. This is accurate for CI, Intel (halved due to SMT) and Apple Silicon
+        gradleTestMaxParallelForks = "sysctl -n hw.physicalcpu".execute().text.toInteger()
+    } else if (ciBuild) {
+        // GitHub Actions (Standard_DS2_v2) are 1:1 on Linux/Windows with two vCPU cores
+        // Sources:
+        // Standard_DS2_v2 https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#cloud-hosts-for-github-hosted-runners
+        // Which is 1:1 https://docs.microsoft.com/en-gb/azure/virtual-machines/acu : DS1_v2 - DS15_v2 | 1:1
+        gradleTestMaxParallelForks = 2
+
+        // separate gradle compile process is a major speed improvement, but consumes 2x RAM
+        // the CI machines don't have enough RAM to do that without going in to swap quite a bit
+        // so for CI machines only - to improve reliability despite compilation speed hit, compile kotlin in process
+        println "CI build detected: setting compiler execution strategy to IN_PROCESS"
+        tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+            compilerExecutionStrategy.set(org.jetbrains.kotlin.gradle.tasks.KotlinCompilerExecutionStrategy.IN_PROCESS)
+        }
+    } else {
+        // Use 50% of cores to account for SMT which doesn't help this workload
         gradleTestMaxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
     }
 }
-

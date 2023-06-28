@@ -18,14 +18,17 @@ package com.ichi2.libanki
 
 import androidx.annotation.CheckResult
 import androidx.annotation.VisibleForTesting
+import androidx.annotation.WorkerThread
 import com.ichi2.anki.exception.ConfirmModSchemaException
 import com.ichi2.libanki.backend.exception.DeckRenameException
 import com.ichi2.utils.DeckComparator
 import com.ichi2.utils.DeckNameComparator
 import com.ichi2.utils.KotlinCleanup
 import net.ankiweb.rsdroid.RustCleanup
+import org.intellij.lang.annotations.Language
 import java.util.*
 
+@WorkerThread
 abstract class DeckManager {
 
     /*
@@ -33,10 +36,12 @@ abstract class DeckManager {
      * ***********************************************************
      */
 
-    abstract fun load(decks: String, dconf: String)
+    abstract fun load(@Language("JSON") decks: String, dconf: String)
+
     @RustCleanup("Unused in V16")
     /** @throws DeckRenameException */
     abstract fun save()
+
     /** Can be called with either a deck or a deck configuration.
      * @throws DeckRenameException */
     abstract fun save(g: Deck)
@@ -49,43 +54,52 @@ abstract class DeckManager {
      */
 
     abstract fun id_for_name(name: String): Long?
+
     @Throws(DeckRenameException::class)
     abstract fun id(name: String): Long
+
     /** Same as id, but rename ancestors if filtered to avoid failure */
     fun id_safe(name: String) = id_safe(name, Decks.DEFAULT_DECK)
+
     /** Same as id, but rename ancestors if filtered to avoid failure */
     abstract fun id_safe(name: String, type: String): Long
 
     /** Remove the deck. delete any cards inside and child decks. */
-    fun rem(did: Long) = rem(did, true)
+    fun rem(did: DeckId) = rem(did, true)
+
     /** Remove the deck. Delete child decks. If cardsToo, delete any cards inside. */
-    fun rem(did: Long, cardsToo: Boolean = true) = rem(did, cardsToo, true)
+    fun rem(did: DeckId, cardsToo: Boolean = true) = rem(did, cardsToo, true)
+
     /** Remove the deck. If cardsToo, delete any cards inside. */
-    abstract fun rem(did: Long, cardsToo: Boolean = true, childrenToo: Boolean = true)
+    abstract fun rem(did: DeckId, cardsToo: Boolean = true, childrenToo: Boolean = true)
 
     /** An unsorted list of all deck names. */
     fun allNames() = allNames(true)
+
     /** An unsorted list of all deck names. */
     abstract fun allNames(dyn: Boolean = true): List<String>
+
     /** A list of all decks. */
     abstract fun all(): List<Deck>
     abstract fun allIds(): Set<Long>
 
-    abstract fun collapse(did: Long)
+    abstract fun collapse(did: DeckId)
 
     /** Return the number of decks. */
     @RustCleanup("This is a long in V16 - shouldn't make a difference, but needs investigation")
     abstract fun count(): Int
-    @CheckResult
+
     /** Obtains the deck from the DeckID, or default if the deck was not found */
-    fun get(did: Long): Deck = get(did, true)!!
+    @CheckResult
+    fun get(did: DeckId): Deck = get(did, true)!!
+
     /**
      * Obtains the deck from the DeckID
      * @param did The deck to obtain
      * @param _default Whether to return the default deck, or null if did is not found
      */
     @CheckResult
-    abstract fun get(did: Long, _default: Boolean): Deck?
+    abstract fun get(did: DeckId, _default: Boolean): Deck?
 
     /** Get deck with NAME, ignoring case */
     @CheckResult
@@ -108,13 +122,15 @@ abstract class DeckManager {
 
     /** * A list of all deck config. */
     abstract fun allConf(): List<DeckConfig>
-    abstract fun confForDid(did: Long): DeckConfig
+    abstract fun confForDid(did: DeckId): DeckConfig
     abstract fun getConf(confId: Long): DeckConfig?
     abstract fun updateConf(g: DeckConfig)
 
     fun confId(name: String): Long = confId(name, Decks.DEFAULT_CONF)
+
     /** Create a new configuration and return id */
     abstract fun confId(name: String, cloneFrom: String): Long
+
     /**
      * Remove a configuration and update all decks using it.
      * @throws ConfirmModSchemaException
@@ -131,10 +147,10 @@ abstract class DeckManager {
      * ***********************************************************
      */
 
-    fun name(did: Long): String = name(did, _default = false)
-    abstract fun name(did: Long, _default: Boolean = false): String
-    fun cids(did: Long): MutableList<Long> = cids(did, false)
-    abstract fun cids(did: Long, children: Boolean): MutableList<Long>
+    fun name(did: DeckId): String = name(did, _default = false)
+    abstract fun name(did: DeckId, _default: Boolean = false): String
+    fun cids(did: DeckId): MutableList<Long> = cids(did, false)
+    abstract fun cids(did: DeckId, children: Boolean): MutableList<Long>
     abstract fun checkIntegrity()
 
     /*
@@ -143,22 +159,26 @@ abstract class DeckManager {
      */
     /** The currently active dids. Make sure to copy before modifying. */
     abstract fun active(): LinkedList<Long>
+
     /** The currently selected did. */
     abstract fun selected(): Long
     abstract fun current(): Deck
+
     /** Select a new branch. */
-    abstract fun select(did: Long)
+    abstract fun select(did: DeckId)
+
     /**
      * All children of did as nodes of (key:name, value:id)
      *
      * TODO: There is likely no need for this collection to be a TreeMap. This method should not
      * need to sort on behalf of select().
      */
-    abstract fun children(did: Long): TreeMap<String, Long>
-    abstract fun childDids(did: Long, childMap: Decks.Node): List<Long>
+    abstract fun children(did: DeckId): TreeMap<String, Long>
+    abstract fun childDids(did: DeckId, childMap: Decks.Node): List<Long>
     abstract fun childMap(): Decks.Node
+
     /** All parents of did. */
-    abstract fun parents(did: Long): List<Deck>
+    abstract fun parents(did: DeckId): List<Deck>
 
     /*
      * Sync handling
@@ -175,7 +195,7 @@ abstract class DeckManager {
     /** Return a new dynamic deck and set it as the current deck. */
     @Throws(DeckRenameException::class)
     abstract fun newDyn(name: String): Long
-    abstract fun isDyn(did: Long): Boolean
+    abstract fun isDyn(did: DeckId): Boolean
 
     /*
      * ***********************************************************
@@ -186,7 +206,7 @@ abstract class DeckManager {
     fun getActualDescription(): String = current().optString("desc", "")
 
     /** @return the fully qualified name of the subdeck, or null if unavailable */
-    fun getSubdeckName(did: Long, subdeckName: String?): String? {
+    fun getSubdeckName(did: DeckId, subdeckName: String?): String? {
         if (subdeckName.isNullOrEmpty()) {
             return null
         }
@@ -213,8 +233,8 @@ abstract class DeckManager {
      * interface components that display a deck list to ensure the ordering is consistent.
      */
     /** {@inheritDoc}  */
-    fun allSorted(): List<Deck?> {
-        val decks: List<Deck?> = all()
+    fun allSorted(): List<Deck> {
+        val decks: List<Deck> = all()
         Collections.sort(decks, DeckComparator.INSTANCE)
         return decks
     }

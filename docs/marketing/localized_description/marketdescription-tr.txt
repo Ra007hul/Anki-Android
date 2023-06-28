@@ -15,17 +15,16 @@ Masaüstü uygulaması Anki veya doğrudan AnkiDroid yoluyla malzeme ekleyin. Uy
 • 6000'den fazla hazır deste
 • ilerleme widget'ı
 • ayrıntılı istatistikler
-• AnkiWeb ile eşitleme
+• AnkiWeb ile eşitlenme
 • açık kaynaklı
 
 ★ Ek özellikler:
 • cevapları yazma (isteğe bağlı)
 • yazı tahtası
 • kart düzenleyici/ekleyici
-• kart tarayıcı
+• kart tarayıcısı
 • tablet düzeni
 • var olan koleksiyon dosyalarını içeri aktarma (Anki Desktop aracılığıyla)
-• sözlük entegrasyonu (ColorDict, GoldenDict, Leo.org, Aedict, çeşitli web sözlükleri)
 • sözlük gibi diğer uygulamalardan istek tabanlı kart ekleme
 • özel yazı tipi desteği
 • tam yedekleme sistemi

@@ -22,6 +22,7 @@ import com.ichi2.anki.cardviewer.TypeAnswer.Companion.contentForCloze
 import com.ichi2.testutils.EmptyApplication
 import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers
+import org.intellij.lang.annotations.Language
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -32,6 +33,7 @@ import org.robolectric.annotation.Config
 class TypeAnswerTest {
     @Test
     fun testTypeAnsAnswerFilterNormalCorrect() {
+        @Language("HTML")
         val buf = """<style>.card {
  font-family: arial;
  font-size: 20px;
@@ -45,6 +47,8 @@ class TypeAnswerTest {
 <hr id=answer>
 
 $!"""
+
+        @Language("HTML")
         val expectedOutput = """<style>.card {
  font-family: arial;
  font-size: 20px;
@@ -63,6 +67,7 @@ $!"""
 
     @Test
     fun testTypeAnsAnswerFilterNormalIncorrect() {
+        @Language("HTML")
         val buf = """<style>.card {
  font-family: arial;
  font-size: 20px;
@@ -76,6 +81,8 @@ $!"""
 <hr id=answer>
 
 hello"""
+
+        @Language("HTML")
         val expectedOutput = """<style>.card {
  font-family: arial;
  font-size: 20px;
@@ -95,6 +102,7 @@ hello"""
 
     @Test
     fun testTypeAnsAnswerFilterNormalEmpty() {
+        @Language("HTML")
         val buf = """<style>.card {
  font-family: arial;
  font-size: 20px;
@@ -108,6 +116,8 @@ hello"""
 <hr id=answer>
 
 hello"""
+
+        @Language("HTML")
         val expectedOutput = """<style>.card {
  font-family: arial;
  font-size: 20px;
@@ -127,6 +137,7 @@ hello"""
 
     @Test
     fun testTypeAnsAnswerFilterDollarSignsCorrect() {
+        @Language("HTML")
         val buf = """<style>.card {
  font-family: arial;
  font-size: 20px;
@@ -140,6 +151,8 @@ hello"""
 <hr id=answer>
 
 $!"""
+
+        @Language("HTML")
         val expectedOutput = """<style>.card {
  font-family: arial;
  font-size: 20px;
@@ -159,6 +172,7 @@ $!"""
 
     @Test
     fun testTypeAnsAnswerFilterDollarSignsIncorrect() {
+        @Language("HTML")
         val buf = """<style>.card {
  font-family: arial;
  font-size: 20px;
@@ -172,6 +186,8 @@ $!"""
 <hr id=answer>
 
 $!"""
+
+        @Language("HTML")
         val expectedOutput = """<style>.card {
  font-family: arial;
  font-size: 20px;
@@ -191,6 +207,7 @@ $!"""
 
     @Test
     fun testTypeAnsAnswerFilterDollarSignsEmpty() {
+        @Language("HTML")
         val buf = """<style>.card {
  font-family: arial;
  font-size: 20px;
@@ -204,6 +221,8 @@ $!"""
 <hr id=answer>
 
 $!"""
+
+        @Language("HTML")
         val expectedOutput = """<style>.card {
  font-family: arial;
  font-size: 20px;
@@ -233,6 +252,7 @@ $!"""
     @Test
     fun testMediaIsNotExpected() {
         // #0096 - Anki Desktop did not expect media.
+        @Language("HTML")
         val input = "ya[sound:36_ya.mp3]<div><img src=\"paste-efbfdfbff329f818e3b5568e578234d0d0054067.png\" /><br /></div>"
         val expected = "ya"
         val actual: String = cleanCorrectAnswer(input)

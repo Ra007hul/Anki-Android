@@ -25,7 +25,7 @@ import timber.log.Timber
 /**
  * This Broadcast-Receiver listens to media ejects and closes the collection prior to unmount. It then sends a broadcast
  * intent to all activities which might be open in order to show an appropriate screen After media has been remounted,
- * another broadcast intent will be sent to let the activites know about it
+ * another broadcast intent will be sent to let the activities know about it
  */
 class SdCardReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -35,7 +35,7 @@ class SdCardReceiver : BroadcastReceiver() {
             i.action = MEDIA_EJECT
             context.sendBroadcast(i)
             try {
-                val col = CollectionHelper.getInstance().getCol(context)
+                val col = CollectionHelper.instance.getCol(context)
                 col?.close()
             } catch (e: Exception) {
                 Timber.w(e, "Exception while trying to close collection likely because it was already unmounted")

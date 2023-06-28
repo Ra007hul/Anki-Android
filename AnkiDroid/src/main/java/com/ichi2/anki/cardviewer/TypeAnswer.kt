@@ -18,7 +18,6 @@ package com.ichi2.anki.cardviewer
 
 import android.content.SharedPreferences
 import android.content.res.Resources
-import android.text.TextUtils
 import androidx.annotation.VisibleForTesting
 import com.ichi2.anki.R
 import com.ichi2.anki.servicelayer.LanguageHint
@@ -27,9 +26,10 @@ import com.ichi2.libanki.Card
 import com.ichi2.libanki.Sound
 import com.ichi2.libanki.Utils
 import com.ichi2.utils.DiffEngine
-import com.ichi2.utils.JSONArray
+import com.ichi2.utils.jsonObjectIterable
+import org.intellij.lang.annotations.Language
+import org.json.JSONArray
 import timber.log.Timber
-import java.util.*
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
@@ -46,9 +46,11 @@ class TypeAnswer(
 
     /** What the learner actually typed (externally mutable) */
     var input = ""
+
     /** Font face of the 'compare to' field */
     var font = ""
         private set
+
     /** The font size of the 'compare to' field */
     var size = 0
         private set
@@ -142,26 +144,24 @@ class TypeAnswer(
             return m.replaceFirst(warning!!)
         }
         val sb = java.lang.StringBuilder()
+        fun append(@Language("HTML") html: String) = sb.append(html)
         if (useInputTag) {
             // These functions are defined in the JavaScript file assets/scripts/card.js. We get the text back in
             // shouldOverrideUrlLoading() in createWebView() in this file.
-            sb.append(
+            append(
                 """<center>
 <input type="text" name="typed" id="typeans" onfocus="taFocus();" onblur="taBlur(this);" onKeyPress="return taKey(this, event)" autocomplete="off" """
             )
             // We have to watch out. For the preview we don’t know the font or font size. Skip those there. (Anki
             // desktop just doesn’t show the input tag there. Do it with standard values here instead.)
-            if (!TextUtils.isEmpty(font) && size > 0) {
-                sb.append("style=\"font-family: '").append(font).append("'; font-size: ")
+            if (font.isNotEmpty() && size > 0) {
+                append("style=\"font-family: '").append(font).append("'; font-size: ")
                     .append(size).append("px;\" ")
             }
-            sb.append(">\n</center>\n")
+            append(">\n</center>\n")
         } else {
-            sb.append("<span id=\"typeans\" class=\"typePrompt")
-            if (useInputTag) {
-                sb.append(" typeOff")
-            }
-            sb.append("\">........</span>")
+            append("<span id=\"typeans\" class=\"typePrompt")
+            append("\">........</span>")
         }
         return m.replaceAll(sb.toString())
     }
@@ -195,42 +195,41 @@ class TypeAnswer(
         val m: Matcher = PATTERN.matcher(answer)
         val diffEngine = DiffEngine()
         val sb = StringBuilder()
-        sb.append(if (doNotUseCodeFormatting) "<div><span id=\"typeans\">" else "<div><code id=\"typeans\">")
+        fun append(@Language("HTML") html: String) = sb.append(html)
+        append(if (doNotUseCodeFormatting) "<div><span id=\"typeans\">" else "<div><code id=\"typeans\">")
 
         // We have to use Matcher.quoteReplacement because the inputs here might have $ or \.
         if (userAnswer.isNotEmpty()) {
             // The user did type something.
             if (userAnswer == correctAnswer) {
                 // and it was right.
-                sb.append(Matcher.quoteReplacement(DiffEngine.wrapGood(correctAnswer)))
-                sb.append("<span id=\"typecheckmark\">\u2714</span>") // Heavy check mark
+                append(Matcher.quoteReplacement(DiffEngine.wrapGood(correctAnswer)))
+                append("<span id=\"typecheckmark\">\u2714</span>") // Heavy check mark
             } else {
                 // Answer not correct.
                 // Only use the complex diff code when needed, that is when we have some typed text that is not
                 // exactly the same as the correct text.
                 val diffedStrings = diffEngine.diffedHtmlStrings(correctAnswer, userAnswer)
                 // We know we get back two strings.
-                sb.append(Matcher.quoteReplacement(diffedStrings[0]))
-                sb.append("<br><span id=\"typearrow\">&darr;</span><br>")
-                sb.append(Matcher.quoteReplacement(diffedStrings[1]))
+                append(Matcher.quoteReplacement(diffedStrings[0]))
+                append("<br><span id=\"typearrow\">&darr;</span><br>")
+                append(Matcher.quoteReplacement(diffedStrings[1]))
             }
         } else {
             if (!useInputTag) {
-                sb.append(Matcher.quoteReplacement(DiffEngine.wrapMissing(correctAnswer)))
+                append(Matcher.quoteReplacement(DiffEngine.wrapMissing(correctAnswer)))
             } else {
-                sb.append(Matcher.quoteReplacement(correctAnswer))
+                append(Matcher.quoteReplacement(correctAnswer))
             }
         }
-        sb.append(if (doNotUseCodeFormatting) "</span></div>" else "</code></div>")
+        append(if (doNotUseCodeFormatting) "</span></div>" else "</code></div>")
         return m.replaceAll(sb.toString())
     }
 
     companion object {
-        @JvmField
         /** Regular expression in card data for a 'type answer' after processing has occurred */
         val PATTERN: Pattern = Pattern.compile("\\[\\[type:(.+?)]]")
 
-        @JvmStatic
         fun createInstance(preferences: SharedPreferences): TypeAnswer {
             return TypeAnswer(
                 useInputTag = preferences.getBoolean("useInputTag", false),
@@ -249,11 +248,9 @@ class TypeAnswer(
          * @param answer The content of the field the text typed by the user is compared to.
          * @return The correct answer text, with actual HTML and media references removed, and HTML entities unescaped.
          */
-        @JvmStatic
         fun cleanCorrectAnswer(answer: String?): String {
-            if (answer == null || "" == answer) {
-                return ""
-            }
+            if (answer.isNullOrEmpty()) return ""
+
             var matcher = spanPattern.matcher(Utils.stripHTML(answer.trim { it <= ' ' }))
             var answerText = matcher.replaceAll("")
             matcher = brPattern.matcher(answerText)
@@ -269,11 +266,9 @@ class TypeAnswer(
          * @param answer The answer text typed by the user.
          * @return The typed answer text, cleaned up.
          */
-        @JvmStatic
-        fun cleanTypedAnswer(answer: String?): String {
-            return if (answer == null || "" == answer) {
-                ""
-            } else Utils.nfcNormalized(answer.trim())
+        fun cleanTypedAnswer(answer: String): String {
+            if (answer.isBlank()) return ""
+            return Utils.nfcNormalized(answer.trim())
         }
 
         /**
@@ -306,7 +301,7 @@ class TypeAnswer(
             return if (uniqMatches.size == 1) {
                 matches[0]
             } else {
-                TextUtils.join(", ", matches)
+                matches.joinToString(", ")
             }
         }
     }

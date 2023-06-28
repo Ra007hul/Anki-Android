@@ -23,163 +23,84 @@
 <!-- Reviewing Preferences -->
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://arbitrary.app.namespace/com.ichi2.anki"
+    xmlns:app1="http://schemas.android.com/apk/res-auto"
     android:title="@string/pref_cat_reviewing"
-    android:summary="@string/pref_cat_reviewing_summ" >
-    <PreferenceCategory android:title="@string/pref_cat_reviewer_behaviour" >
+    android:key="@string/pref_reviewing_screen_key">
+    <PreferenceCategory android:title="@string/pref_cat_scheduling" >
         <ListPreference
             android:entries="@array/new_spread_labels"
             android:entryValues="@array/new_spread_values"
-            android:key="newSpread"
-            android:title="@string/new_spread" />
-        <com.ichi2.preferences.SeekBarPreferenceCompat
-            android:key="dayOffset"
-            android:max="23"
-            android:summary="@string/day_offset_summ"
+            android:key="@string/new_spread_preference"
+            android:title="@string/new_spread"
+            app1:useSimpleSummaryProvider="true"/>
+        <com.ichi2.preferences.SliderPreference
+            android:key="@string/day_offset_preference"
+            android:valueFrom="0"
+            android:valueTo="23"
             android:title="@string/day_offset_with_description"
-            app:interval="1"
-            app:min="0"
-            app:xlabel="@string/xlabel_dayoffset_seekbar"
-            app:ylabel="@string/ylabel_dayoffset_seekbar" />
+            app1:persistent="false"
+            app1:summaryFormat="@string/day_offset_summary"/>
         <com.ichi2.preferences.NumberRangePreferenceCompat
-            android:key="learnCutoff"
-            android:summary="@string/time_limit_summ"
+            android:key="@string/learn_cutoff_preference"
             android:title="@string/learn_cutoff"
             app:max="999"
-            app:min="0" />
+            app:min="0"
+            app1:summaryFormat="@string/pref_summary_minutes"/>
         <com.ichi2.preferences.NumberRangePreferenceCompat
-            android:key="timeLimit"
-            android:summary="@string/time_limit_summ"
+            android:key="@string/time_limit_preference"
             android:title="@string/time_limit"
             app:max="9999"
-            app:min="0" />
-        <CheckBoxPreference
-            android:key="newTimezoneHandling"
-            android:title="@string/new_timezone"
-            android:defaultValue="false" />
-        <com.ichi2.preferences.NumberRangePreferenceCompat
-            android:defaultValue="200"
-            android:key="doubleTapTimeInterval"
-            android:summary="@string/pref_double_tap_time_interval_summary"
-            android:title="@string/pref_double_tap_time_interval"
             app:min="0"
-            app:max="2000" />
-
-    </PreferenceCategory>
-    <PreferenceCategory android:title="@string/pref_cat_flashcard" >
-        <Preference
-            android:summary="@string/custom_buttons_summary"
-            android:title="@string/custom_buttons"
-            android:key="custom_buttons_link"
-            android:fragment="com.ichi2.anki.Preferences$CustomButtonsSettingsFragment" />
-        <CheckBoxPreference
-            android:defaultValue="false"
-            android:key="keepScreenOn"
-            android:summary="@string/pref_keep_screen_on_summ"
-            android:title="@string/pref_keep_screen_on" />
-        <ListPreference
-            android:defaultValue="0"
-            android:key="fullscreenMode"
-            android:entries="@array/full_screen_mode_labels"
-            android:entryValues="@array/full_screen_mode_values"
-            android:title="@string/fullscreen_review" />
-        <CheckBoxPreference
-            android:defaultValue="false"
-            android:key="centerVertically"
-            android:summary="@string/vertical_centering_summ"
-            android:title="@string/vertical_centering" />
-        <CheckBoxPreference
-            android:key="showEstimates"
-            android:summary="@string/show_estimates_summ"
-            android:title="@string/show_estimates" />
-        <com.ichi2.preferences.SeekBarPreferenceCompat
-            android:defaultValue="100"
-            android:key="cardZoom"
-            android:max="300"
-            android:summary="@string/preference_summary_percentage"
-            android:text=" %"
-            android:title="@string/card_zoom"
-            app:interval="10"
-            app:min="10" />
-        <com.ichi2.preferences.SeekBarPreferenceCompat
-            android:defaultValue="100"
-            android:key="imageZoom"
-            android:max="300"
-            android:summary="@string/preference_summary_percentage"
-            android:text=" %"
-            android:title="@string/image_zoom"
-            app:interval="10"
-            app:min="50" />
-        <com.ichi2.preferences.SeekBarPreferenceCompat
-            android:defaultValue="100"
-            android:key="answerButtonSize"
-            android:max="200"
-            android:summary="@string/preference_summary_percentage"
-            android:text=" %"
-            android:title="@string/button_size"
-            app:interval="10"
-            app:min="100" />
-        <ListPreference
-            android:defaultValue="bottom"
-            android:entries="@array/answer_buttons_position_labels"
-            android:entryValues="@array/answer_buttons_position"
-            android:key="@string/answer_buttons_position_preference"
-            android:title="@string/answer_buttons_position" />
-        <CheckBoxPreference
-            android:key="showTopbar"
-            android:defaultValue="true"
-            android:summary="@string/show_top_bar_summ"
-            android:title="@string/show_top_bar" />
-        <CheckBoxPreference
-            android:key="showProgress"
-            android:summary="@string/show_progress_summ"
-            android:title="@string/show_progress" />
-        <CheckBoxPreference
-            android:key="showETA"
-            android:defaultValue="true"
-            android:summary="@string/show_eta_summ"
-            android:title="@string/show_eta" />
-        <CheckBoxPreference
-            android:key="showLargeAnswerButtons"
-            android:defaultValue="false"
-            android:summary="@string/show_large_answer_buttons_summ"
-            android:title="@string/show_large_answer_buttons"/>
-    </PreferenceCategory>
-    <PreferenceCategory android:title="@string/pref_cat_whiteboard" >
-        <com.ichi2.preferences.SeekBarPreferenceCompat
-            android:defaultValue="6"
-            android:key="whiteBoardStrokeWidth"
-            android:max="30"
-            android:summary="@string/preference_summary_literal"
-            android:text=""
-            android:title="@string/whiteboard_stroke_width" />
+            app1:summaryFormat="@string/pref_summary_minutes"/>
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/timeout_answer_text" >
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
             android:defaultValue="false"
             android:disableDependentsState="false"
-            android:key="timeoutAnswer"
+            android:key="@string/timeout_answer_preference"
             android:summary="@string/timeout_answer_summ"
             android:title="@string/timeout_answer_text" />
         <ListPreference
             android:entries="@array/automatic_answer_options"
-            android:dependency="timeoutAnswer"
+            android:dependency="@string/timeout_answer_preference"
             android:entryValues="@array/automatic_answer_values"
             android:defaultValue="0"
-            android:key="automaticAnswerAction"
-            android:title="@string/timeout_answer" />
-        <com.ichi2.preferences.SeekBarPreferenceCompat
+            android:key="@string/automatic_answer_action_preference"
+            android:title="@string/timeout_answer"
+            app1:useSimpleSummaryProvider="true"/>
+        <com.ichi2.preferences.SliderPreference
+            android:key="@string/timeout_answer_seconds_preference"
+            android:dependency="@string/timeout_answer_preference"
+            android:title="@string/timeout_answer_seconds"
             android:defaultValue="20"
-            android:dependency="timeoutAnswer"
-            android:key="timeoutAnswerSeconds"
-            android:max="30"
-            android:summary="@string/timeout_answer_seconds_summ"
-            android:title="@string/timeout_answer_seconds" />
-        <com.ichi2.preferences.SeekBarPreferenceCompat
+            android:valueFrom="0"
+            android:valueTo="30"
+            app1:displayFormat="@string/pref_summary_seconds"/>
+        <com.ichi2.preferences.SliderPreference
+            android:key="@string/timeout_question_seconds_preference"
+            android:dependency="@string/timeout_answer_preference"
             android:defaultValue="60"
-            android:dependency="timeoutAnswer"
-            android:key="timeoutQuestionSeconds"
-            android:max="60"
-            android:summary="@string/timeout_answer_seconds_summ"
-            android:title="@string/timeout_question_seconds" />
+            android:valueFrom="0"
+            android:valueTo="60"
+            android:title="@string/timeout_question_seconds"
+            app1:displayFormat="@string/pref_summary_seconds"/>
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_cat_advanced">
+        <SwitchPreferenceCompat
+            android:defaultValue="false"
+            android:key="@string/keep_screen_on_preference"
+            android:summary="@string/pref_keep_screen_on_summ"
+            android:title="@string/pref_keep_screen_on" />
+        <SwitchPreferenceCompat
+            android:key="@string/new_timezone_handling_preference"
+            android:title="@string/new_timezone"
+            android:defaultValue="false" />
+        <com.ichi2.preferences.NumberRangePreferenceCompat
+            android:defaultValue="200"
+            android:key="@string/double_tap_time_interval_preference"
+            android:summary="@string/pref_double_tap_time_interval_summary"
+            android:title="@string/pref_double_tap_time_interval"
+            app:min="0"
+            app:max="2000" />
     </PreferenceCategory>
 </PreferenceScreen>

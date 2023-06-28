@@ -17,7 +17,6 @@
 package com.ichi2.anki.dialogs
 
 import android.os.Bundle
-import com.afollestad.materialdialogs.DialogAction
 import com.afollestad.materialdialogs.MaterialDialog
 import com.ichi2.anki.R
 import timber.log.Timber
@@ -25,42 +24,42 @@ import java.net.URLDecoder
 
 class ImportDialog : AsyncDialogFragment() {
     interface ImportDialogListener {
-        fun importAdd(importPath: String?)
-        fun importReplace(importPath: String?)
+        fun importAdd(importPath: List<String>)
+        fun importReplace(importPath: List<String>)
         fun dismissAllDialogFragments()
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): MaterialDialog {
         super.onCreate(savedInstanceState)
         val type = requireArguments().getInt("dialogType")
-        val res = resources
-        val builder = MaterialDialog.Builder(requireActivity())
-        builder.cancelable(true)
-        val dialogMessage = requireArguments().getString("dialogMessage")!!
+        val dialog = MaterialDialog(requireActivity())
+        dialog.cancelable(true)
+        val dialogMessageList = requireArguments().getStringArrayList("dialogMessage")!!
+        // Iterate over dialog message list & create display filename
+        val displayFileName = dialogMessageList.joinToString("\n") { filenameFromPath(convertToDisplayName(it)) }
+
         return when (type) {
             DIALOG_IMPORT_ADD_CONFIRM -> {
-                val displayFileName = convertToDisplayName(dialogMessage)
-                builder.title(res.getString(R.string.import_title))
-                    .content(res.getString(R.string.import_message_add_confirm, filenameFromPath(displayFileName)))
-                    .positiveText(R.string.import_message_add)
-                    .negativeText(R.string.dialog_cancel)
-                    .onPositive { _: MaterialDialog?, _: DialogAction? ->
-                        (activity as ImportDialogListener?)!!.importAdd(dialogMessage)
+                dialog.show {
+                    title(R.string.import_title)
+                    message(text = res().getQuantityString(R.plurals.import_files_message_add_confirm, dialogMessageList.size, displayFileName))
+                    positiveButton(R.string.import_message_add) {
+                        (activity as ImportDialogListener).importAdd(dialogMessageList)
                         dismissAllDialogFragments()
                     }
-                    .show()
+                    negativeButton(R.string.dialog_cancel)
+                }
             }
             DIALOG_IMPORT_REPLACE_CONFIRM -> {
-                val displayFileName = convertToDisplayName(dialogMessage)
-                builder.title(res.getString(R.string.import_title))
-                    .content(res.getString(R.string.import_message_replace_confirm, displayFileName))
-                    .positiveText(R.string.dialog_positive_replace)
-                    .negativeText(R.string.dialog_cancel)
-                    .onPositive { _: MaterialDialog?, _: DialogAction? ->
-                        (activity as ImportDialogListener?)!!.importReplace(dialogMessage)
+                dialog.show {
+                    title(R.string.import_title)
+                    message(text = res().getString(R.string.import_message_replace_confirm, displayFileName))
+                    positiveButton(R.string.dialog_positive_replace) {
+                        (activity as ImportDialogListener).importReplace(dialogMessageList)
                         dismissAllDialogFragments()
                     }
-                    .show()
+                    negativeButton(R.string.dialog_cancel)
+                }
             }
             else -> null!!
         }
@@ -77,16 +76,18 @@ class ImportDialog : AsyncDialogFragment() {
         }
     }
 
-    override fun getNotificationMessage(): String {
-        return res().getString(R.string.import_interrupted)
-    }
+    override val notificationMessage: String
+        get() {
+            return res().getString(R.string.import_interrupted)
+        }
 
-    override fun getNotificationTitle(): String {
-        return res().getString(R.string.import_title)
-    }
+    override val notificationTitle: String
+        get() {
+            return res().getString(R.string.import_title)
+        }
 
     fun dismissAllDialogFragments() {
-        (activity as ImportDialogListener?)!!.dismissAllDialogFragments()
+        (activity as ImportDialogListener).dismissAllDialogFragments()
     }
 
     companion object {
@@ -97,15 +98,14 @@ class ImportDialog : AsyncDialogFragment() {
          * A set of dialogs which deal with importing a file
          *
          * @param dialogType An integer which specifies which of the sub-dialogs to show
-         * @param dialogMessage An optional string which can be used to show a custom message
+         * @param dialogMessageList An optional ArrayList of string(s) which can be used to show a custom message
          * or specify import path
          */
-        @JvmStatic
-        fun newInstance(dialogType: Int, dialogMessage: String): ImportDialog {
+        fun newInstance(dialogType: Int, dialogMessageList: ArrayList<String>): ImportDialog {
             val f = ImportDialog()
             val args = Bundle()
             args.putInt("dialogType", dialogType)
-            args.putString("dialogMessage", dialogMessage)
+            args.putStringArrayList("dialogMessage", dialogMessageList)
             f.arguments = args
             return f
         }

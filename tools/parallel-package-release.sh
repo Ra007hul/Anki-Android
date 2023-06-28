@@ -31,12 +31,14 @@ fi
 
 BUILDNAMES='A B C D E'
 for BUILD in $BUILDNAMES; do
-    git reset --hard
-    git clean -f
     LCBUILD=`tr '[:upper:]' '[:lower:]' <<< $BUILD`
-    ./tools/parallel-package-name.sh com.ichi2.anki.$LCBUILD AnkiDroid.$BUILD
-    ./gradlew assemblePlayRelease -Duniversal-apk=true
-    cp AnkiDroid/build/outputs/apk/play/release/AnkiDroid-play-universal-release.apk ./AnkiDroid-$TAG.parallel.$BUILD.apk
+    ./gradlew --stop
+    if ! ./gradlew assembleFullRelease -PcustomSuffix="$LCBUILD" -PcustomName="AnkiDroid.$BUILD" -Duniversal-apk=true
+    then
+      echo "Unable to build parallel target $BUILD"
+      exit 1
+    fi
+    cp AnkiDroid/build/outputs/apk/full/release/AnkiDroid-full-universal-release.apk ./AnkiDroid-$TAG.parallel.$BUILD.apk
 done
 git reset --hard
 git clean -f

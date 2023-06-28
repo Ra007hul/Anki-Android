@@ -19,27 +19,28 @@ import android.app.Dialog
 import android.os.Bundle
 import android.os.Parcel
 import android.os.Parcelable
-import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.CheckResult
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
-import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.view.updatePadding
 import androidx.fragment.app.DialogFragment
 import androidx.recyclerview.widget.RecyclerView
 import com.afollestad.materialdialogs.MaterialDialog
+import com.afollestad.materialdialogs.list.customListAdapter
+import com.afollestad.materialdialogs.list.getRecyclerView
 import com.ichi2.anki.AnkiActivity
 import com.ichi2.anki.R
 import com.ichi2.anki.analytics.UsageAnalytics
-import timber.log.Timber
+import com.ichi2.compat.CompatHelper.Companion.getParcelableArrayListCompat
+import com.ichi2.compat.CompatHelper.Companion.readListCompat
 import java.util.*
 
 /** A Dialog displaying The various options for "Help" in a nested structure  */
 class RecursivePictureMenu : DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val items: List<Item> = requireArguments().getParcelableArrayList("bundle")!!
+        val items: List<Item> = requireArguments().getParcelableArrayListCompat("bundle", Item::class.java)!!
         val title = requireContext().getString(requireArguments().getInt("titleRes"))
         val adapter: RecyclerView.Adapter<*> = object : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
             override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -60,30 +61,10 @@ class RecursivePictureMenu : DialogFragment() {
                 return items.size
             }
         }
-        val dialog = MaterialDialog.Builder(requireContext())
-            .adapter(adapter, null)
-            .title(title)
-            .show()
-        setMenuBreadcrumbHeader(dialog)
-        val v = dialog.findViewById(R.id.md_contentRecyclerView)
-        v.setPadding(v.paddingLeft, v.paddingTop, v.paddingRight, 0)
-        // DEFECT: There is 9dp of bottom margin which I can't seem to get rid of.
-        return dialog
-    }
-
-    protected fun setMenuBreadcrumbHeader(dialog: MaterialDialog) {
-        try {
-            val titleFrame = dialog.findViewById(R.id.md_titleFrame)
-            titleFrame.setPadding(10, 22, 10, 10)
-            titleFrame.setOnClickListener { dismiss() }
-            val icon = dialog.findViewById(R.id.md_icon) as ImageView
-            icon.visibility = View.VISIBLE
-            val iconValue = AppCompatResources.getDrawable(requireContext(), R.drawable.ic_menu_back_black_24dp)
-            iconValue!!.isAutoMirrored = true
-            icon.setImageDrawable(iconValue)
-        } catch (e: Exception) {
-            Timber.w(e, "Failed to set Menu title/icon")
-        }
+        return MaterialDialog(requireContext()).show {
+            customListAdapter(adapter, null)
+            title(text = title)
+        }.apply { getRecyclerView().updatePadding(bottom = 0) }
     }
 
     abstract class Item : Parcelable {
@@ -162,7 +143,7 @@ class RecursivePictureMenu : DialogFragment() {
         protected constructor(parcel: Parcel) : super(parcel) {
             if (parcel.readByte().toInt() == 0x01) {
                 mChildren = ArrayList()
-                parcel.readList(mChildren, Item::class.java.classLoader)
+                parcel.readListCompat<Item>(mChildren)
             } else {
                 mChildren = ArrayList(0)
             }
@@ -179,6 +160,7 @@ class RecursivePictureMenu : DialogFragment() {
         }
 
         companion object {
+            @JvmField // required field that makes Parcelables from a Parcel
             val CREATOR: Parcelable.Creator<ItemHeader?> = object : Parcelable.Creator<ItemHeader?> {
                 override fun createFromParcel(parcel: Parcel): ItemHeader {
                     return ItemHeader(parcel)
@@ -192,7 +174,6 @@ class RecursivePictureMenu : DialogFragment() {
     }
 
     companion object {
-        @JvmStatic
         @CheckResult
         fun createInstance(itemList: ArrayList<Item?>?, @StringRes title: Int): RecursivePictureMenu {
             val helpDialog = RecursivePictureMenu()
@@ -203,7 +184,6 @@ class RecursivePictureMenu : DialogFragment() {
             return helpDialog
         }
 
-        @JvmStatic
         fun removeFrom(allItems: List<Item>, toRemove: Item?) {
             // Note: currently doesn't remove the top-level elements.
             for (i in allItems) {

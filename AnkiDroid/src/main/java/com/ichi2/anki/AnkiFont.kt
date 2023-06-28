@@ -59,16 +59,16 @@ class AnkiFont private constructor(val name: String, private val family: String,
          * @param fromAssets True if the font is to be found in assets of application
          * @return A new AnkiFont object or null if the file can't be interpreted as typeface.
          */
-        @JvmStatic
         fun createAnkiFont(ctx: Context, filePath: String, fromAssets: Boolean): AnkiFont? {
-            var path = filePath
-            val fontfile = File(path)
-            val name = Utils.splitFilename(fontfile.name)[0]
+            val fontFile = File(filePath)
+            val path = if (fromAssets) {
+                fAssetPathPrefix + fontFile.name
+            } else {
+                filePath
+            }
+            val name = Utils.splitFilename(fontFile.name)[0]
             var family = name
             val attributes: MutableList<String> = ArrayList(2)
-            if (fromAssets) {
-                path = fAssetPathPrefix + fontfile.name
-            }
             val tf = getTypeface(ctx, path) // unable to create typeface
                 ?: return null
             if (tf.isBold || name.lowercase().contains("bold")) {
@@ -114,7 +114,6 @@ class AnkiFont private constructor(val name: String, private val family: String,
             return createdFont
         }
 
-        @JvmStatic
         fun getTypeface(ctx: Context, path: String): Typeface? {
             return try {
                 if (path.startsWith(fAssetPathPrefix)) {
@@ -127,7 +126,7 @@ class AnkiFont private constructor(val name: String, private val family: String,
                 if (!corruptFonts.contains(path)) {
                     // Show warning toast
                     val name = File(path).name
-                    val res = AnkiDroidApp.getAppResources()
+                    val res = AnkiDroidApp.appResources
                     UIUtils.showThemedToast(ctx, res.getString(R.string.corrupt_font, name), false)
                     // Don't warn again in this session
                     corruptFonts.add(path)

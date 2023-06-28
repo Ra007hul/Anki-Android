@@ -16,17 +16,22 @@
 package com.ichi2.anki.dialogs
 
 import android.content.Context
-import com.afollestad.materialdialogs.MaterialDialog
+import androidx.appcompat.app.AlertDialog
 import com.ichi2.anki.R
+import com.ichi2.utils.message
+import com.ichi2.utils.negativeButton
+import com.ichi2.utils.positiveButton
+import com.ichi2.utils.show
 
 class DiscardChangesDialog {
     companion object {
-        @JvmStatic
-        fun getDefault(context: Context?): MaterialDialog.Builder {
-            return MaterialDialog.Builder(context!!)
-                .content(R.string.discard_unsaved_changes)
-                .positiveText(R.string.dialog_ok)
-                .negativeText(R.string.dialog_cancel)
+        fun showDialog(
+            context: Context,
+            positiveMethod: () -> Unit
+        ) = AlertDialog.Builder(context).show {
+            message(R.string.discard_unsaved_changes)
+            positiveButton(R.string.dialog_ok) { positiveMethod() }
+            negativeButton(R.string.dialog_cancel)
         }
     }
 }

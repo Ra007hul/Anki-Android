@@ -24,15 +24,29 @@ object BundleUtils {
     /**
      * Retrieves a [Long] value from a [Bundle] using a key, returns null if not found
      *
-     * @param bundle the bundle to look into
-     * can be null to support nullable bundles like [Fragment.getArguments]
+     * can be null to support nullable bundles like [androidx.fragment.app.Fragment.getArguments]
      * @param key the key to use
      * @return the long value, or null if not found
      */
-    @JvmStatic
-    fun getNullableLong(bundle: Bundle?, key: String): Long? {
-        return if (bundle == null || !bundle.containsKey(key)) {
+    fun Bundle.getNullableLong(key: String): Long? {
+        return if (!containsKey(key)) {
             null
-        } else bundle.getLong(key)
+        } else {
+            getLong(key)
+        }
+    }
+
+    /**
+     * Retrieves a [Long] value from a [Bundle] using a key, throws if not found
+     *
+     * @param key A string key
+     * @return the value associated with [key]
+     * @throws IllegalStateException If [key] does not exist in the bundle
+     */
+    fun Bundle.requireLong(key: String): Long {
+        if (!this.containsKey(key)) {
+            throw IllegalStateException("key: '$key' not found")
+        }
+        return getLong(key)
     }
 }

@@ -20,9 +20,9 @@ package com.ichi2.anki
 import android.content.Context
 import androidx.annotation.VisibleForTesting
 import androidx.core.content.edit
+import com.ichi2.anki.IntroductionActivity.Companion.INTRODUCTION_SLIDES_SHOWN
 import timber.log.Timber
 import java.util.*
-import kotlin.collections.HashSet
 
 class OnboardingUtils {
 
@@ -32,6 +32,7 @@ class OnboardingUtils {
          * Preference can be toggled by visiting 'Advanced' settings in the app.
          */
         const val SHOW_ONBOARDING = "showOnboarding"
+
         @VisibleForTesting
         val featureConstants: MutableSet<String> = HashSet()
 
@@ -72,7 +73,7 @@ class OnboardingUtils {
             // Set the bit at the index defined for a feature once the tutorial for that feature is seen by the user.
             visitedFeatures.set(featureIdentifier.getOnboardingEnumValue())
 
-            AnkiDroidApp.getSharedPrefs(context).edit().putLong(featureIdentifier.getFeatureConstant(), visitedFeatures.toLongArray()[0]).apply()
+            AnkiDroidApp.getSharedPrefs(context).edit { putLong(featureIdentifier.getFeatureConstant(), visitedFeatures.toLongArray()[0]) }
         }
 
         /**
@@ -93,6 +94,8 @@ class OnboardingUtils {
                 featureConstants.forEach {
                     this@edit.putLong(it, 0)
                 }
+                // Reset introduction slides preference
+                putBoolean(INTRODUCTION_SLIDES_SHOWN, false)
             }
         }
     }

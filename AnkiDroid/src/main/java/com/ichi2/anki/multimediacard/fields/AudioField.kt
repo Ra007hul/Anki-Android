@@ -20,70 +20,33 @@
 package com.ichi2.anki.multimediacard.fields
 
 import com.ichi2.libanki.Collection
-import com.ichi2.utils.KotlinCleanup
 import java.io.File
 import java.util.regex.Pattern
 
 /**
  * Implementation of Audio field types
  */
-@KotlinCleanup("want name & hasTemporaryMedia to be a property in the interface rather than a getter/setter")
 abstract class AudioField : FieldBase(), IField {
     private var mAudioPath: String? = null
-    protected var currentName: String? = null
-    protected var currentHasTemporaryMedia = false
-    abstract override fun getType(): EFieldType
-    override fun setType(type: EFieldType): Boolean {
-        return false
-    }
 
-    abstract override fun isModified(): Boolean
-    override fun getHtml(): String? {
-        return null
-    }
+    override var imagePath: String? = null
 
-    override fun setHtml(html: String): Boolean {
-        return false
-    }
-
-    override fun setImagePath(pathToImage: String): Boolean {
-        return false
-    }
-
-    override fun getImagePath(): String? {
-        return null
-    }
-
-    override fun setAudioPath(pathToAudio: String?): Boolean {
-        mAudioPath = pathToAudio
-        setThisModified()
-        return true
-    }
-
-    override fun getAudioPath(): String? {
-        return mAudioPath
-    }
-
-    override fun getText(): String? {
-        return null
-    }
-
-    override fun setText(text: String): Boolean {
-        return false
-    }
-
-    abstract override fun setHasTemporaryMedia(hasTemporaryMedia: Boolean)
-    abstract override fun hasTemporaryMedia(): Boolean
-    abstract override fun getName(): String?
-    abstract override fun setName(name: String)
-    override fun getFormattedValue(): String {
-        var formattedValue = ""
-        val file = File(audioPath!!)
-        if (file.exists()) {
-            formattedValue = String.format("[sound:%s]", file.name)
+    override var audioPath: String?
+        get() = mAudioPath
+        set(value) {
+            mAudioPath = value
+            setThisModified()
         }
-        return formattedValue
-    }
+
+    override var text: String? = null
+
+    override var hasTemporaryMedia: Boolean = false
+
+    override val formattedValue: String
+        get() = audioPath?.let { path ->
+            val file = File(path)
+            if (file.exists()) "[sound:${file.name}]" else ""
+        } ?: ""
 
     override fun setFormattedString(col: Collection, value: String) {
         val p = Pattern.compile(PATH_REGEX)

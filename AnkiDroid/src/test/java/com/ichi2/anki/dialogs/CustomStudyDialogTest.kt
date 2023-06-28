@@ -15,11 +15,13 @@
  */
 package com.ichi2.anki.dialogs
 
+import androidx.core.view.get
 import androidx.fragment.app.testing.FragmentScenario
 import androidx.lifecycle.Lifecycle
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.afollestad.materialdialogs.DialogAction
 import com.afollestad.materialdialogs.MaterialDialog
+import com.afollestad.materialdialogs.WhichButton
+import com.afollestad.materialdialogs.actions.getActionButton
 import com.ichi2.anki.R
 import com.ichi2.anki.RobolectricTest
 import com.ichi2.anki.dialogs.customstudy.CustomStudyDialog
@@ -29,6 +31,7 @@ import com.ichi2.libanki.Collection
 import com.ichi2.libanki.sched.AbstractSched
 import com.ichi2.testutils.JsonUtils.toOrderedString
 import com.ichi2.testutils.ParametersUtils
+import com.ichi2.testutils.items
 import com.ichi2.utils.KotlinCleanup
 import org.hamcrest.CoreMatchers.notNullValue
 import org.hamcrest.MatcherAssert
@@ -38,6 +41,8 @@ import org.junit.After
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 import org.robolectric.annotation.Config
 
 @RunWith(AndroidJUnit4::class)
@@ -57,8 +62,8 @@ class CustomStudyDialogTest : RobolectricTest() {
     @Test
     fun learnAheadCardsRegressionTest() {
         // #6289 - Regression Test
-        val args = CustomStudyDialog(ParametersUtils.whatever(), ParametersUtils.whatever())
-            .withArguments(CustomStudyDialog.CUSTOM_STUDY_AHEAD, 1)
+        val args = CustomStudyDialog(mock(), ParametersUtils.whatever())
+            .withArguments(CustomStudyDialog.ContextMenuOption.STUDY_AHEAD, 1)
             .arguments
         val factory = CustomStudyDialogFactory({ this.col }, mMockListener)
         val scenario = FragmentScenario.launch(CustomStudyDialog::class.java, args, factory)
@@ -66,7 +71,7 @@ class CustomStudyDialogTest : RobolectricTest() {
         scenario.onFragment { f: CustomStudyDialog ->
             val dialog = f.dialog as MaterialDialog?
             MatcherAssert.assertThat(dialog, IsNull.notNullValue())
-            dialog!!.getActionButton(DialogAction.POSITIVE).callOnClick()
+            dialog!!.getActionButton(WhichButton.POSITIVE).callOnClick()
         }
         val customStudy = col.decks.current()
         MatcherAssert.assertThat("Custom Study should be dynamic", customStudy.isDyn)
@@ -90,7 +95,7 @@ class CustomStudyDialogTest : RobolectricTest() {
             "\"timeToday\":[0,0]," +
             "\"usn\":-1" +
             "}"
-        MatcherAssert.assertThat(customStudy.toOrderedString(), Matchers.`is`(expected))
+        MatcherAssert.assertThat(customStudy.toOrderedString(), Matchers.equalTo(expected))
     }
 
     @Test
@@ -98,8 +103,8 @@ class CustomStudyDialogTest : RobolectricTest() {
     @KotlinCleanup("Use kotlin based Mockito extensions")
     fun increaseNewCardLimitRegressionTest() {
         // #8338 - Regression Test
-        val args = CustomStudyDialog(ParametersUtils.whatever(), ParametersUtils.whatever())
-            .withArguments(CustomStudyDialog.CONTEXT_MENU_STANDARD, 1)
+        val args = CustomStudyDialog(mock(), ParametersUtils.whatever())
+            .withArguments(CustomStudyDialog.ContextMenuConfiguration.STANDARD, 1)
             .arguments
 
         // we are using mock collection for the CustomStudyDialog but still other parts of the code
@@ -108,8 +113,8 @@ class CustomStudyDialogTest : RobolectricTest() {
         ensureCollectionLoadIsSynchronous()
         val mockCollection = Mockito.mock(Collection::class.java, Mockito.RETURNS_DEEP_STUBS)
         val mockSched = Mockito.mock(AbstractSched::class.java)
-        Mockito.`when`(mockCollection.sched).thenReturn(mockSched)
-        Mockito.`when`(mockSched.newCount()).thenReturn(0)
+        whenever(mockCollection.sched).thenReturn(mockSched)
+        whenever(mockSched.newCount()).thenReturn(0)
         val factory = CustomStudyDialogFactory({ mockCollection }, mMockListener)
         val scenario = FragmentScenario.launch(CustomStudyDialog::class.java, args, R.style.Theme_AppCompat, factory)
         scenario.moveToState(Lifecycle.State.STARTED)

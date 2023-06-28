@@ -21,25 +21,29 @@ package com.ichi2.anki
 
 import android.content.Context
 import android.content.Intent
-import android.net.ConnectivityManager
 import android.net.Uri
-import android.text.TextUtils
-import android.view.View
 import android.webkit.JavascriptInterface
-import android.widget.TextView
 import com.github.zafarkhaja.semver.Version
 import com.google.android.material.snackbar.Snackbar
 import com.ichi2.anim.ActivityTransitionAnimation
-import com.ichi2.anki.UIUtils.showThemedToast
+import com.ichi2.anki.snackbar.setMaxLines
+import com.ichi2.anki.snackbar.showSnackbar
+import com.ichi2.libanki.Card
+import com.ichi2.libanki.CardId
 import com.ichi2.libanki.Consts.CARD_QUEUE
 import com.ichi2.libanki.Consts.CARD_TYPE
 import com.ichi2.libanki.Decks
-import com.ichi2.utils.JSONException
-import com.ichi2.utils.JSONObject
+import com.ichi2.libanki.SortOrder
+import com.ichi2.utils.NetworkUtils
+import kotlinx.coroutines.runBlocking
+import org.json.JSONException
+import org.json.JSONObject
 import timber.log.Timber
-import java.util.*
 
 open class AnkiDroidJsAPI(private val activity: AbstractFlashcardViewer) {
+    private val currentCard: Card
+        get() = activity.currentCard!!
+
     /**
      Javascript Interface class for calling Java function from AnkiDroid WebView
      see card.js for available functions
@@ -75,7 +79,7 @@ open class AnkiDroidJsAPI(private val activity: AbstractFlashcardViewer) {
      * @param apiName
      * @param apiErrorCode
      */
-    protected fun isInit(apiName: String, apiErrorCode: Int): Boolean {
+    fun isInit(apiName: String, apiErrorCode: Int): Boolean {
         if (isAnkiApiNull(apiName)) {
             showDeveloperContact(AnkiDroidJsAPIConstants.ankiJsErrorCodeDefault)
             return false
@@ -97,20 +101,14 @@ open class AnkiDroidJsAPI(private val activity: AbstractFlashcardViewer) {
      */
     fun showDeveloperContact(errorCode: Int) {
         val errorMsg: String = context.getString(R.string.anki_js_error_code, errorCode)
-        val parentLayout: View = activity.findViewById(android.R.id.content)
         val snackbarMsg: String = context.getString(R.string.api_version_developer_contact, cardSuppliedDeveloperContact, errorMsg)
-        val snackbar: Snackbar? = UIUtils.showSnackbar(
-            activity,
-            snackbarMsg,
-            false,
-            R.string.reviewer_invalid_api_version_visit_documentation,
-            { activity.openUrl(Uri.parse("https://github.com/ankidroid/Anki-Android/wiki")) },
-            parentLayout,
-            null
-        )
-        val snackbarTextView = snackbar!!.view.findViewById<TextView>(com.google.android.material.R.id.snackbar_text)
-        snackbarTextView.maxLines = 3
-        snackbar.show()
+
+        activity.showSnackbar(snackbarMsg, Snackbar.LENGTH_INDEFINITE) {
+            setMaxLines(3)
+            setAction(R.string.reviewer_invalid_api_version_visit_documentation) {
+                activity.openUrl(Uri.parse("https://github.com/ankidroid/Anki-Android/wiki"))
+            }
+        }
     }
 
     /**
@@ -118,7 +116,7 @@ open class AnkiDroidJsAPI(private val activity: AbstractFlashcardViewer) {
      */
     private fun requireApiVersion(apiVer: String, apiDevContact: String): Boolean {
         try {
-            if (TextUtils.isEmpty(apiDevContact)) {
+            if (apiDevContact.isEmpty()) {
                 return false
             }
             val versionCurrent = Version.valueOf(AnkiDroidJsAPIConstants.sCurrentJsApiVersion)
@@ -134,11 +132,15 @@ open class AnkiDroidJsAPI(private val activity: AbstractFlashcardViewer) {
                     true
                 }
                 versionSupplied.lessThan(versionCurrent) -> {
-                    showThemedToast(context, context.getString(R.string.update_js_api_version, cardSuppliedDeveloperContact), false)
+                    activity.runOnUiThread {
+                        activity.showSnackbar(context.getString(R.string.update_js_api_version, cardSuppliedDeveloperContact))
+                    }
                     versionSupplied.greaterThanOrEqualTo(Version.valueOf(AnkiDroidJsAPIConstants.sMinimumJsApiVersion))
                 }
                 else -> {
-                    showThemedToast(context, context.getString(R.string.valid_js_api_version, cardSuppliedDeveloperContact), false)
+                    activity.runOnUiThread {
+                        activity.showSnackbar(context.getString(R.string.valid_js_api_version, cardSuppliedDeveloperContact))
+                    }
                     false
                 }
             }
@@ -155,12 +157,12 @@ open class AnkiDroidJsAPI(private val activity: AbstractFlashcardViewer) {
         }
     }
 
-    private fun getJsApiListMap(): HashMap<String, Boolean>? {
+    protected fun getJsApiListMap(): HashMap<String, Boolean>? {
         return mJsApiListMap
     }
 
     @JavascriptInterface
-    fun init(jsonData: String?): String {
+    fun init(jsonData: String): String {
         val data: JSONObject
         var apiStatusJson = ""
         try {
@@ -170,10 +172,12 @@ open class AnkiDroidJsAPI(private val activity: AbstractFlashcardViewer) {
             if (requireApiVersion(cardSuppliedApiVersion, cardSuppliedDeveloperContact)) {
                 enableJsApi()
             }
-            apiStatusJson = JSONObject.fromMap(mJsApiListMap).toString()
+            apiStatusJson = JSONObject(mJsApiListMap as Map<String, Boolean>).toString()
         } catch (j: JSONException) {
             Timber.w(j)
-            showThemedToast(context, context.getString(R.string.invalid_json_data, j.localizedMessage), false)
+            activity.runOnUiThread {
+                activity.showSnackbar(context.getString(R.string.invalid_json_data, j.localizedMessage))
+            }
         }
         return apiStatusJson
     }
@@ -204,111 +208,111 @@ open class AnkiDroidJsAPI(private val activity: AbstractFlashcardViewer) {
 
     @JavascriptInterface
     fun ankiGetCardMark(): Boolean {
-        return activity.currentCard.note().hasTag("marked")
+        return currentCard.note().hasTag("marked")
     }
 
     @JavascriptInterface
     fun ankiGetCardFlag(): Int {
-        return activity.currentCard.userFlag()
+        return currentCard.userFlag()
     }
 
     // behavior change ankiGetNextTime1...4
     @JavascriptInterface
     open fun ankiGetNextTime1(): String {
-        return activity.mEaseButton1.nextTime
+        return activity.easeButton1!!.nextTime
     }
 
     @JavascriptInterface
     open fun ankiGetNextTime2(): String {
-        return activity.mEaseButton2.nextTime
+        return activity.easeButton2!!.nextTime
     }
 
     @JavascriptInterface
     open fun ankiGetNextTime3(): String {
-        return activity.mEaseButton3.nextTime
+        return activity.easeButton3!!.nextTime
     }
 
     @JavascriptInterface
     open fun ankiGetNextTime4(): String {
-        return activity.mEaseButton4.nextTime
+        return activity.easeButton4!!.nextTime
     }
 
     @JavascriptInterface
     fun ankiGetCardReps(): Int {
-        return activity.currentCard.reps
+        return currentCard.reps
     }
 
     @JavascriptInterface
     fun ankiGetCardInterval(): Int {
-        return activity.currentCard.ivl
+        return currentCard.ivl
     }
 
     /** Returns the ease as an int (percentage * 10). Default: 2500 (250%). Minimum: 1300 (130%)  */
     @JavascriptInterface
     fun ankiGetCardFactor(): Int {
-        return activity.currentCard.factor
+        return currentCard.factor
     }
 
     /** Returns the last modified time as a Unix timestamp in seconds. Example: 1477384099  */
     @JavascriptInterface
     fun ankiGetCardMod(): Long {
-        return activity.currentCard.mod
+        return currentCard.mod
     }
 
     /** Returns the ID of the card. Example: 1477380543053  */
     @JavascriptInterface
     fun ankiGetCardId(): Long {
-        return activity.currentCard.id
+        return currentCard.id
     }
 
     /** Returns the ID of the note which generated the card. Example: 1590418157630  */
     @JavascriptInterface
     fun ankiGetCardNid(): Long {
-        return activity.currentCard.nid
+        return currentCard.nid
     }
 
     @JavascriptInterface
     @CARD_TYPE
     fun ankiGetCardType(): Int {
-        return activity.currentCard.type
+        return currentCard.type
     }
 
     /** Returns the ID of the deck which contains the card. Example: 1595967594978  */
     @JavascriptInterface
     fun ankiGetCardDid(): Long {
-        return activity.currentCard.did
+        return currentCard.did
     }
 
     @JavascriptInterface
     fun ankiGetCardLeft(): Int {
-        return activity.currentCard.left
+        return currentCard.left
     }
 
     /** Returns the ID of the home deck for the card if it is filtered, or 0 if not filtered. Example: 1595967594978  */
     @JavascriptInterface
     fun ankiGetCardODid(): Long {
-        return activity.currentCard.oDid
+        return currentCard.oDid
     }
 
     @JavascriptInterface
     fun ankiGetCardODue(): Long {
-        return activity.currentCard.oDue
+        return currentCard.oDue
     }
 
     @JavascriptInterface
     @CARD_QUEUE
     fun ankiGetCardQueue(): Int {
-        return activity.currentCard.queue
+        return currentCard.queue
     }
 
     @JavascriptInterface
     fun ankiGetCardLapses(): Int {
-        return activity.currentCard.lapses
+        return currentCard.lapses
     }
 
     @JavascriptInterface
     fun ankiGetCardDue(): Long {
-        return activity.currentCard.due
+        return currentCard.due
     }
 
     @JavascriptInterface
@@ -318,7 +322,7 @@ open class AnkiDroidJsAPI(private val activity: AbstractFlashcardViewer) {
 
     @JavascriptInterface
     fun ankiIsTopbarShown(): Boolean {
-        return activity.mPrefShowTopbar
+        return activity.prefShowTopbar
     }
 
     @JavascriptInterface
@@ -333,7 +337,7 @@ open class AnkiDroidJsAPI(private val activity: AbstractFlashcardViewer) {
 
     @JavascriptInterface
     fun ankiGetDeckName(): String {
-        return Decks.basename(activity.col.decks.get(activity.currentCard.did).getString("name"))
+        return Decks.basename(activity.col.decks.get(currentCard.did).getString("name"))
     }
 
     @JavascriptInterface
@@ -380,22 +384,22 @@ open class AnkiDroidJsAPI(private val activity: AbstractFlashcardViewer) {
     @JavascriptInterface
     fun ankiSearchCard(query: String?) {
         val intent = Intent(context, CardBrowser::class.java)
-        val currentCardId: Long = activity.currentCard.id
+        val currentCardId: CardId = currentCard.id
         intent.putExtra("currentCard", currentCardId)
         intent.putExtra("search_query", query)
-        activity.startActivityForResultWithAnimation(intent, NavigationDrawerActivity.REQUEST_BROWSE_CARDS, ActivityTransitionAnimation.Direction.START)
+        activity.startActivityWithAnimation(intent, ActivityTransitionAnimation.Direction.START)
     }
 
     @JavascriptInterface
     fun ankiIsActiveNetworkMetered(): Boolean {
-        return try {
-            val cm = AnkiDroidApp.getInstance().applicationContext
-                .getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-            cm.isActiveNetworkMetered
-        } catch (e: Exception) {
-            Timber.w(e, "Exception obtaining metered connection - assuming metered connection")
-            true
-        }
+        return NetworkUtils.isActiveNetworkMetered()
+    }
+
+    // Know if {{tts}} is supported - issue #10443
+    // Return false for now
+    @JavascriptInterface
+    fun ankiTtsFieldModifierIsAvailable(): Boolean {
+        return false
     }
 
     @JavascriptInterface
@@ -409,7 +413,7 @@ open class AnkiDroidJsAPI(private val activity: AbstractFlashcardViewer) {
     }
 
     @JavascriptInterface
-    fun ankiTtsSetLanguage(loc: String?): Int {
+    fun ankiTtsSetLanguage(loc: String): Int {
         return mTalker.setLanguage(loc)
     }
 
@@ -445,11 +449,65 @@ open class AnkiDroidJsAPI(private val activity: AbstractFlashcardViewer) {
 
     @JavascriptInterface
     fun ankiEnableHorizontalScrollbar(scroll: Boolean) {
-        activity.webView.isHorizontalScrollBarEnabled = scroll
+        activity.webView!!.isHorizontalScrollBarEnabled = scroll
     }
 
     @JavascriptInterface
     fun ankiEnableVerticalScrollbar(scroll: Boolean) {
-        activity.webView.isVerticalScrollBarEnabled = scroll
+        activity.webView!!.isVerticalScrollBarEnabled = scroll
+    }
+
+    @JavascriptInterface
+    fun ankiSearchCardWithCallback(query: String) {
+        val cards = try {
+            runBlocking {
+                searchForCards(query, SortOrder.UseCollectionOrdering(), true)
+            }
+        } catch (exc: Exception) {
+            activity.webView!!.evaluateJavascript(
+                "console.log('${context.getString(R.string.search_card_js_api_no_results)}')",
+                null
+            )
+            return
+        }
+        val searchResult: MutableList<String> = ArrayList()
+        for (s in cards) {
+            val jsonObject = JSONObject()
+            val fieldsData = s.card.note().fields
+            val fieldsName = s.card.model().fieldsNames
+
+            val noteId = s.card.note().id
+            val cardId = s.card.id
+            jsonObject.put("cardId", cardId)
+            jsonObject.put("noteId", noteId)
+
+            val jsonFieldObject = JSONObject()
+            fieldsName.zip(fieldsData).forEach { pair ->
+                jsonFieldObject.put(pair.component1(), pair.component2())
+            }
+            jsonObject.put("fieldsData", jsonFieldObject)
+
+            searchResult.add(jsonObject.toString())
+        }
+
+        // quote result to prevent JSON injection attack
+        val jsonEncodedString = org.json.JSONObject.quote(searchResult.toString())
+        activity.runOnUiThread {
+            activity.webView!!.evaluateJavascript("ankiSearchCard($jsonEncodedString)", null)
+        }
+    }
+
+    @JavascriptInterface
+    open fun ankiSetCardDue(days: Int): Boolean {
+        // the function is overridden in Reviewer.kt
+        // it may be called in previewer so just return true value here
+        return true
+    }
+
+    @JavascriptInterface
+    open fun ankiResetProgress(): Boolean {
+        // the function is overridden in Reviewer.kt
+        // it may be called in previewer so just return true value here
+        return true
     }
 }

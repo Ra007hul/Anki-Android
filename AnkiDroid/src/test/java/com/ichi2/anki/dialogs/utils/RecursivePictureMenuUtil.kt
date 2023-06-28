@@ -18,16 +18,15 @@ package com.ichi2.anki.dialogs.utils
 import androidx.annotation.CheckResult
 import androidx.recyclerview.widget.RecyclerView
 import com.afollestad.materialdialogs.MaterialDialog
+import com.afollestad.materialdialogs.list.getRecyclerView
 import com.ichi2.anki.dialogs.RecursivePictureMenu
-import java.util.*
 
 class RecursivePictureMenuUtil {
     companion object {
-        @JvmStatic
         @CheckResult
         fun getRecyclerViewFor(menu: RecursivePictureMenu): RecyclerView {
-            val dialog = Objects.requireNonNull(menu.dialog) as MaterialDialog
-            return dialog.recyclerView
+            val dialog = menu.dialog as MaterialDialog
+            return dialog.getRecyclerView()
         }
     }
 }

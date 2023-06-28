@@ -21,10 +21,10 @@ import android.view.Gravity
 import android.widget.LinearLayout
 import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
-import com.afollestad.materialdialogs.DialogAction
-import com.afollestad.materialdialogs.MaterialDialog
+import androidx.appcompat.app.AlertDialog
 import com.ichi2.anki.R
 import com.ichi2.ui.FixedTextView
+import com.ichi2.utils.*
 import java.util.function.Consumer
 
 class WhiteBoardWidthDialog(private val context: Context, private var wbStrokeWidth: Int) {
@@ -65,17 +65,14 @@ class WhiteBoardWidthDialog(private val context: Context, private var wbStrokeWi
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
         )
-        MaterialDialog.Builder(context)
-            .title(R.string.whiteboard_stroke_width)
-            .positiveText(R.string.save)
-            .negativeText(R.string.dialog_cancel)
-            .customView(layout, true)
-            .onPositive { _: MaterialDialog?, _: DialogAction? ->
-                if (onStrokeWidthChanged != null) {
-                    onStrokeWidthChanged!!.accept(wbStrokeWidth)
-                }
+        AlertDialog.Builder(context).show {
+            title(R.string.whiteboard_stroke_width)
+            positiveButton(R.string.save) {
+                onStrokeWidthChanged?.accept(wbStrokeWidth)
             }
-            .show()
+            negativeButton(R.string.dialog_cancel)
+            setView(layout)
+        }
     }
 
     fun onStrokeWidthChanged(c: Consumer<Int>?) {

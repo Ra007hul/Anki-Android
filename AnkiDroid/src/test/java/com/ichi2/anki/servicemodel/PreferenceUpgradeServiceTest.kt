@@ -21,26 +21,31 @@ import androidx.core.content.edit
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.ichi2.anki.AnkiDroidApp
 import com.ichi2.anki.RobolectricTest
+import com.ichi2.anki.noteeditor.CustomToolbarButton
 import com.ichi2.anki.servicelayer.PreferenceUpgradeService
 import com.ichi2.anki.servicelayer.PreferenceUpgradeService.PreferenceUpgrade
-import com.ichi2.anki.web.CustomSyncServer
-import com.ichi2.testutils.EmptyApplication
+import com.ichi2.anki.servicelayer.RemovedPreferences
+import com.ichi2.libanki.Consts
+import com.ichi2.utils.HashUtil
+import com.ichi2.utils.LanguageUtil
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.lessThan
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.annotation.Config
+import java.util.*
+import kotlin.test.assertNotNull
 
 @RunWith(AndroidJUnit4::class)
-@Config(application = EmptyApplication::class) // no point in Application init if we don't use it
 class PreferenceUpgradeServiceTest : RobolectricTest() {
 
     private lateinit var mPrefs: SharedPreferences
 
     @Before
-    fun before() {
+    override fun setUp() {
+        super.setUp()
         mPrefs = AnkiDroidApp.getSharedPrefs(targetContext)
     }
 
@@ -104,11 +109,103 @@ class PreferenceUpgradeServiceTest : RobolectricTest() {
     }
 
     @Test
-    fun check_custom_media_sync_url() {
-        var syncURL = "https://msync.ankiweb.net"
-        mPrefs.edit { putString(CustomSyncServer.PREFERENCE_CUSTOM_MEDIA_SYNC_URL, syncURL) }
-        assertThat("Preference of custom media sync url is set to ($syncURL).", CustomSyncServer.getMediaSyncUrl(mPrefs).equals(syncURL))
-        PreferenceUpgrade.RemoveLegacyMediaSyncUrl().performUpgrade(mPrefs)
-        assertThat("Preference of custom media sync url is removed.", CustomSyncServer.getMediaSyncUrl(mPrefs).equals(null))
+    fun note_editor_toolbar_button_text() {
+        // add two example toolbar buttons
+        val buttons = HashUtil.HashSetInit<String>(2)
+
+        var values = arrayOf(0, "<h1>", "</h1>")
+        buttons.add(values.joinToString(Consts.FIELD_SEPARATOR))
+
+        values = arrayOf(1, "<p>", "</p>")
+        buttons.add(values.joinToString(Consts.FIELD_SEPARATOR))
+
+        mPrefs.edit {
+            putStringSet("note_editor_custom_buttons", buttons)
+        }
+
+        // now update it and check it
+        PreferenceUpgrade.UpdateNoteEditorToolbarPrefs().performUpgrade(mPrefs)
+
+        val set = mPrefs.getStringSet("note_editor_custom_buttons", HashUtil.HashSetInit<String>(0)) as Set<String?>
+        val toolbarButtons = CustomToolbarButton.fromStringSet(set)
+
+        assertEquals("Set size", 2, set.size)
+        assertEquals("Toolbar buttons size", 2, toolbarButtons.size)
+
+        assertEquals("Button text prefs", "1", toolbarButtons[0].buttonText)
+        assertEquals("Button text prefs", "2", toolbarButtons[1].buttonText)
+    }
+
+    @Test
+    fun day_and_night_themes() {
+        // Plain and Dark
+        mPrefs.edit {
+            putString("dayTheme", "1")
+            putString("nightTheme", "1")
+            putBoolean("invertedColors", true)
+        }
+        PreferenceUpgrade.UpgradeDayAndNightThemes().performUpgrade(mPrefs)
+
+        assertThat(mPrefs.getString("dayTheme", "0"), equalTo("2"))
+        assertThat(mPrefs.getString("nightTheme", "0"), equalTo("4"))
+        assertThat(mPrefs.contains("invertedColors"), equalTo(false))
+
+        // Light and Black
+        mPrefs.edit {
+            putString("dayTheme", "0")
+            putString("nightTheme", "0")
+        }
+        PreferenceUpgrade.UpgradeDayAndNightThemes().performUpgrade(mPrefs)
+
+        assertThat(mPrefs.getString("dayTheme", "1"), equalTo("1"))
+        assertThat(mPrefs.getString("nightTheme", "1"), equalTo("3"))
+        assertThat(mPrefs.contains("invertedColors"), equalTo(false))
+    }
+
+    @Test
+    fun `Fetch media pref's values are converted to 'always' if enabled and 'never' if disabled`() {
+        // enabled -> always
+        mPrefs.edit { putBoolean(RemovedPreferences.SYNC_FETCHES_MEDIA, true) }
+        PreferenceUpgrade.UpgradeFetchMedia().performUpgrade(mPrefs)
+        assertThat(mPrefs.getString("syncFetchMedia", null), equalTo("always"))
+
+        // disabled -> never
+        mPrefs.edit { putBoolean(RemovedPreferences.SYNC_FETCHES_MEDIA, false) }
+        PreferenceUpgrade.UpgradeFetchMedia().performUpgrade(mPrefs)
+        assertThat(mPrefs.getString("syncFetchMedia", null), equalTo("never"))
+    }
+
+    // ############################
+    // ##### UpgradeAppLocale #####
+    // ############################
+    @Test
+    fun `Language preference value is updated to use language tags`() {
+        val upgradeAppLocale = PreferenceUpgrade.UpgradeAppLocale()
+        for (languageTag in LanguageUtil.APP_LANGUAGES.values) {
+            mPrefs.edit {
+                putString("language", Locale.forLanguageTag(languageTag).toString())
+            }
+            upgradeAppLocale.performUpgrade(mPrefs)
+            val correctLanguage = mPrefs.getString("language", null)
+            assertThat(languageTag, equalTo(correctLanguage))
+            assertThat(LanguageUtil.getCurrentLocaleTag(), equalTo(languageTag))
+        }
+    }
+
+    @Test
+    fun `Language preference value is set to system default correctly if it hasn't been set`() {
+        PreferenceUpgrade.UpgradeAppLocale().performUpgrade(mPrefs)
+
+        assertNotNull(mPrefs.getString("language", null))
+        assertThat(LanguageUtil.getCurrentLocaleTag(), equalTo(""))
+    }
+
+    @Test
+    fun `Language preference value is set to system default correctly`() {
+        mPrefs.edit { putString("language", "") }
+        PreferenceUpgrade.UpgradeAppLocale().performUpgrade(mPrefs)
+
+        assertThat(mPrefs.getString("language", null), equalTo(""))
+        assertThat(LanguageUtil.getCurrentLocaleTag(), equalTo(""))
     }
 }

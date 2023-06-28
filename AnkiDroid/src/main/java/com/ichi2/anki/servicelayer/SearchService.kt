@@ -16,8 +16,8 @@
 
 package com.ichi2.anki.servicelayer
 
-import com.ichi2.anki.AnkiDroidApp
 import com.ichi2.anki.CardBrowser
+import com.ichi2.anki.CrashReportService
 import com.ichi2.libanki.exception.InvalidSearchException
 import net.ankiweb.rsdroid.RustCleanup
 
@@ -30,6 +30,7 @@ class SearchService {
 
         @get:JvmName("hasResult")
         val hasResult = result != null
+
         @get:JvmName("hasError")
         val hasError = error != null
         fun size() = result?.size ?: 0
@@ -37,16 +38,16 @@ class SearchService {
         companion object {
             @RustCleanup("error checking")
             @RustCleanup("i18n - we use an error message from the Rust")
-            @JvmStatic fun error(e: Exception): SearchCardsResult {
+            fun error(e: Exception): SearchCardsResult {
                 if (e !is InvalidSearchException) {
                     // temporary check to see we haven't missed a backend exception
-                    AnkiDroidApp.sendExceptionReport(e, "unexpected error type")
+                    CrashReportService.sendExceptionReport(e, "unexpected error type")
                 }
                 val error = e.localizedMessage?.replace("net.ankiweb.rsdroid.exceptions.BackendInvalidInputException: ", "")
                 return SearchCardsResult(null, error)
             }
-            @JvmStatic fun success(result: List<CardBrowser.CardCache>) = SearchCardsResult(result, null)
-            @JvmStatic fun invalidResult() = SearchCardsResult(null, null)
+            fun success(result: List<CardBrowser.CardCache>) = SearchCardsResult(result, null)
+            fun invalidResult() = SearchCardsResult(null, null)
         }
     }
 }

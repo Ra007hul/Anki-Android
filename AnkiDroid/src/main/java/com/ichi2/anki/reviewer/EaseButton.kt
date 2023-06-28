@@ -67,8 +67,8 @@ class EaseButton(private val ease: Int, private val layout: LinearLayout, privat
     }
 
     fun setListeners(easeHandler: AbstractFlashcardViewer.SelectEaseHandler) {
-        layout.setOnClickListener { view: View? -> easeHandler.onClick(view) }
-        layout.setOnTouchListener { view: View?, event: MotionEvent? -> easeHandler.onTouch(view, event) }
+        layout.setOnClickListener { view: View -> easeHandler.onClick(view) }
+        layout.setOnTouchListener { view: View, event: MotionEvent -> easeHandler.onTouch(view, event) }
     }
 
     fun detachFromParent() {

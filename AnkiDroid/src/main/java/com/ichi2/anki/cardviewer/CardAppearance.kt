@@ -19,48 +19,41 @@ import android.content.SharedPreferences
 import androidx.annotation.CheckResult
 import com.ichi2.anki.reviewer.ReviewerCustomFonts
 import com.ichi2.libanki.Card
-import com.ichi2.themes.Themes
+import com.ichi2.themes.Theme
+import com.ichi2.themes.Themes.currentTheme
 
 /** Responsible for calculating CSS and element styles and modifying content on a flashcard  */
-class CardAppearance(private val customFonts: ReviewerCustomFonts, private val cardZoom: Int, private val imageZoom: Int, val isNightMode: Boolean, private val centerVertically: Boolean) {
-    /**
-     * hasUserDefinedNightMode finds out if the user has included class .night_mode in card's stylesheet
-     */
-    fun hasUserDefinedNightMode(card: Card): Boolean {
-        // TODO: find more robust solution that won't match unrelated classes like "night_mode_old"
-        return card.css().contains(".night_mode") || card.css().contains(".nightMode")
-    }
-
+class CardAppearance(private val customFonts: ReviewerCustomFonts, private val cardZoom: Int, private val imageZoom: Int, private val centerVertically: Boolean) {
     /** Below could be in a better abstraction.  */
     fun appendCssStyle(style: StringBuilder) {
         // Zoom cards
         if (cardZoom != 100) {
-            style.append(String.format("body { zoom: %s }\n", cardZoom / 100.0))
+            style.append("body { zoom: ${cardZoom / 100.0} }\n")
         }
 
         // Zoom images
         if (imageZoom != 100) {
-            style.append(String.format("img { zoom: %s }\n", imageZoom / 100.0))
+            style.append("img { zoom: ${imageZoom / 100.0} }\n")
         }
     }
 
     @CheckResult
-    fun getCssClasses(currentTheme: Int): String {
+    fun getCssClasses(): String {
         val cardClass = StringBuilder()
         if (centerVertically) {
             cardClass.append(" vertically_centered")
         }
-        if (isNightMode) {
+        if (currentTheme.isNightMode) {
             // Enable the night-mode class
             cardClass.append(" night_mode nightMode")
 
             // Emit the dark_mode selector to allow dark theme overrides
-            if (currentTheme == Themes.THEME_NIGHT_DARK) {
+            if (currentTheme == Theme.DARK) {
                 cardClass.append(" ankidroid_dark_mode")
             }
         } else {
             // Emit the plain_mode selector to allow plain theme overrides
-            if (currentTheme == Themes.THEME_DAY_PLAIN) {
+            if (currentTheme == Theme.PLAIN) {
                 cardClass.append(" ankidroid_plain_mode")
             }
         }
@@ -75,37 +68,31 @@ class CardAppearance(private val customFonts: ReviewerCustomFonts, private val c
             return style.toString()
         }
 
-    fun getCardClass(oneBasedCardOrdinal: Int, currentTheme: Int): String {
-        var cardClass = "card card$oneBasedCardOrdinal"
-        cardClass += getCssClasses(currentTheme)
-        return cardClass
+    fun getCardClass(oneBasedCardOrdinal: Int): String {
+        return "card card$oneBasedCardOrdinal" + getCssClasses()
     }
 
     companion object {
-        /** Constant for class attribute signaling answer  */
-        const val ANSWER_CLASS = "\"answer\""
+        private val nightModeClassRegex = Regex("\\.night(?:_m|M)ode\\b")
 
-        /** Constant for class attribute signaling question  */
-        const val QUESTION_CLASS = "\"question\""
-        @JvmStatic
         fun create(customFonts: ReviewerCustomFonts, preferences: SharedPreferences): CardAppearance {
             val cardZoom = preferences.getInt("cardZoom", 100)
             val imageZoom = preferences.getInt("imageZoom", 100)
-            val nightMode = isInNightMode(preferences)
             val centerVertically = preferences.getBoolean("centerVertically", false)
-            return CardAppearance(customFonts, cardZoom, imageZoom, nightMode, centerVertically)
+            return CardAppearance(customFonts, cardZoom, imageZoom, centerVertically)
         }
 
-        @JvmStatic
-        fun isInNightMode(sharedPrefs: SharedPreferences): Boolean {
-            return sharedPrefs.getBoolean("invertedColors", false)
-        }
-
-        @JvmStatic
         fun fixBoldStyle(content: String): String {
             // In order to display the bold style correctly, we have to change
             // font-weight to 700
             return content.replace("font-weight:600;", "font-weight:700;")
+        }
+
+        /**
+         * hasUserDefinedNightMode finds out if the user has included class .night_mode in card's stylesheet
+         */
+        fun hasUserDefinedNightMode(card: Card): Boolean {
+            return card.css().contains(nightModeClassRegex)
         }
     }
 }

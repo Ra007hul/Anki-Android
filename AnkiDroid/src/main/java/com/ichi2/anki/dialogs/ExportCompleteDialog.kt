@@ -16,57 +16,51 @@
 
 package com.ichi2.anki.dialogs
 
+import android.annotation.SuppressLint
 import android.os.Bundle
-import com.afollestad.materialdialogs.DialogAction
+import androidx.core.os.bundleOf
 import com.afollestad.materialdialogs.MaterialDialog
+import com.afollestad.materialdialogs.list.listItems
 import com.ichi2.anki.R
-import java.io.File
 
 class ExportCompleteDialog(private val listener: ExportCompleteDialogListener) : AsyncDialogFragment() {
     interface ExportCompleteDialogListener {
         fun dismissAllDialogFragments()
-        fun emailFile(path: String?)
-        fun saveExportFile(exportPath: String?)
+        fun shareFile(path: String) // path of the file to be shared
+        fun saveExportFile(exportPath: String)
     }
+    private val exportPath
+        get() = requireArguments().getString("exportPath")!!
 
-    fun withArguments(exportPath: String?): ExportCompleteDialog {
-        var args = this.arguments
-        if (args == null) {
-            args = Bundle()
-        }
-        args.putString("exportPath", exportPath)
-        this.arguments = args
+    fun withArguments(exportPath: String): ExportCompleteDialog {
+        arguments = (arguments ?: bundleOf(Pair("exportPath", exportPath)))
         return this
     }
 
+    @SuppressLint("CheckResult")
     override fun onCreateDialog(savedInstanceState: Bundle?): MaterialDialog {
         super.onCreate(savedInstanceState)
-        val exportPath = requireArguments().getString("exportPath")
-        val dialogBuilder = MaterialDialog.Builder(requireActivity())
-            .title(getNotificationTitle())
-            .content(getNotificationMessage())
-            .iconAttr(R.attr.dialogSendIcon)
-            .positiveText(R.string.export_send_button)
-            .negativeText(R.string.export_save_button)
-            .onPositive { _: MaterialDialog?, _: DialogAction? ->
+        val options = listOf(
+            getString(R.string.export_select_save_app),
+            getString(R.string.export_select_share_app)
+        )
+        return MaterialDialog(requireActivity()).show {
+            title(text = notificationTitle)
+            message(text = notificationMessage)
+            listItems(items = options, waitForPositiveButton = false) { _, index, _ ->
                 listener.dismissAllDialogFragments()
-                listener.emailFile(exportPath)
+                when (index) {
+                    0 -> listener.saveExportFile(exportPath)
+                    1 -> listener.shareFile(exportPath)
+                }
             }
-            .onNegative { _: MaterialDialog?, _: DialogAction? ->
-                listener.dismissAllDialogFragments()
-                listener.saveExportFile(exportPath)
-            }
-            .neutralText(R.string.dialog_cancel)
-            .onNeutral { _: MaterialDialog?, _: DialogAction? -> listener.dismissAllDialogFragments() }
-        return dialogBuilder.show()
+            negativeButton(R.string.dialog_cancel) { listener.dismissAllDialogFragments() }
+        }
     }
 
-    override fun getNotificationTitle(): String {
-        return res().getString(R.string.export_successful_title)
-    }
+    override val notificationTitle: String
+        get() = res().getString(R.string.export_success_title)
 
-    override fun getNotificationMessage(): String {
-        val exportPath = File(requireArguments().getString("exportPath")!!)
-        return res().getString(R.string.export_successful, exportPath.name)
-    }
+    override val notificationMessage: String
+        get() = res().getString(R.string.export_success_message)
 }

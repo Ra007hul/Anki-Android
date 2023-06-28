@@ -19,7 +19,6 @@ import android.app.Activity
 import android.app.Dialog
 import android.content.Context
 import android.os.Bundle
-import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -31,13 +30,14 @@ import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.afollestad.materialdialogs.DialogAction
 import com.afollestad.materialdialogs.MaterialDialog
+import com.afollestad.materialdialogs.customview.customView
 import com.ichi2.anki.R
 import com.ichi2.anki.analytics.AnalyticsDialogFragment
 import com.ichi2.anki.dialogs.LocaleSelectionDialog.LocaleListAdapter.TextViewHolder
 import com.ichi2.ui.RecyclerSingleTouchAdapter
 import com.ichi2.utils.DisplayUtils.resizeWhenSoftInputShown
+import com.ichi2.utils.TypedFilter
 import java.util.*
 
 /** Locale selection dialog. Note: this must be dismissed onDestroy if not called from an activity implementing LocaleSelectionDialogHandler  */
@@ -69,15 +69,18 @@ class LocaleSelectionDialog : AnalyticsDialogFragment() {
         val activity: Activity = requireActivity()
         val tagsDialogView = LayoutInflater.from(activity)
             .inflate(R.layout.locale_selection_dialog, activity.findViewById(R.id.root_layout), false)
-        val adapter = LocaleListAdapter(Locale.getAvailableLocales())
+        val adapter = LocaleListAdapter(Locale.getAvailableLocales() + IPALanguage)
         setupRecyclerView(activity, tagsDialogView, adapter)
         inflateMenu(tagsDialogView, adapter)
+
         // Only show a negative button, use the RecyclerView for positive actions
-        val builder = MaterialDialog.Builder(activity)
-            .negativeText(getString(R.string.dialog_cancel))
-            .customView(tagsDialogView, false)
-            .onNegative { _: MaterialDialog?, _: DialogAction? -> mDialogHandler!!.onLocaleSelectionCancelled() }
-        val dialog: Dialog = builder.build()
+        val dialog = MaterialDialog(activity).show {
+            customView(view = tagsDialogView, noVerticalPadding = true)
+            negativeButton(text = getString(R.string.dialog_cancel)) {
+                mDialogHandler!!.onLocaleSelectionCancelled()
+            }
+        }
+
         val window = dialog.window
         if (window != null) {
             resizeWhenSoftInputShown(window)
@@ -92,7 +95,9 @@ class LocaleSelectionDialog : AnalyticsDialogFragment() {
         recyclerView.layoutManager = layoutManager
         recyclerView.adapter = adapter
         recyclerView.addOnItemTouchListener(
-            RecyclerSingleTouchAdapter(activity) { _: View?, position: Int ->
+            RecyclerSingleTouchAdapter(
+                activity
+            ) { _, position ->
                 val l = adapter.getLocaleAtPosition(position)
                 mDialogHandler!!.onSelectedLocale(l)
             }
@@ -118,9 +123,9 @@ class LocaleSelectionDialog : AnalyticsDialogFragment() {
         })
     }
 
-    class LocaleListAdapter(locales: Array<Locale?>) : RecyclerView.Adapter<TextViewHolder>(), Filterable {
-        private val mCurrentlyVisibleLocales: MutableList<Locale>
-        private val mSelectableLocales: List<Locale> = Collections.unmodifiableList(ArrayList(mutableListOf(*locales)))
+    class LocaleListAdapter(locales: Array<Locale>) : RecyclerView.Adapter<TextViewHolder>(), Filterable {
+        private val mCurrentlyVisibleLocales: MutableList<Locale> = locales.toMutableList()
+        private val mSelectableLocales: List<Locale> = locales.toList()
 
         class TextViewHolder(private val textView: TextView) : RecyclerView.ViewHolder(textView) {
             fun setText(text: String) {
@@ -142,65 +147,49 @@ class LocaleSelectionDialog : AnalyticsDialogFragment() {
             return TextViewHolder(v)
         }
 
-        override fun onBindViewHolder(holder: TextViewHolder, position: Int) {
+        override fun onBindViewHolder(holder: TextViewHolder, position: Int) =
             holder.setLocale(mCurrentlyVisibleLocales[position])
-        }
 
-        override fun getItemCount(): Int {
-            return mCurrentlyVisibleLocales.size
-        }
+        override fun getItemCount(): Int = mCurrentlyVisibleLocales.size
 
-        fun getLocaleAtPosition(position: Int): Locale {
-            return mCurrentlyVisibleLocales[position]
-        }
+        fun getLocaleAtPosition(position: Int): Locale = mCurrentlyVisibleLocales[position]
 
         override fun getFilter(): Filter {
-            val selectableLocales = mSelectableLocales
-            val visibleLocales = mCurrentlyVisibleLocales
-            return object : Filter() {
-                override fun performFiltering(constraint: CharSequence): FilterResults {
-                    if (TextUtils.isEmpty(constraint)) {
-                        val filterResults = FilterResults()
-                        filterResults.values = selectableLocales
-                        return filterResults
-                    }
+            return object : TypedFilter<Locale>(mSelectableLocales) {
+                override fun filterResults(constraint: CharSequence, items: List<Locale>): List<Locale> {
                     val normalisedConstraint = constraint.toString().lowercase(Locale.getDefault())
-                    val locales = ArrayList<Locale>(selectableLocales.size)
-                    for (l in selectableLocales) {
-                        if (l.displayName.lowercase(Locale.getDefault()).contains(normalisedConstraint)) {
-                            locales.add(l)
-                        }
+                    return items.filter {
+                        it.displayName.lowercase(Locale.getDefault()).contains(normalisedConstraint)
                     }
-                    val filterResults = FilterResults()
-                    filterResults.values = locales
-                    return filterResults
                 }
-                @Suppress("UNCHECKED_CAST")
-                override fun publishResults(constraint: CharSequence, results: FilterResults) {
-                    visibleLocales.clear()
-                    val values = results.values as Collection<Locale>
-                    visibleLocales.addAll(values)
+
+                override fun publishResults(constraint: CharSequence?, results: List<Locale>) {
+                    mCurrentlyVisibleLocales.clear()
+                    mCurrentlyVisibleLocales.addAll(results)
                     notifyDataSetChanged()
                 }
             }
-        }
-
-        init {
-            mCurrentlyVisibleLocales = ArrayList(mutableListOf(*locales))
         }
     }
 
     companion object {
         /**
+         * Language identifier for International Phonetic Alphabet. This isn't available from [Locale.getAvailableLocales], but
+         * GBoard seems to understand this as a language code.
+         *
+         * See issue #13883
+         * See https://en.wikipedia.org/wiki/International_Phonetic_Alphabet#IETF_language_tags
+         */
+        private val IPALanguage = Locale.Builder().setLanguageTag("und-fonipa").build()
+
+        /**
          * @param handler Marker interface to enforce the convention the caller implementing LocaleSelectionDialogHandler
          */
-        @JvmStatic
         fun newInstance(handler: LocaleSelectionDialogHandler): LocaleSelectionDialog {
-            val t = LocaleSelectionDialog()
-            t.mDialogHandler = handler
-            val args = Bundle()
-            t.arguments = args
-            return t
+            return LocaleSelectionDialog().apply {
+                mDialogHandler = handler
+                arguments = Bundle()
+            }
         }
     }
 }

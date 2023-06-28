@@ -19,11 +19,17 @@ package com.ichi2.anki.cardviewer
 import android.content.Context
 import com.ichi2.anki.R
 import com.ichi2.anki.TtsParser
+import com.ichi2.anki.cardviewer.CardAppearance.Companion.hasUserDefinedNightMode
 import com.ichi2.libanki.*
+import com.ichi2.libanki.Sound.SingleSoundSide
+import com.ichi2.libanki.Sound.SingleSoundSide.ANSWER
+import com.ichi2.libanki.Sound.SingleSoundSide.QUESTION
 import com.ichi2.libanki.template.MathJax
 import com.ichi2.themes.HtmlColors
-import com.ichi2.utils.JSONObject
+import com.ichi2.themes.Themes.currentTheme
+import net.ankiweb.rsdroid.BackendFactory
 import net.ankiweb.rsdroid.RustCleanup
+import org.json.JSONObject
 import timber.log.Timber
 import java.util.regex.Pattern
 
@@ -40,8 +46,7 @@ class CardHtml(
     private val getAnswerContentWithoutFrontSide_slow: (() -> String),
     @RustCleanup("too many variables, combine once we move away from backend")
     private var questionSound: List<SoundOrVideoTag>? = null,
-    private var answerSound: List<SoundOrVideoTag>? = null,
-    private val usingBackend: Boolean = answerSound != null
+    private var answerSound: List<SoundOrVideoTag>? = null
 ) {
     fun getSoundTags(sideFor: Side): List<SoundOrVideoTag> {
         if (sideFor == this.side) {
@@ -109,11 +114,11 @@ class CardHtml(
 
     private fun getCardClass(requiresMathjax: Boolean): String {
         // CSS class for card-specific styling
-        var cardClass: String = context.cardAppearance.getCardClass(ord + 1, context.currentTheme)
-        if (requiresMathjax) {
-            cardClass += " mathjax-needs-to-render"
+        return if (requiresMathjax) {
+            context.cardAppearance.getCardClass(ord + 1) + " mathjax-needs-to-render"
+        } else {
+            context.cardAppearance.getCardClass(ord + 1)
         }
-        return cardClass
     }
 
     private fun getScripts(requiresMathjax: Boolean): String {
@@ -129,14 +134,15 @@ class CardHtml(
         fun createInstance(card: Card, reload: Boolean, side: Side, context: HtmlGenerator): CardHtml {
             val content = displayString(card, reload, side, context)
 
-            val nightModeInversion = context.cardAppearance.isNightMode && !context.cardAppearance.hasUserDefinedNightMode(card)
+            val nightModeInversion = currentTheme.isNightMode && !hasUserDefinedNightMode(card)
 
             val renderOutput = card.render_output()
             val questionAv = renderOutput.question_av_tags
             val answerAv = renderOutput.answer_av_tags
-
-            val questionSound = questionAv?.filterIsInstance(SoundOrVideoTag::class.java)
-            val answerSound = answerAv?.filterIsInstance(SoundOrVideoTag::class.java)
+            val questionSound: List<SoundOrVideoTag>? =
+                if (!BackendFactory.defaultLegacySchema) questionAv.filterIsInstance(SoundOrVideoTag::class.java) else null
+            val answerSound: List<SoundOrVideoTag>? =
+                if (!BackendFactory.defaultLegacySchema) answerAv.filterIsInstance(SoundOrVideoTag::class.java) else null
 
             // legacy (slow) function to return the answer without the front side
             fun getAnswerWithoutFrontSideLegacy(): String = removeFrontSideAudio(card, card.a())
@@ -159,25 +165,18 @@ class CardHtml(
             content = Media.escapeImages(content)
             content = context.filterTypeAnswer(content, side)
             Timber.v("question: '%s'", content)
-            return enrichWithQADiv(content, side)
+            return enrichWithQADiv(content)
         }
 
         /**
          * Adds a div html tag around the contents to have an indication, where answer/question is displayed
          *
          * @param content The content to surround with tags.
-         * @param side whether the class attribute is set to "answer" or "question".
          * @return The enriched content
          */
-        fun enrichWithQADiv(content: String?, side: Side): String {
+        fun enrichWithQADiv(content: String?): String {
             val sb = StringBuilder()
-            sb.append("<div class=")
-            if (side == Side.BACK) {
-                sb.append(CardAppearance.ANSWER_CLASS)
-            } else {
-                sb.append(CardAppearance.QUESTION_CLASS)
-            }
-            sb.append(" id=\"qa\">")
+            sb.append("""<div id="qa">""")
             sb.append(content)
             sb.append("</div>")
             return sb.toString()
@@ -203,7 +202,6 @@ class CardHtml(
          * @param answerContent     The content from which to remove front side audio.
          * @return The content stripped of audio due to {{FrontSide}} inclusion.
          */
-        @JvmStatic
         fun removeFrontSideAudio(card: Card, answerContent: String): String {
             val answerFormat = getAnswerFormat(card)
             var newAnswerContent = answerContent
@@ -218,15 +216,10 @@ class CardHtml(
             return newAnswerContent
         }
 
-        @JvmStatic
-        fun legacyGetTtsTags(card: Card, cardSide: Sound.SoundSide, context: Context): List<TTSTag>? {
-            val cardSideContent: String = when {
-                Sound.SoundSide.QUESTION == cardSide -> card.q(true)
-                Sound.SoundSide.ANSWER == cardSide -> card.pureAnswer
-                else -> {
-                    Timber.w("Unrecognised cardSide")
-                    return null
-                }
+        fun legacyGetTtsTags(card: Card, cardSide: SingleSoundSide, context: Context): List<TTSTag> {
+            val cardSideContent: String = when (cardSide) {
+                QUESTION -> card.q(true)
+                ANSWER -> card.pureAnswer
             }
             return TtsParser.getTextsToRead(cardSideContent, context.getString(R.string.reviewer_tts_cloze_spoken_replacement))
         }

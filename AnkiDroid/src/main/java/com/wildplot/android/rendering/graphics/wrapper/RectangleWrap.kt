@@ -19,16 +19,12 @@ package com.wildplot.android.rendering.graphics.wrapper
 import android.graphics.Rect
 
 class RectangleWrap(rect: Rect) {
-    @JvmField
     val x: Int
-    @JvmField
     val y: Int
-    @JvmField
     var width: Int
-    @JvmField
     var height: Int
 
-    constructor(width: Int, heigth: Int) : this(Rect(0, 0, width, heigth)) {}
+    constructor(width: Int, height: Int) : this(Rect(0, 0, width, height)) {}
 
     fun width(): Int {
         return width

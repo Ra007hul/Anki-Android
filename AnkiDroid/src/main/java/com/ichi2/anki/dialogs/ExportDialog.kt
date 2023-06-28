@@ -16,87 +16,85 @@
 
 package com.ichi2.anki.dialogs
 
+import android.annotation.SuppressLint
 import android.os.Bundle
-import com.afollestad.materialdialogs.DialogAction
+import anki.cards.cardIds
+import anki.import_export.ExportLimit
+import anki.import_export.exportLimit
+import anki.notes.noteIds
 import com.afollestad.materialdialogs.MaterialDialog
+import com.afollestad.materialdialogs.list.listItemsMultiChoice
 import com.ichi2.anki.R
 import com.ichi2.anki.analytics.AnalyticsDialogFragment
+import com.ichi2.anki.dialogs.ExportDialogParams.Companion.toExportDialogParams
+import com.ichi2.anki.export.ExportType
+import com.ichi2.anki.export.ExportType.*
+import com.ichi2.libanki.DeckId
 import com.ichi2.utils.BundleUtils.getNullableLong
 import com.ichi2.utils.contentNullable
 
 class ExportDialog(private val listener: ExportDialogListener) : AnalyticsDialogFragment() {
     interface ExportDialogListener {
-        fun exportApkg(path: String?, did: Long?, includeSched: Boolean, includeMedia: Boolean)
+        fun exportColAsApkgOrColpkg(path: String?, includeSched: Boolean, includeMedia: Boolean)
+        fun exportDeckAsApkg(path: String?, did: DeckId, includeSched: Boolean, includeMedia: Boolean)
+        fun exportSelectedAsApkg(path: String?, limit: ExportLimit, includeSched: Boolean, includeMedia: Boolean)
         fun dismissAllDialogFragments()
     }
 
-    private var mIncludeSched = false
-    private var mIncludeMedia = false
+    private var includeSched = false
+    private var includeMedia = false
 
-    /**
-     * Creates a new instance of ExportDialog to export a deck of cards
-     *
-     * @param did A long which specifies the deck to be exported,
-     *            if did is null then the whole collection of decks will be exported
-     * @param dialogMessage A string which can be used to show a custom message or specify import path
-     */
-    @JvmOverloads
-    fun withArguments(dialogMessage: String, did: Long? = null): ExportDialog {
-        var args = this.arguments
-        if (args == null) {
-            args = Bundle()
-        }
-        if (did != null) {
-            args.putLong("did", did)
-        }
-        args.putString("dialogMessage", dialogMessage)
-        this.arguments = args
+    fun withArguments(data: ExportDialogParams): ExportDialog {
+        this.arguments = data.appendToBundle(this.arguments ?: Bundle())
         return this
     }
 
+    @SuppressLint("CheckResult")
     override fun onCreateDialog(savedInstanceState: Bundle?): MaterialDialog {
         super.onCreate(savedInstanceState)
-        val res = resources
-        val did = getNullableLong(arguments, "did")
-        val checked: Array<Int>
-        if (did != null) {
-            mIncludeSched = false
-            checked = arrayOf()
-        } else {
-            mIncludeSched = true
-            checked = arrayOf(INCLUDE_SCHED)
-        }
-        val items = arrayOf(
-            res.getString(R.string.export_include_schedule),
-            res.getString(R.string.export_include_media)
-        )
-        val builder = MaterialDialog.Builder(requireActivity())
-            .title(R.string.export)
-            .contentNullable(requireArguments().getString("dialogMessage"))
-            .positiveText(android.R.string.ok)
-            .negativeText(android.R.string.cancel)
-            .cancelable(true)
-            .items(*items)
-            .alwaysCallMultiChoiceCallback()
-            .itemsCallbackMultiChoice(
-                checked
-            ) { _: MaterialDialog?, integers: Array<Int?>, _: Array<CharSequence?>? ->
-                mIncludeMedia = false
-                mIncludeSched = false
-                for (integer in integers) {
-                    when (integer) {
-                        INCLUDE_SCHED -> mIncludeSched = true
-                        INCLUDE_MEDIA -> mIncludeMedia = true
+        val exportData = requireArguments().toExportDialogParams()
+        includeSched = exportData.includeScheduling
+        includeMedia = exportData.includeMedia
+
+        val initialSelection = mutableListOf<Int>()
+        if (includeSched) initialSelection.add(INCLUDE_SCHED)
+        if (includeMedia) initialSelection.add(INCLUDE_MEDIA)
+
+        return MaterialDialog(requireActivity()).show {
+            title(R.string.export)
+            contentNullable(exportData.message)
+            positiveButton(android.R.string.ok) {
+                when (val exportType = exportData.exportType) {
+                    is ExportDeck -> listener.exportDeckAsApkg(null, exportType.deckId, includeSched, includeMedia)
+                    is ExportCollection -> listener.exportColAsApkgOrColpkg(null, includeSched, includeMedia)
+                    is ExportNotes -> {
+                        val limit = exportLimit { this.noteIds = noteIds { this.noteIds.addAll(exportType.nodeIds) } }
+                        listener.exportSelectedAsApkg(null, limit, includeSched, includeMedia)
+                    }
+                    is ExportCards -> {
+                        val limit = exportLimit { this.cardIds = cardIds { cids.addAll(exportType.cardIds) } }
+                        listener.exportSelectedAsApkg(null, limit, includeSched, includeMedia)
                     }
                 }
-                true
-            }
-            .onPositive { _: MaterialDialog?, _: DialogAction? ->
-                listener.exportApkg(null, did, mIncludeSched, mIncludeMedia)
                 dismissAllDialogFragments()
             }
-            .onNegative { _: MaterialDialog?, _: DialogAction? -> dismissAllDialogFragments() }
-        return builder.show()
+            negativeButton(android.R.string.cancel) {
+                dismissAllDialogFragments()
+            }
+            cancelable(true)
+            listItemsMultiChoice(
+                items = listOf(
+                    resources.getString(R.string.export_include_schedule),
+                    resources.getString(R.string.export_include_media)
+                ),
+                initialSelection = initialSelection.toIntArray(),
+                allowEmptySelection = true,
+                waitForPositiveButton = false
+            ) { _: MaterialDialog, ints: IntArray, _: List<CharSequence> ->
+                includeMedia = ints.contains(INCLUDE_MEDIA)
+                includeSched = ints.contains(INCLUDE_SCHED)
+            }
+        }
     }
 
     fun dismissAllDialogFragments() {
@@ -106,5 +104,62 @@ class ExportDialog(private val listener: ExportDialogListener) : AnalyticsDialog
     companion object {
         private const val INCLUDE_SCHED = 0
         private const val INCLUDE_MEDIA = 1
+    }
+}
+
+/**
+ * @param message A dialog to display to the user when exporting
+ */
+class ExportDialogParams(val message: String, val exportType: ExportType, includeMedia: Boolean? = null) {
+    val includeScheduling: Boolean = when (this.exportType) {
+        is ExportNotes -> false
+        is ExportCards -> false
+        is ExportDeck -> false
+        is ExportCollection -> true
+    }
+    val includeMedia = includeMedia ?: false
+
+    fun appendToBundle(bundle: Bundle): Bundle {
+        bundle.putString(MESSAGE, this.message)
+        bundle.putBoolean(INCLUDE_MEDIA, this.includeMedia)
+
+        when (this.exportType) {
+            is ExportNotes -> bundle.putLongArray(NOTE_IDS, this.exportType.nodeIds.toLongArray())
+            is ExportCards -> bundle.putLongArray(CARD_IDS, this.exportType.cardIds.toLongArray())
+            is ExportDeck -> bundle.putLong(DECK_ID, this.exportType.deckId)
+            is ExportCollection -> {}
+        }
+        return bundle
+    }
+
+    companion object {
+        private const val MESSAGE = "dialogMessage"
+        private const val DECK_ID = "did"
+        private const val CARD_IDS = "cardIds"
+        private const val NOTE_IDS = "noteIds"
+        private const val INCLUDE_MEDIA = "includeMedia"
+
+        private fun Bundle.toExportType(): ExportType {
+            val did = getNullableLong(DECK_ID)
+            val cardIds = getLongArray(CARD_IDS)
+            val noteIds = getLongArray(NOTE_IDS)
+
+            if (did != null) {
+                return ExportDeck(did)
+            }
+            if (cardIds != null) {
+                return ExportCards(cardIds.toList())
+            }
+            if (noteIds != null) {
+                return ExportNotes(noteIds.toList())
+            }
+            return ExportCollection
+        }
+
+        fun Bundle.toExportDialogParams(): ExportDialogParams = ExportDialogParams(
+            message = getString(MESSAGE)!!,
+            exportType = this.toExportType(),
+            includeMedia = getBoolean(INCLUDE_MEDIA)
+        )
     }
 }

@@ -18,6 +18,7 @@ package com.ichi2.anki.web
 
 import android.content.SharedPreferences
 import androidx.annotation.CheckResult
+import androidx.core.content.edit
 import com.ichi2.libanki.sync.HostNum
 import timber.log.Timber
 
@@ -27,16 +28,14 @@ class PreferenceBackedHostNum(hostNum: Int?, private val preferences: SharedPref
         hostNum = getDefaultHostNum()
     }
 
-    override fun getHostNum(): Int? {
-        return getHostNum(preferences)
-    }
-
-    override fun setHostNum(newHostNum: Int?) {
-        Timber.d("Setting hostnum to %s", newHostNum)
-        val prefValue = convertToPreferenceValue(newHostNum)
-        preferences.edit().putString("hostNum", prefValue).apply()
-        super.setHostNum(newHostNum)
-    }
+    override var hostNum: Int?
+        get() = getHostNum(preferences)
+        set(value) {
+            Timber.d("Setting hostnum to %s", value)
+            val prefValue = convertToPreferenceValue(value)
+            preferences.edit { putString("hostNum", prefValue) }
+            super.hostNum = value
+        }
 
     @CheckResult
     private fun convertToPreferenceValue(newHostNum: Int?): String? {
@@ -44,7 +43,6 @@ class PreferenceBackedHostNum(hostNum: Int?, private val preferences: SharedPref
     }
 
     companion object {
-        @JvmStatic
         fun fromPreferences(preferences: SharedPreferences): PreferenceBackedHostNum {
             val hostNum = getHostNum(preferences)
             return PreferenceBackedHostNum(hostNum, preferences)
@@ -64,11 +62,13 @@ class PreferenceBackedHostNum(hostNum: Int?, private val preferences: SharedPref
         private fun convertFromPreferenceValue(hostNum: String?): Int? {
             return if (hostNum == null) {
                 getDefaultHostNum()
-            } else try {
-                hostNum.toInt()
-            } catch (e: Exception) {
-                Timber.w(e)
-                getDefaultHostNum()
+            } else {
+                try {
+                    hostNum.toInt()
+                } catch (e: Exception) {
+                    Timber.w(e)
+                    getDefaultHostNum()
+                }
             }
         }
     }

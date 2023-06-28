@@ -16,12 +16,12 @@
 
 package com.ichi2.async
 
-import com.ichi2.anki.AnkiDroidApp
+import com.ichi2.anki.CrashReportService
 import com.ichi2.utils.MethodLogger.log
 import com.ichi2.utils.Threads
 
 @Suppress("deprecation") // #7108: AsyncTask
-open class BaseAsyncTask<Params, Progress, Result> : android.os.AsyncTask<Params, Progress, Result?>(), ProgressSenderAndCancelListener<Progress> {
+open class BaseAsyncTask<Params, Progress, Result> : android.os.AsyncTask<Params, Progress, Result>(), ProgressSenderAndCancelListener<Progress> {
     override fun onPreExecute() {
         if (DEBUG) {
             log()
@@ -30,12 +30,12 @@ open class BaseAsyncTask<Params, Progress, Result> : android.os.AsyncTask<Params
         super.onPreExecute()
     }
 
-    override fun onPostExecute(result: Result?) {
+    override fun onPostExecute(result: Result) {
         if (DEBUG) {
             log()
         }
         if (isCancelled) {
-            AnkiDroidApp.sendExceptionReport("onPostExecute called with task cancelled. This should never occur !", "BaseAsyncTask - onPostExecute")
+            CrashReportService.sendExceptionReport("onPostExecute called with task cancelled. This should never occur !", "BaseAsyncTask - onPostExecute")
         }
         Threads.checkMainThread()
         super.onPostExecute(result)

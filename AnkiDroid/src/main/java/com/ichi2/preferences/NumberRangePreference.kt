@@ -19,13 +19,13 @@ import android.content.Context
 import android.text.InputFilter
 import android.text.InputFilter.LengthFilter
 import android.text.InputType
-import android.text.TextUtils
 import android.util.AttributeSet
+import android.view.View
 import com.ichi2.anki.AnkiDroidApp
 import timber.log.Timber
 
 @Suppress("deprecation") // TODO Tracked in https://github.com/ankidroid/Anki-Android/issues/5019 : use NumberRangePreferenceCompat
-open class NumberRangePreference : android.preference.EditTextPreference {
+open class NumberRangePreference : android.preference.EditTextPreference, AutoFocusable {
     protected val mMin: Int
     private val mMax: Int
 
@@ -45,6 +45,11 @@ open class NumberRangePreference : android.preference.EditTextPreference {
         mMin = getMinFromAttributes(null)
         mMax = getMaxFromAttributes(null)
         updateSettings()
+    }
+
+    override fun onBindDialogView(view: View?) {
+        super.onBindDialogView(view)
+        autoFocusAndMoveCursorToEnd(editText)
     }
 
     override fun onDialogClosed(positiveResult: Boolean) {
@@ -76,7 +81,7 @@ open class NumberRangePreference : android.preference.EditTextPreference {
      * @return The input value within acceptable range.
      */
     private fun getValidatedRangeFromString(input: String): Int {
-        return if (TextUtils.isEmpty(input)) {
+        return if (input.isEmpty()) {
             mMin
         } else {
             try {
@@ -152,6 +157,7 @@ open class NumberRangePreference : android.preference.EditTextPreference {
          * @return the persisted value.
          */
         get() = getPersistedInt(mMin)
+
         /**
          * Set this preference's value. The value is validated and persisted as an Integer.
          *

@@ -20,6 +20,7 @@ package com.ichi2.anki
 
 import android.annotation.SuppressLint
 import android.graphics.*
+import android.graphics.drawable.VectorDrawable
 import android.net.Uri
 import android.view.MotionEvent
 import android.view.View
@@ -30,15 +31,17 @@ import android.widget.LinearLayout
 import androidx.annotation.CheckResult
 import androidx.annotation.VisibleForTesting
 import androidx.core.content.ContextCompat
-import com.ichi2.anki.cardviewer.CardAppearance.Companion.isInNightMode
+import androidx.core.content.edit
 import com.ichi2.anki.dialogs.WhiteBoardWidthDialog
 import com.ichi2.compat.CompatHelper
 import com.ichi2.libanki.utils.Time
 import com.ichi2.libanki.utils.TimeUtils
+import com.ichi2.themes.Themes.currentTheme
 import com.ichi2.utils.DisplayUtils.getDisplayDimensions
+import com.ichi2.utils.KotlinCleanup
+import com.mrudultora.colorpicker.ColorPickerPopUp
 import timber.log.Timber
 import java.io.FileNotFoundException
-import java.util.*
 import kotlin.math.abs
 import kotlin.math.max
 
@@ -62,13 +65,9 @@ class Whiteboard(activity: AnkiActivity, handleMultiTouch: Boolean, inverted: Bo
     private var mSecondFingerY = 0f
     private var mSecondFingerPointerId = 0
     private var mSecondFingerWithinTapTolerance = false
-    var isCurrentlyDrawing = false
-        private set
 
-    /**
-     * @return true if the undo queue has had any strokes added to it since the last clear
-     */
-    var isUndoModeActive = false
+    var toggleStylus = false
+    var isCurrentlyDrawing = false
         private set
 
     @get:CheckResult
@@ -82,9 +81,11 @@ class Whiteboard(activity: AnkiActivity, handleMultiTouch: Boolean, inverted: Bo
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        canvas.drawColor(0)
-        canvas.drawBitmap(mBitmap, 0f, 0f, mBitmapPaint)
-        canvas.drawPath(mPath, mPaint)
+        canvas.apply {
+            drawColor(0)
+            drawBitmap(mBitmap, 0f, 0f, mBitmapPaint)
+            drawPath(mPath, mPaint)
+        }
     }
 
     /** Handle motion events to draw using the touch screen or to interact with the flashcard behind
@@ -108,6 +109,9 @@ class Whiteboard(activity: AnkiActivity, handleMultiTouch: Boolean, inverted: Bo
     private fun handleDrawEvent(event: MotionEvent): Boolean {
         val x = event.x
         val y = event.y
+        if (event.getToolType(event.actionIndex) != MotionEvent.TOOL_TYPE_STYLUS && toggleStylus == true) {
+            return false
+        }
         return when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
                 drawStart(x, y)
@@ -116,10 +120,8 @@ class Whiteboard(activity: AnkiActivity, handleMultiTouch: Boolean, inverted: Bo
             }
             MotionEvent.ACTION_MOVE -> {
                 if (isCurrentlyDrawing) {
-                    var i = 0
-                    while (i < event.historySize) {
+                    for (i in 0 until event.historySize) {
                         drawAlong(event.getHistoricalX(i), event.getHistoricalY(i))
-                        i++
                     }
                     drawAlong(x, y)
                     invalidate()
@@ -169,14 +171,15 @@ class Whiteboard(activity: AnkiActivity, handleMultiTouch: Boolean, inverted: Bo
                 MotionEvent.ACTION_POINTER_UP -> trySecondFingerClick(event)
                 else -> false
             }
-        } else false
+        } else {
+            false
+        }
     }
 
     /**
      * Clear the whiteboard.
      */
     fun clear() {
-        isUndoModeActive = false
         mBitmap.eraseColor(0)
         mUndo.clear()
         invalidate()
@@ -214,6 +217,22 @@ class Whiteboard(activity: AnkiActivity, handleMultiTouch: Boolean, inverted: Bo
         createBitmap(bitmapSize, bitmapSize)
     }
 
+    /**
+     * On rotating the device onSizeChanged() helps to stretch the previously created Bitmap rather
+     * than creating a new Bitmap which makes sure bitmap doesn't go out of screen.
+     */
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        // createScaledBitmap requires a width and height > 0; #13972
+        if (w <= 0 || h <= 0) {
+            Timber.w("Width or height <= 0: w: $w h: $h Bitmap couldn't be created with the new size")
+            return
+        }
+        val scaledBitmap: Bitmap = Bitmap.createScaledBitmap(mBitmap, w, h, true)
+        mBitmap = scaledBitmap
+        mCanvas = Canvas(mBitmap)
+    }
+
     private fun drawStart(x: Float, y: Float) {
         isCurrentlyDrawing = true
         mPath.reset()
@@ -240,7 +259,6 @@ class Whiteboard(activity: AnkiActivity, handleMultiTouch: Boolean, inverted: Bo
         val action = if (pm.length > 0) DrawPath(Path(mPath), paint) else DrawPoint(mX, mY, paint)
         action.apply(mCanvas)
         mUndo.add(action)
-        isUndoModeActive = true
         // kill the path so we don't double draw
         mPath.reset()
         if (mUndo.size() == 1) {
@@ -329,6 +347,23 @@ class Whiteboard(activity: AnkiActivity, handleMultiTouch: Boolean, inverted: Bo
                 val yellowPenColor = ContextCompat.getColor(context, R.color.material_yellow_500)
                 penColor = yellowPenColor
             }
+            R.id.pen_color_custom -> {
+                ColorPickerPopUp(context).run {
+                    setShowAlpha(true)
+                    setDefaultColor(penColor)
+                    setOnPickColorListener(object : ColorPickerPopUp.OnPickColorListener {
+
+                        override fun onColorPicked(color: Int) {
+                            penColor = color
+                        }
+
+                        override fun onCancel() {
+                            // unused
+                        }
+                    })
+                    show()
+                }
+            }
             R.id.stroke_width -> {
                 handleWidthChangeDialog()
             }
@@ -343,9 +378,9 @@ class Whiteboard(activity: AnkiActivity, handleMultiTouch: Boolean, inverted: Bo
 
     private fun saveStrokeWidth(wbStrokeWidth: Int) {
         mPaint.strokeWidth = wbStrokeWidth.toFloat()
-        val edit = AnkiDroidApp.getSharedPrefs(mAnkiActivity).edit()
-        edit.putInt("whiteBoardStrokeWidth", wbStrokeWidth)
-        edit.apply()
+        AnkiDroidApp.getSharedPrefs(mAnkiActivity).edit {
+            putInt("whiteBoardStrokeWidth", wbStrokeWidth)
+        }
     }
 
     @get:VisibleForTesting
@@ -475,10 +510,10 @@ class Whiteboard(activity: AnkiActivity, handleMultiTouch: Boolean, inverted: Bo
         }
         draw(canvas)
         val baseFileName = "Whiteboard" + TimeUtils.getTimestamp(time!!)
-        // TODO: Fix inconsistent CompressFormat 'JPEG' and file extension 'png'
-        return CompatHelper.getCompat().saveImage(context, bitmap, baseFileName, "png", Bitmap.CompressFormat.JPEG, 95)
+        return CompatHelper.compat.saveImage(context, bitmap, baseFileName, "jpg", Bitmap.CompressFormat.JPEG, 95)
     }
 
+    @KotlinCleanup("fun interface & use SAM on callers")
     interface OnPaintColorChangeListener {
         fun onPaintColorChange(color: Int?)
     }
@@ -486,13 +521,12 @@ class Whiteboard(activity: AnkiActivity, handleMultiTouch: Boolean, inverted: Bo
     companion object {
         private const val TOUCH_TOLERANCE = 4f
         private var mWhiteboardMultiTouchMethods: WhiteboardMultiTouchMethods? = null
-        @JvmStatic
         fun createInstance(context: AnkiActivity, handleMultiTouch: Boolean, whiteboardMultiTouchMethods: WhiteboardMultiTouchMethods?): Whiteboard {
-            val sharedPrefs = AnkiDroidApp.getSharedPrefs(context)
-            val whiteboard = Whiteboard(context, handleMultiTouch, isInNightMode(sharedPrefs))
+            val whiteboard = Whiteboard(context, handleMultiTouch, currentTheme.isNightMode)
             mWhiteboardMultiTouchMethods = whiteboardMultiTouchMethods
             val lp2 = FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
             )
             whiteboard.layoutParams = lp2
             val fl = context.findViewById<FrameLayout>(R.id.whiteboard)
@@ -502,7 +536,7 @@ class Whiteboard(activity: AnkiActivity, handleMultiTouch: Boolean, inverted: Bo
         }
 
         private val displayDimensions: Point
-            get() = getDisplayDimensions(AnkiDroidApp.getInstance().applicationContext)
+            get() = getDisplayDimensions(AnkiDroidApp.instance.applicationContext)
     }
 
     init {
@@ -517,14 +551,15 @@ class Whiteboard(activity: AnkiActivity, handleMultiTouch: Boolean, inverted: Bo
             whitePenColorButton.setOnClickListener { view: View -> onClick(view) }
             foregroundColor = Color.WHITE
         }
-        mPaint = Paint()
-        mPaint.isAntiAlias = true
-        mPaint.isDither = true
-        mPaint.color = foregroundColor
-        mPaint.style = Paint.Style.STROKE
-        mPaint.strokeJoin = Paint.Join.ROUND
-        mPaint.strokeCap = Paint.Cap.ROUND
-        mPaint.strokeWidth = currentStrokeWidth.toFloat()
+        mPaint = Paint().apply {
+            isAntiAlias = true
+            isDither = true
+            color = foregroundColor
+            style = Paint.Style.STROKE
+            strokeJoin = Paint.Join.ROUND
+            strokeCap = Paint.Cap.ROUND
+            strokeWidth = currentStrokeWidth.toFloat()
+        }
         createBitmap()
         mPath = Path()
         mBitmapPaint = Paint(Paint.DITHER_FLAG)
@@ -535,6 +570,13 @@ class Whiteboard(activity: AnkiActivity, handleMultiTouch: Boolean, inverted: Bo
         activity.findViewById<View>(R.id.pen_color_green).setOnClickListener { view: View -> onClick(view) }
         activity.findViewById<View>(R.id.pen_color_blue).setOnClickListener { view: View -> onClick(view) }
         activity.findViewById<View>(R.id.pen_color_yellow).setOnClickListener { view: View -> onClick(view) }
-        activity.findViewById<View>(R.id.stroke_width).setOnClickListener { view: View -> onClick(view) }
+        activity.findViewById<View>(R.id.pen_color_custom).apply {
+            setOnClickListener { view: View -> onClick(view) }
+            (background as? VectorDrawable)?.setTint(foregroundColor)
+        }
+        activity.findViewById<View>(R.id.stroke_width).apply {
+            setOnClickListener { view: View -> onClick(view) }
+            (background as? VectorDrawable)?.setTint(foregroundColor)
+        }
     }
 }

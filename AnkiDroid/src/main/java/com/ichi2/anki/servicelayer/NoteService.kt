@@ -22,15 +22,21 @@ package com.ichi2.anki.servicelayer
 import android.os.Bundle
 import androidx.annotation.CheckResult
 import androidx.annotation.VisibleForTesting
-import com.ichi2.anki.AnkiDroidApp
+import com.ichi2.anki.CollectionManager.withCol
+import com.ichi2.anki.CrashReportService
 import com.ichi2.anki.FieldEditText
 import com.ichi2.anki.multimediacard.IMultimediaEditableNote
 import com.ichi2.anki.multimediacard.fields.*
 import com.ichi2.anki.multimediacard.impl.MultimediaEditableNote
+import com.ichi2.libanki.Card
+import com.ichi2.libanki.Consts
 import com.ichi2.libanki.Note
+import com.ichi2.libanki.NoteTypeId
 import com.ichi2.libanki.exception.EmptyMediaException
-import com.ichi2.utils.JSONException
-import com.ichi2.utils.JSONObject
+import com.ichi2.utils.CollectionUtils.average
+import net.ankiweb.rsdroid.BackendFactory
+import org.json.JSONException
+import org.json.JSONObject
 import timber.log.Timber
 import java.io.File
 import java.io.IOException
@@ -42,7 +48,6 @@ object NoteService {
      * @param model the model in JSOBObject format
      * @return a new note instance
      */
-    @JvmStatic
     fun createEmptyNote(model: JSONObject): MultimediaEditableNote? {
         try {
             val fieldsArray = model.getJSONArray("flds")
@@ -67,17 +72,15 @@ object NoteService {
         return null
     }
 
-    @JvmStatic
-    fun updateMultimediaNoteFromFields(col: com.ichi2.libanki.Collection?, fields: Array<String>, modelId: Long, mmNote: MultimediaEditableNote) {
+    fun updateMultimediaNoteFromFields(col: com.ichi2.libanki.Collection, fields: Array<String>, modelId: NoteTypeId, mmNote: MultimediaEditableNote) {
         for (i in fields.indices) {
             val value = fields[i]
-            var field: IField?
-            field = if (value.startsWith("<img")) {
+            val field: IField = if (value.startsWith("<img")) {
                 ImageField()
             } else if (value.startsWith("[sound:") && value.contains("rec")) {
                 AudioRecordingField()
             } else if (value.startsWith("[sound:")) {
-                AudioClipField()
+                MediaClipField()
             } else {
                 TextField()
             }
@@ -90,59 +93,22 @@ object NoteService {
     }
 
     /**
-     * Updates the JsonNote field values from MultimediaEditableNote When both notes are using the same Model, it updaes
+     * Updates the JsonNote field values from MultimediaEditableNote When both notes are using the same Model, it updates
      * the destination field values with source values. If models are different it throws an Exception
      *
      * @param noteSrc
      * @param editorNoteDst
      */
-    @JvmStatic
     fun updateJsonNoteFromMultimediaNote(noteSrc: IMultimediaEditableNote?, editorNoteDst: Note) {
         if (noteSrc is MultimediaEditableNote) {
-            val mmNote = noteSrc
-            if (mmNote.modelId != editorNoteDst.mid) {
+            if (noteSrc.modelId != editorNoteDst.mid) {
                 throw RuntimeException("Source and Destination Note ID do not match.")
             }
-            val totalFields: Int = mmNote.numberOfFields
+            val totalFields: Int = noteSrc.numberOfFields
             for (i in 0 until totalFields) {
-                editorNoteDst.values()[i] = mmNote.getField(i)!!.formattedValue
+                editorNoteDst.values()[i] = noteSrc.getField(i)!!.formattedValue!!
             }
         }
-    }
-
-    /**
-     * Saves the multimedia associated with this card to proper path inside anki folder. For each field associated with
-     * the note it checks for the following condition a. The field content should have changed b. The field content does
-     * not already point to a media inside anki media path If both condition satisfies then it copies the file inside
-     * the media path and deletes the file referenced by the note
-     *
-     * @param noteNew
-     */
-    @JvmStatic
-    fun saveMedia(col: com.ichi2.libanki.Collection, noteNew: MultimediaEditableNote) {
-        // if (noteNew.getModelId() == noteOld.getModelId())
-        // {
-        // int fieldCount = noteNew.getNumberOfFields();
-        // for (int i = 0; i < fieldCount; i++)
-        // {
-        // IField newField = noteNew.getField(i);
-        // IField oldField = noteOld.getField(i);
-        // if
-        // (newField.getFormattedValue().equals(oldField.getFormattedValue()))
-        // {
-        // continue;
-        // }
-        // importMediaToDirectory(newField);
-        // }
-        // }
-        // else
-        // {
-        val fieldCount: Int = noteNew.numberOfFields
-        for (i in 0 until fieldCount) {
-            val newField = noteNew.getField(i)
-            importMediaToDirectory(col, newField)
-        }
-        // }
     }
 
     /**
@@ -150,14 +116,12 @@ object NoteService {
      *
      * @param field
      */
-    private fun importMediaToDirectory(col: com.ichi2.libanki.Collection, field: IField?) {
+    fun importMediaToDirectory(col: com.ichi2.libanki.Collection, field: IField?) {
         var tmpMediaPath: String? = null
         when (field!!.type) {
-            EFieldType.AUDIO_RECORDING, EFieldType.AUDIO_CLIP -> tmpMediaPath = field.audioPath
+            EFieldType.AUDIO_RECORDING, EFieldType.MEDIA_CLIP -> tmpMediaPath = field.audioPath
             EFieldType.IMAGE -> tmpMediaPath = field.imagePath
             EFieldType.TEXT -> {
-            }
-            else -> {
             }
         }
         if (tmpMediaPath != null) {
@@ -166,12 +130,12 @@ object NoteService {
                 if (inFile.exists() && inFile.length() > 0) {
                     val fname = col.media.addFile(inFile)
                     val outFile = File(col.media.dir(), fname)
-                    if (field.hasTemporaryMedia() && outFile.absolutePath != tmpMediaPath) {
+                    if (field.hasTemporaryMedia && outFile.absolutePath != tmpMediaPath) {
                         // Delete original
                         inFile.delete()
                     }
                     when (field.type) {
-                        EFieldType.AUDIO_RECORDING, EFieldType.AUDIO_CLIP -> field.audioPath = outFile.absolutePath
+                        EFieldType.AUDIO_RECORDING, EFieldType.MEDIA_CLIP -> field.audioPath = outFile.absolutePath
                         EFieldType.IMAGE -> field.imagePath = outFile.absolutePath
                         else -> {
                         }
@@ -182,7 +146,7 @@ object NoteService {
             } catch (mediaException: EmptyMediaException) {
                 // This shouldn't happen, but we're fine to ignore it if it does.
                 Timber.w(mediaException)
-                AnkiDroidApp.sendExceptionReport(mediaException, "noteService::importMediaToDirectory")
+                CrashReportService.sendExceptionReport(mediaException, "noteService::importMediaToDirectory")
             }
         }
     }
@@ -190,7 +154,6 @@ object NoteService {
     /**
      * @param replaceNewlines Converts [FieldEditText.NEW_LINE] to HTML linebreaks
      */
-    @JvmStatic
     @VisibleForTesting
     @CheckResult
     fun getFieldsAsBundleForPreview(editFields: Collection<NoteField?>?, replaceNewlines: Boolean): Bundle {
@@ -201,35 +164,67 @@ object NoteService {
             return fields
         }
         for (e in editFields) {
-            if (e == null || e.fieldText == null) {
+            if (e?.fieldText == null) {
                 continue
             }
             val fieldValue = convertToHtmlNewline(e.fieldText!!, replaceNewlines)
-            fields.putString(Integer.toString(e.ord), fieldValue)
+            fields.putString(e.ord.toString(), fieldValue)
         }
         return fields
     }
 
-    @JvmStatic
     fun convertToHtmlNewline(fieldData: String, replaceNewlines: Boolean): String {
         return if (!replaceNewlines) {
             fieldData
-        } else fieldData.replace(FieldEditText.NEW_LINE, "<br>")
+        } else {
+            fieldData.replace(FieldEditText.NEW_LINE, "<br>")
+        }
     }
 
-    @JvmStatic
-    fun toggleMark(note: Note) {
+    suspend fun toggleMark(note: Note) {
         if (isMarked(note)) {
             note.delTag("marked")
         } else {
             note.addTag("marked")
         }
-        note.flush()
+
+        withCol {
+            if (BackendFactory.defaultLegacySchema) {
+                note.flush()
+            } else {
+                newBackend.updateNote(note)
+            }
+        }
     }
 
-    @JvmStatic
     fun isMarked(note: Note): Boolean {
         return note.hasTag("marked")
+    }
+
+    //  TODO: should make a direct SQL query to do this
+    /**
+     * returns the average ease of all the non-new cards in the note,
+     * or if all the cards in the note are new, returns null
+     */
+    fun avgEase(note: Note): Int? {
+        val nonNewCards = note.cards().filter { it.type != Consts.CARD_TYPE_NEW }
+
+        return nonNewCards.average { it.factor }?.let { it / 10 }?.toInt()
+    }
+
+    //  TODO: should make a direct SQL query to do this
+    fun totalLapses(note: Note) = note.cards().sumOf { it.lapses }
+
+    fun totalReviews(note: Note) = note.cards().sumOf { it.reps }
+
+    /**
+     * Returns the average interval of all the non-new and non-learning cards in the note,
+     * or if all the cards in the note are new or learning, returns null
+     */
+    fun avgInterval(note: Note): Int? {
+        val nonNewOrLearningCards = note.cards().filter { it.type != Consts.CARD_TYPE_NEW && it.type != Consts.CARD_TYPE_LRN }
+
+        return nonNewOrLearningCards.average { it.ivl }?.toInt()
     }
 
     interface NoteField {
@@ -239,3 +234,9 @@ object NoteService {
         val fieldText: String?
     }
 }
+
+fun Card.totalLapsesOfNote() = NoteService.totalLapses(note())
+
+fun Card.totalReviewsForNote() = NoteService.totalReviews(note())
+
+fun Card.avgIntervalOfNote() = NoteService.avgInterval(note())

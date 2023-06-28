@@ -1,17 +1,17 @@
 /*
- Copyright (c) 2020 David Allison <davidallisongithub@gmail.com>                     
-                                                                                     
- This program is free software; you can redistribute it and/or modify it under       
- the terms of the GNU General Public License as published by the Free Software       
- Foundation; either version 3 of the License, or (at your option) any later          
- version.                                                                            
-                                                                                     
- This program is distributed in the hope that it will be useful, but WITHOUT ANY     
- WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A     
- PARTICULAR PURPOSE. See the GNU General Public License for more details.            
-                                                                                     
- You should have received a copy of the GNU General Public License along with        
- this program.  If not, see <http://www.gnu.org/licenses/>.                          
+ Copyright (c) 2020 David Allison <davidallisongithub@gmail.com>
+
+ This program is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License as published by the Free Software
+ Foundation; either version 3 of the License, or (at your option) any later
+ version.
+
+ This program is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+ PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+ You should have received a copy of the GNU General Public License along with
+ this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package com.ichi2.anki.reviewer
@@ -31,7 +31,7 @@ class PeripheralKeymap(reviewerUi: ReviewerUi, commandProcessor: ViewerCommand.C
     private val mKeyMap: KeyMap
     private var mHasSetup = false
     fun setup() {
-        val preferences = AnkiDroidApp.getSharedPrefs(AnkiDroidApp.getInstance())
+        val preferences = AnkiDroidApp.getSharedPrefs(AnkiDroidApp.instance)
         setup(preferences)
     }
 
@@ -55,7 +55,9 @@ class PeripheralKeymap(reviewerUi: ReviewerUi, commandProcessor: ViewerCommand.C
     fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         return if (!mHasSetup || event.repeatCount > 0) {
             false
-        } else mKeyMap.onKeyUp(keyCode, event)
+        } else {
+            mKeyMap.onKeyUp(keyCode, event)
+        }
     }
 
     @Suppress("UNUSED_PARAMETER")
@@ -74,7 +76,7 @@ class PeripheralKeymap(reviewerUi: ReviewerUi, commandProcessor: ViewerCommand.C
             for (b in bindings) {
                 val binding = MappableBinding(b, MappableBinding.Screen.Reviewer(side))
                 val command = mBindingMap[binding] ?: continue
-                ret = ret or processor.executeCommand(command)
+                ret = ret or processor.executeCommand(command, fromGesture = null)
             }
             return ret
         }

@@ -73,7 +73,7 @@ class JavaScriptTTS internal constructor() : OnInitListener {
      *     <li> -2 Denotes the language is not supported.
      */
     @TTSLangResult
-    fun setLanguage(loc: String?): Int {
+    fun setLanguage(loc: String): Int {
         // The Int values will be returned
         // Code indicating the support status for the locale. See LANG_AVAILABLE, LANG_COUNTRY_AVAILABLE, LANG_COUNTRY_VAR_AVAILABLE, LANG_MISSING_DATA and LANG_NOT_SUPPORTED.
         return mTts.setLanguage(LanguageUtils.localeFromStringIgnoringScriptAndExtensions(loc))
@@ -137,7 +137,7 @@ class JavaScriptTTS internal constructor() : OnInitListener {
     }
 
     init {
-        val context = AnkiDroidApp.getInstance().applicationContext
+        val context = AnkiDroidApp.instance.applicationContext
         mTts = TextToSpeech(context, this)
     }
 }

@@ -7,7 +7,6 @@ import android.os.Bundle
 import android.text.InputFilter
 import android.text.InputType
 import android.text.Spanned
-import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
@@ -17,15 +16,19 @@ import android.widget.TextView
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.afollestad.materialdialogs.DialogAction
 import com.afollestad.materialdialogs.MaterialDialog
+import com.afollestad.materialdialogs.customview.customView
+import com.afollestad.materialdialogs.input.getInputField
+import com.afollestad.materialdialogs.input.input
 import com.ichi2.anki.R
-import com.ichi2.anki.UIUtils.showSnackbar
 import com.ichi2.anki.analytics.AnalyticsDialogFragment
+import com.ichi2.anki.snackbar.showSnackbar
+import com.ichi2.annotations.NeedsTest
 import com.ichi2.utils.DisplayUtils.resizeWhenSoftInputShown
-import java.util.*
+import com.ichi2.utils.TagsUtil
 
 class TagsDialog : AnalyticsDialogFragment {
     /**
@@ -102,10 +105,7 @@ class TagsDialog : AnalyticsDialogFragment {
         uncheckedTags: List<String>?,
         allTags: List<String?>
     ): TagsDialog {
-        var args = this.arguments
-        if (args == null) {
-            args = Bundle()
-        }
+        val args = this.arguments ?: Bundle()
         args.putInt(DIALOG_TYPE_KEY, type.ordinal)
         args.putStringArrayList(CHECKED_TAGS_KEY, ArrayList(checkedTags))
         if (uncheckedTags != null) {
@@ -132,14 +132,19 @@ class TagsDialog : AnalyticsDialogFragment {
         get() = mListener
             ?: TagsDialogListener.createFragmentResultSender(parentFragmentManager)
 
+    @NeedsTest(
+        "In EDIT_TAGS dialog, long-clicking a tag should open the add tag dialog with the clicked tag" +
+            "filled as prefix properly. In other dialog types, long-clicking a tag behaves like a short click."
+    )
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        @SuppressLint("InflateParams") val tagsDialogView = LayoutInflater.from(activity).inflate(R.layout.tags_dialog, null, false)
+        @SuppressLint("InflateParams")
+        val tagsDialogView = LayoutInflater.from(activity).inflate(R.layout.tags_dialog, null, false)
         mTagsListRecyclerView = tagsDialogView.findViewById(R.id.tags_dialog_tags_list)
         val tagsListRecyclerView: RecyclerView? = mTagsListRecyclerView
         tagsListRecyclerView?.requestFocus()
         val tagsListLayout: RecyclerView.LayoutManager = LinearLayoutManager(activity)
         tagsListRecyclerView?.layoutManager = tagsListLayout
-        mTagsArrayAdapter = TagsArrayAdapter(mTags!!)
+        mTagsArrayAdapter = TagsArrayAdapter(mTags!!, resources)
         tagsListRecyclerView?.adapter = mTagsArrayAdapter
         mNoTagsTextView = tagsDialogView.findViewById(R.id.tags_dialog_no_tags_textview)
         val noTagsTextView: TextView? = mNoTagsTextView
@@ -157,17 +162,26 @@ class TagsDialog : AnalyticsDialogFragment {
             mDialogTitle = resources.getString(R.string.card_details_tags)
             optionsGroup.visibility = View.GONE
             mPositiveText = getString(R.string.dialog_ok)
+            mTagsArrayAdapter!!.tagLongClickListener = View.OnLongClickListener { v ->
+                createAddTagDialog(v.tag as String)
+                true
+            }
         } else {
             mDialogTitle = resources.getString(R.string.studyoptions_limit_select_tags)
             mPositiveText = getString(R.string.select)
+            mTagsArrayAdapter!!.tagLongClickListener = View.OnLongClickListener { false }
         }
         adjustToolbar(tagsDialogView)
-        val builder = MaterialDialog.Builder(requireActivity())
-            .positiveText(mPositiveText!!)
-            .negativeText(R.string.dialog_cancel)
-            .customView(tagsDialogView, false)
-            .onPositive { _: MaterialDialog?, _: DialogAction? -> tagsDialogListener.onSelectedTags(mTags!!.copyOfCheckedTagList(), mTags!!.copyOfIndeterminateTagList(), mSelectedOption) }
-        mDialog = builder.build()
+        mDialog = MaterialDialog(requireActivity())
+            .positiveButton(text = mPositiveText!!) {
+                tagsDialogListener.onSelectedTags(
+                    mTags!!.copyOfCheckedTagList(),
+                    mTags!!.copyOfIndeterminateTagList(),
+                    mSelectedOption
+                )
+            }
+            .negativeButton(R.string.dialog_cancel)
+            .customView(view = tagsDialogView, noVerticalPadding = true)
         val dialog: MaterialDialog? = mDialog
         resizeWhenSoftInputShown(dialog?.window!!)
         return dialog
@@ -178,34 +192,18 @@ class TagsDialog : AnalyticsDialogFragment {
         toolbar.title = mDialogTitle
         toolbar.inflateMenu(R.menu.tags_dialog_menu)
 
-        // disallow inputting the 'space' character
-        val addTagFilter = InputFilter { source: CharSequence, start: Int, end: Int, _: Spanned?, _: Int, _: Int ->
-            var i = start
-            while (i < end) {
-                if (source[i] == ' ') {
-                    return@InputFilter ""
-                }
-                i++
-            }
-            null
-        }
         val toolbarAddItem = toolbar.menu.findItem(R.id.tags_dialog_action_add)
+        val drawable = ContextCompat.getDrawable(requireContext(), R.drawable.ic_add_white)
+        drawable?.setTint(ContextCompat.getColor(requireContext(), R.color.white))
+        toolbarAddItem.icon = drawable
+
         toolbarAddItem.setOnMenuItemClickListener {
             val query = mToolbarSearchView!!.query.toString()
-            if (mToolbarSearchItem!!.isActionViewExpanded && !TextUtils.isEmpty(query)) {
+            if (mToolbarSearchItem!!.isActionViewExpanded && query.isNotEmpty()) {
                 addTag(query)
                 mToolbarSearchView!!.setQuery("", true)
             } else {
-                val addTagBuilder = MaterialDialog.Builder(requireActivity())
-                    .title(getString(R.string.add_tag))
-                    .negativeText(R.string.dialog_cancel)
-                    .positiveText(R.string.dialog_ok)
-                    .inputType(InputType.TYPE_CLASS_TEXT)
-                    .input(R.string.tag_name, R.string.empty_string) { _: MaterialDialog?, input: CharSequence -> addTag(input.toString()) }
-                val addTagDialog = addTagBuilder.build()
-                val inputET = requireDialogInputEditText(addTagDialog)
-                inputET.filters = arrayOf(addTagFilter)
-                addTagDialog.show()
+                createAddTagDialog(null)
             }
             true
         }
@@ -245,14 +243,40 @@ class TagsDialog : AnalyticsDialogFragment {
     /**
      * A wrapper function around dialog.getInputEditText() to get non null [EditText]
      */
+    // TODO: Remove this, no longer needed
     private fun requireDialogInputEditText(dialog: MaterialDialog): EditText {
-        return dialog.inputEditText
-            ?: throw IllegalStateException("MaterialDialog $dialog does not have an input edit text.")
+        return dialog.getInputField()
+    }
+
+    /**
+     * Create an add tag dialog.
+     *
+     * @param prefixTag: The tag to be prefilled into the EditText section. A trailing '::' will be appended.
+     */
+    @NeedsTest("The prefixTag should be prefilled properly")
+    private fun createAddTagDialog(prefixTag: String?) {
+        val addTagDialog = MaterialDialog(requireActivity())
+            .title(text = getString(R.string.add_tag))
+            .positiveButton(R.string.dialog_ok)
+            .negativeButton(R.string.dialog_cancel)
+            .input(
+                hintRes = R.string.tag_name,
+                inputType = InputType.TYPE_CLASS_TEXT
+            ) { _: MaterialDialog?, input: CharSequence -> addTag(input.toString()) }
+        val inputET = requireDialogInputEditText(addTagDialog)
+        inputET.filters = arrayOf(addTagFilter)
+        if (!prefixTag.isNullOrEmpty()) {
+            // utilize the addTagFilter to append '::' properly by appending a space to prefixTag
+            inputET.setText("$prefixTag ")
+        }
+        inputET.setSelection(inputET.text.length)
+        addTagDialog.show()
     }
 
     @VisibleForTesting
-    fun addTag(tag: String?) {
-        if (!TextUtils.isEmpty(tag)) {
+    fun addTag(rawTag: String?) {
+        if (!rawTag.isNullOrEmpty()) {
+            val tag = TagsUtil.getUniformedTag(rawTag)
             val feedbackText: String
             if (mTags!!.add(tag)) {
                 if (mNoTagsTextView!!.visibility == View.VISIBLE) {
@@ -266,12 +290,21 @@ class TagsDialog : AnalyticsDialogFragment {
             mTags!!.check(tag)
             mTagsArrayAdapter!!.sortData()
             mTagsArrayAdapter!!.notifyDataSetChanged()
+            // Expand to reveal the newly added tag.
+            mTagsArrayAdapter!!.filter.apply {
+                setExpandTarget(tag)
+                refresh()
+            }
+
             // Show a snackbar to let the user know the tag was added successfully
-            showSnackbar(
-                requireActivity(), feedbackText, false, -1, null,
-                mDialog!!.view.findViewById(R.id.tags_dialog_snackbar), null
-            )
+            mDialog!!.view.findViewById<View>(R.id.tags_dialog_snackbar)
+                .showSnackbar(feedbackText)
         }
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    internal fun getSearchView(): SearchView? {
+        return mToolbarSearchView
     }
 
     companion object {
@@ -279,5 +312,47 @@ class TagsDialog : AnalyticsDialogFragment {
         private const val CHECKED_TAGS_KEY = "checked_tags"
         private const val UNCHECKED_TAGS_KEY = "unchecked_tags"
         private const val ALL_TAGS_KEY = "all_tags"
+
+        /**
+         * The filter that constrains the inputted tag.
+         * Space is not allowed in a tag. For UX of hierarchical tag, inputting a space will instead
+         * insert "::" at the cursor. If there are already some colons in front of the cursor,
+         * complete to 2 colons. For example:
+         *   "tag"   -- input a space --> "tag::"
+         *   "tag:"  -- input a space --> "tag::"
+         *   "tag::" -- input a space --> "tag::"
+         */
+        private val addTagFilter = InputFilter { source: CharSequence, start: Int, end: Int, dest: Spanned?, destStart: Int, _: Int ->
+            if (!source.subSequence(start, end).contains(' ')) {
+                return@InputFilter null
+            }
+            var previousColonsCnt = 0
+            if (dest != null) {
+                val previousPart = dest.substring(0, destStart)
+                if (previousPart.endsWith("::")) {
+                    previousColonsCnt = 2
+                } else if (previousPart.endsWith(":")) {
+                    previousColonsCnt = 1
+                }
+            }
+            val sb = StringBuilder()
+            for (char in source.subSequence(start, end)) {
+                if (char == ' ') {
+                    if (previousColonsCnt == 0) {
+                        sb.append("::")
+                    } else if (previousColonsCnt == 1) {
+                        sb.append(":")
+                    }
+                } else {
+                    sb.append(char)
+                }
+                previousColonsCnt = if (char == ':') {
+                    previousColonsCnt + 1
+                } else {
+                    0
+                }
+            }
+            sb
+        }
     }
 }

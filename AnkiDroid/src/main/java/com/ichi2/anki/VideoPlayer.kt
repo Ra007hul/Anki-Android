@@ -21,19 +21,17 @@ import android.content.res.Configuration
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.view.SurfaceHolder
-import android.view.WindowManager
+import android.view.WindowManager.LayoutParams
 import android.widget.VideoView
 import com.ichi2.anki.UIUtils.showThemedToast
-import com.ichi2.libanki.Sound
+import com.ichi2.libanki.VideoPlayer
 import com.ichi2.themes.Themes
-import com.ichi2.utils.KotlinCleanup
 import timber.log.Timber
 
-@KotlinCleanup("for better possibly-null handling")
 class VideoPlayer : Activity(), SurfaceHolder.Callback {
-    private var mVideoView: VideoView? = null
-    private var mPath: String? = null
-    private var mSoundPlayer: Sound? = null
+    private lateinit var mVideoView: VideoView
+    private lateinit var videoPlayer: VideoPlayer
+    private lateinit var path: String
 
     /** Called when the activity is first created.  */
     @Suppress("DEPRECATION") // #9332: UI Visibility -> Insets
@@ -42,33 +40,36 @@ class VideoPlayer : Activity(), SurfaceHolder.Callback {
         super.onCreate(savedInstanceState)
         Themes.disableXiaomiForceDarkMode(this)
         setContentView(R.layout.video_player)
-        mPath = intent.getStringExtra("path")
-        Timber.i("Video Player intent had path: %s", mPath)
-        window.setFlags(
-            WindowManager.LayoutParams.FLAG_FULLSCREEN,
-            WindowManager.LayoutParams.FLAG_FULLSCREEN
-        )
-        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        this.path = intent.getStringExtra("path").let { path ->
+            if (path == null) {
+                // #5911 - May happen if launched externally. Not possible inside AnkiDroid
+                Timber.w("video path was null")
+                showThemedToast(this, getString(R.string.video_creation_error), true)
+                finish()
+                return
+            }
+            path
+        }
+
+        Timber.i("Video Player launched successfully")
+        window.apply {
+            setFlags(
+                LayoutParams.FLAG_FULLSCREEN,
+                LayoutParams.FLAG_FULLSCREEN
+            )
+            addFlags(LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
         mVideoView = findViewById(R.id.video_surface)
-        mVideoView!!.holder.addCallback(this)
-        mSoundPlayer = Sound()
+        videoPlayer = VideoPlayer(mVideoView)
+        mVideoView.holder.addCallback(this)
     }
 
     override fun surfaceCreated(holder: SurfaceHolder) {
         Timber.i("surfaceCreated")
-        if (mPath == null) {
-            // #5911 - path shouldn't be null. I couldn't determine why this happens.
-            AnkiDroidApp.sendExceptionReport("Video: mPath was unexpectedly null", "VideoPlayer surfaceCreated")
-            Timber.e("path was unexpectedly null")
-            showThemedToast(this, getString(R.string.video_creation_error), true)
+        videoPlayer.play(path, { mp: MediaPlayer? ->
             finish()
-            return
-        }
-        mSoundPlayer!!.playSound(mPath, { mp: MediaPlayer? ->
-            finish()
-            val originalListener = mSoundPlayer!!.mediaCompletionListener
-            originalListener?.onCompletion(mp)
-        }, mVideoView, null)
+            mediaCompletionListener?.onCompletion(mp)
+        }, null)
     }
 
     override fun surfaceChanged(
@@ -77,20 +78,23 @@ class VideoPlayer : Activity(), SurfaceHolder.Callback {
         width: Int,
         height: Int
     ) {
-        // TODO Auto-generated method stub
+        // intentionally blank: required for interface
     }
 
     override fun surfaceDestroyed(holder: SurfaceHolder) {
-        mSoundPlayer!!.stopSounds()
+        videoPlayer.stopSounds()
         finish()
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-        mSoundPlayer!!.notifyConfigurationChanged(mVideoView)
+        videoPlayer.notifyConfigurationChanged()
     }
 
-    public override fun onStop() {
-        super.onStop()
+    companion object {
+        /**
+         * OnCompletionListener so that external video player can notify to play next sound
+         */
+        var mediaCompletionListener: MediaPlayer.OnCompletionListener? = null
     }
 }

@@ -27,7 +27,6 @@ object AnimationUtil {
     /** This is a fast animation - We don't want the user incorrectly selecting the current position
      * for the next collapse operation  */
     private const val DURATION_MILLIS = 200
-    @JvmStatic
     fun collapseView(view: View, animationEnabled: Boolean) {
         view.animate().cancel()
         if (!animationEnabled) {
@@ -36,8 +35,10 @@ object AnimationUtil {
         }
         val set = AnimationSet(true)
         val expandAnimation = ScaleAnimation(
-            1f, 1f,
-            1f, 0.5f
+            1f,
+            1f,
+            1f,
+            0.5f
         )
         expandAnimation.duration = DURATION_MILLIS.toLong()
         expandAnimation.setAnimationListener(object : Animation.AnimationListener {
@@ -56,7 +57,6 @@ object AnimationUtil {
         view.startAnimation(set)
     }
 
-    @JvmStatic
     fun expandView(view: View, enableAnimation: Boolean) {
         view.animate().cancel()
         if (!enableAnimation) {
@@ -69,8 +69,10 @@ object AnimationUtil {
         // Sadly this seems necessary - yScale didn't work.
         val set = AnimationSet(true)
         val resetEditTextScale = ScaleAnimation(
-            1f, 1f,
-            1f, 1f
+            1f,
+            1f,
+            1f,
+            1f
         )
         resetEditTextScale.duration = DURATION_MILLIS.toLong()
         val alphaAnimation = AlphaAnimation(0.0f, 1.0f)

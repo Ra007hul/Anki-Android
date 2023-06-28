@@ -17,7 +17,6 @@
 package com.ichi2.anki.reviewer
 
 import android.content.Context
-import android.text.TextUtils
 import com.ichi2.anki.AnkiDroidApp
 import com.ichi2.anki.AnkiFont
 import com.ichi2.libanki.Utils
@@ -27,35 +26,10 @@ class ReviewerCustomFonts(context: Context) {
     private val mCustomStyle: String
     private var mDefaultFontStyle: String? = null
     private var mOverrideFontStyle: String? = null
-    private var mThemeFontStyle: String? = null
     private var mDominantFontStyle: String? = null
     fun updateCssStyle(cssStyle: StringBuilder) {
         cssStyle.append(mCustomStyle)
     }
-
-    /**
-     * Returns the CSS used to set the theme font.
-     *
-     * @return the font style, or the empty string if no font is set
-     */
-    private val themeFontStyle: String?
-        get() {
-            if (mThemeFontStyle == null) {
-                val themeFontName = "OpenSans"
-                mThemeFontStyle = if (TextUtils.isEmpty(themeFontName)) {
-                    ""
-                } else {
-                    String.format(
-                        """
-                        BODY {font-family: '%s';font-weight: normal;font-style: normal;font-stretch: normal;}
-                        
-                        """.trimIndent(),
-                        themeFontName
-                    )
-                }
-            }
-            return mThemeFontStyle
-        }
 
     /**
      * Returns the CSS used to set the default font.
@@ -104,9 +78,9 @@ class ReviewerCustomFonts(context: Context) {
     private fun getDominantFontStyle(context: Context, customFontsMap: Map<String?, AnkiFont>): String? {
         if (mDominantFontStyle == null) {
             mDominantFontStyle = getOverrideFontStyle(context, customFontsMap)
-            if (TextUtils.isEmpty(mDominantFontStyle)) {
+            if (mDominantFontStyle.isNullOrEmpty()) {
                 mDominantFontStyle = getDefaultFontStyle(context, customFontsMap)
-                if (TextUtils.isEmpty(mDominantFontStyle)) {
+                if (mDominantFontStyle.isNullOrEmpty()) {
                     mDominantFontStyle = themeFontStyle
                 }
             }
@@ -115,6 +89,13 @@ class ReviewerCustomFonts(context: Context) {
     }
 
     companion object {
+        /**
+         * @return the CSS used to set the theme font.
+         *
+         * The font used to be variable
+         */
+        private const val themeFontStyle = "BODY {font-family: 'OpenSans';font-weight: normal;font-style: normal;font-stretch: normal;}"
+
         /**
          * Returns the CSS used to handle custom fonts.
          * <p>

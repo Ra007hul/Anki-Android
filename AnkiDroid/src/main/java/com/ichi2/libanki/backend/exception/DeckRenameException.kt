@@ -14,7 +14,9 @@ class DeckRenameException
     override val message: String?
         get() = if (errorCode == FILTERED_NOSUBDECKS) {
             "Deck $mDeckName has filtered ancestor $mFilteredAncestorName"
-        } else super.message
+        } else {
+            super.message
+        }
 
     fun getLocalizedMessage(res: Resources): String {
         return when (errorCode) {
@@ -29,7 +31,6 @@ class DeckRenameException
         private const val FILTERED_NOSUBDECKS = 1
 
         /** Generates a {@link com.ichi2.libanki.backend.exception.DeckRenameException} with additional information in the message */
-        @JvmStatic
         fun filteredAncestor(deckName: String?, filteredAncestorName: String?): DeckRenameException {
             val ex = DeckRenameException(FILTERED_NOSUBDECKS)
             ex.mFilteredAncestorName = filteredAncestorName

@@ -16,13 +16,15 @@
 
 package com.ichi2.libanki
 
-import com.ichi2.anki.AnkiDroidApp
+import androidx.annotation.WorkerThread
+import com.ichi2.anki.CrashReportService
 import com.ichi2.anki.exception.ConfirmModSchemaException
 import com.ichi2.utils.Assert
-import com.ichi2.utils.JSONObject
 import net.ankiweb.rsdroid.RustCleanup
+import org.json.JSONObject
 import timber.log.Timber
 
+@WorkerThread
 abstract class ModelManager(protected val col: Collection) {
 
     /*
@@ -36,6 +38,7 @@ abstract class ModelManager(protected val col: Collection) {
     /** Mark M modified if provided, and schedule registry flush. */
     fun save() = save(null)
     fun save(m: Model?) = save(m, false)
+
     /**
      * Save a model
      * @param m model to save
@@ -70,8 +73,12 @@ abstract class ModelManager(protected val col: Collection) {
 
     /** get model with ID, or null.  */
     abstract fun get(id: Long): Model?
+
     /** get all models  */
     abstract fun all(): List<Model>
+
+    /** get the names of all models */
+    abstract fun allNames(): List<String>
 
     /** get model with NAME.  */
     abstract fun byName(name: String): Model?
@@ -88,6 +95,7 @@ abstract class ModelManager(protected val col: Collection) {
     abstract fun rem(m: Model)
 
     abstract fun add(m: Model)
+
     /** Add or update an existing model. Used for syncing and merging.  */
     open fun update(m: Model) = update(m, true)
 
@@ -117,6 +125,7 @@ abstract class ModelManager(protected val col: Collection) {
      */
     @RustCleanup("use all_use_counts()")
     abstract fun useCount(m: Model): Int
+
     /**
      * Number of notes using m
      * @param m The model to the count the notes of.
@@ -139,15 +148,19 @@ abstract class ModelManager(protected val col: Collection) {
     abstract fun newField(name: String): JSONObject
 
     abstract fun sortIdx(m: Model): Int
+
     @Throws(ConfirmModSchemaException::class)
     abstract fun setSortIdx(m: Model, idx: Int)
 
     @Throws(ConfirmModSchemaException::class)
     abstract fun addField(m: Model, field: JSONObject)
+
     @Throws(ConfirmModSchemaException::class)
     abstract fun remField(m: Model, field: JSONObject)
+
     @Throws(ConfirmModSchemaException::class)
     abstract fun moveField(m: Model, field: JSONObject, idx: Int)
+
     @Throws(ConfirmModSchemaException::class)
     abstract fun renameField(m: Model, field: JSONObject, newName: String)
 
@@ -157,6 +170,7 @@ abstract class ModelManager(protected val col: Collection) {
 
     @Throws(ConfirmModSchemaException::class)
     abstract fun addTemplate(m: Model, template: JSONObject)
+
     /**
      * Removing a template
      *
@@ -180,7 +194,7 @@ abstract class ModelManager(protected val col: Collection) {
      * @throws ConfirmModSchemaException
      */
     @Throws(ConfirmModSchemaException::class)
-    abstract fun change(m: Model, nid: Long, newModel: Model, fmap: Map<Int, Int>?, cmap: Map<Int, Int>?)
+    abstract fun change(m: Model, nid: NoteId, newModel: Model, fmap: Map<Int, Int?>, cmap: Map<Int, Int?>)
 
     /*
       Schema hash ***********************************************************************************************
@@ -255,9 +269,9 @@ abstract class ModelManager(protected val col: Collection) {
      * @param ords array of ints, each one is the ordinal a the card template in the given model
      * @return null if deleting ords would orphan notes, long[] of related card ids to delete if it is safe
      */
-    open fun getCardIdsForModel(modelId: Long, ords: IntArray): List<Long?>? {
+    open fun getCardIdsForModel(modelId: NoteTypeId, ords: IntArray): List<Long>? {
         val cardIdsToDeleteSql = "select c2.id from cards c2, notes n2 where c2.nid=n2.id and n2.mid = ? and c2.ord  in " + Utils.ids2str(ords)
-        val cids: List<Long?> = col.db.queryLongList(cardIdsToDeleteSql, modelId)
+        val cids: List<Long> = col.db.queryLongList(cardIdsToDeleteSql, modelId)
         // Timber.d("cardIdsToDeleteSql was ' %s' and got %s", cardIdsToDeleteSql, Utils.ids2str(cids));
         Timber.d("getCardIdsForModel found %s cards to delete for model %s and ords %s", cids.size, modelId, Utils.ids2str(ords))
 
@@ -290,7 +304,7 @@ abstract class ModelManager(protected val col: Collection) {
             _addField(m, field)
         } catch (e: ConfirmModSchemaException) {
             Timber.w(e, "Unexpected mod schema")
-            AnkiDroidApp.sendExceptionReport(e, "addFieldInNewModel: Unexpected mod schema")
+            CrashReportService.sendExceptionReport(e, "addFieldInNewModel: Unexpected mod schema")
             throw IllegalStateException("ConfirmModSchemaException should not be thrown", e)
         }
     }
@@ -304,13 +318,14 @@ abstract class ModelManager(protected val col: Collection) {
             _addTemplate(m, template)
         } catch (e: ConfirmModSchemaException) {
             Timber.w(e, "Unexpected mod schema")
-            AnkiDroidApp.sendExceptionReport(e, "addTemplateInNewModel: Unexpected mod schema")
+            CrashReportService.sendExceptionReport(e, "addTemplateInNewModel: Unexpected mod schema")
             throw IllegalStateException("ConfirmModSchemaException should not be thrown", e)
         }
     }
 
     /** Add template without schema mod */
     protected abstract fun _addTemplate(m: Model, template: JSONObject)
+
     /** Add field without schema mod */
     protected abstract fun _addField(m: Model, field: JSONObject)
 

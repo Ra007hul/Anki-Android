@@ -19,9 +19,11 @@ import android.content.ContentValues
 import android.database.SQLException
 import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.sqlite.db.SupportSQLiteStatement
+import net.ankiweb.rsdroid.RustCleanup
 import java.util.*
 
 /** Detects any database modifications and notifies the sync status of the application  */
+@RustCleanup("After migrating to new backend, can use backend call instead of this class.")
 class DatabaseChangeDecorator(val wrapped: SupportSQLiteDatabase) : SupportSQLiteDatabase by wrapped {
     private fun markDataAsChanged() {
         SyncStatus.markDataAsChanged()
@@ -64,13 +66,19 @@ class DatabaseChangeDecorator(val wrapped: SupportSQLiteDatabase) : SupportSQLit
         return insert
     }
 
-    override fun delete(table: String, whereClause: String, whereArgs: Array<Any>): Int {
+    override fun delete(table: String, whereClause: String?, whereArgs: Array<out Any?>?): Int {
         val delete = wrapped.delete(table, whereClause, whereArgs)
         markDataAsChanged()
         return delete
     }
 
-    override fun update(table: String, conflictAlgorithm: Int, values: ContentValues, whereClause: String?, whereArgs: Array<Any>?): Int {
+    override fun update(
+        table: String,
+        conflictAlgorithm: Int,
+        values: ContentValues,
+        whereClause: String?,
+        whereArgs: Array<out Any?>?
+    ): Int {
         val update = wrapped.update(table, conflictAlgorithm, values, whereClause, whereArgs)
         markDataAsChanged()
         return update
@@ -83,7 +91,7 @@ class DatabaseChangeDecorator(val wrapped: SupportSQLiteDatabase) : SupportSQLit
     }
 
     @Throws(SQLException::class)
-    override fun execSQL(sql: String, bindArgs: Array<Any>) {
+    override fun execSQL(sql: String, bindArgs: Array<out Any?>) {
         wrapped.execSQL(sql, bindArgs)
         checkForChanges(sql)
     }
