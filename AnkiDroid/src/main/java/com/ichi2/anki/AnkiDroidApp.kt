@@ -18,12 +18,13 @@
 package com.ichi2.anki
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
 import android.content.res.Resources
 import android.net.Uri
+import android.os.Bundle
 import android.os.Environment
 import android.system.Os
 import android.util.Log
@@ -37,6 +38,7 @@ import com.ichi2.anki.analytics.UsageAnalytics
 import com.ichi2.anki.contextmenu.AnkiCardContextMenu
 import com.ichi2.anki.contextmenu.CardBrowserContextMenu
 import com.ichi2.anki.exception.StorageAccessException
+import com.ichi2.anki.preferences.sharedPrefs
 import com.ichi2.anki.services.BootService
 import com.ichi2.anki.services.NotificationService
 import com.ichi2.anki.ui.dialogs.ActivityAgnosticDialogs
@@ -92,7 +94,7 @@ open class AnkiDroidApp : Application() {
         instance = this
 
         // Get preferences
-        val preferences = getSharedPrefs(this)
+        val preferences = this.sharedPrefs()
 
         // TODO remove the following if-block once AnkiDroid uses the new schema by default
         if (BuildConfig.LEGACY_SCHEMA) {
@@ -182,6 +184,36 @@ open class AnkiDroidApp : Application() {
 
         // Register for notifications
         mNotifications.observeForever { NotificationService.triggerNotificationFor(this) }
+
+        registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
+            override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
+                Timber.i("${activity::class.simpleName}::onCreate")
+            }
+
+            override fun onActivityStarted(activity: Activity) {
+                Timber.i("${activity::class.simpleName}::onStart")
+            }
+
+            override fun onActivityResumed(activity: Activity) {
+                Timber.i("${activity::class.simpleName}::onResume")
+            }
+
+            override fun onActivityPaused(activity: Activity) {
+                Timber.i("${activity::class.simpleName}::onPause")
+            }
+
+            override fun onActivityStopped(activity: Activity) {
+                Timber.i("${activity::class.simpleName}::onStop")
+            }
+
+            override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {
+                Timber.i("${activity::class.simpleName}::onSaveInstanceState")
+            }
+
+            override fun onActivityDestroyed(activity: Activity) {
+                Timber.i("${activity::class.simpleName}::onDestroy")
+            }
+        })
 
         activityAgnosticDialogs = ActivityAgnosticDialogs.register(this)
     }
@@ -322,17 +354,6 @@ open class AnkiDroidApp : Application() {
                 isAccessible = true
                 set(field, value)
             }
-        }
-
-        /**
-         * Convenience method for accessing Shared preferences
-         *
-         * @param context Context to get preferences for.
-         * @return A SharedPreferences object for this instance of the app.
-         */
-        @Suppress("deprecation") // TODO Tracked in https://github.com/ankidroid/Anki-Android/issues/5019
-        fun getSharedPrefs(context: Context?): SharedPreferences {
-            return android.preference.PreferenceManager.getDefaultSharedPreferences(context)
         }
 
         val cacheStorageDirectory: String

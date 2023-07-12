@@ -30,6 +30,7 @@ import android.webkit.WebViewClient
 import android.widget.Button
 import androidx.appcompat.widget.ThemeUtils
 import com.ichi2.anim.ActivityTransitionAnimation
+import com.ichi2.anki.preferences.sharedPrefs
 import com.ichi2.utils.AdaptionUtil
 import com.ichi2.utils.IntentUtil.canOpenIntent
 import com.ichi2.utils.IntentUtil.tryOpenIntent
@@ -52,13 +53,12 @@ class Info : AnkiActivity() {
         if (showedActivityFailedScreen(savedInstanceState)) {
             return
         }
-        Timber.d("onCreate()")
         super.onCreate(savedInstanceState)
         val res = resources
         val type = intent.getIntExtra(TYPE_EXTRA, TYPE_NEW_VERSION)
         // If the page crashes, we do not want to display it again (#7135 maybe)
         if (type == TYPE_NEW_VERSION) {
-            val prefs = AnkiDroidApp.getSharedPrefs(this.baseContext)
+            val prefs = this.baseContext.sharedPrefs()
             InitialActivity.setUpgradedToLatestVersion(prefs)
         }
         setContentView(R.layout.info)
@@ -94,7 +94,7 @@ class Info : AnkiActivity() {
         val backgroundColor = typedArray.getColor(0, -1)
         val textColor = typedArray.getColor(1, -1).toRGBHex()
 
-        val anchorTextThemeColor = ThemeUtils.getThemeAttrColor(this, R.attr.colorAccent)
+        val anchorTextThemeColor = ThemeUtils.getThemeAttrColor(this, android.R.attr.colorAccent)
         val anchorTextColor = anchorTextThemeColor.toRGBHex()
 
         mWebView!!.setBackgroundColor(backgroundColor)

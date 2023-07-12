@@ -199,12 +199,11 @@
         <item quantity="one">მონიშნული შენიშვნის APKG ფაილად შენახვა?</item>
         <item quantity="other">მონიშნული %d შენიშვნის APKG ფაილად შენახვა?</item>
     </plurals>
-    <string name="export_in_progress">მიმდინარეობს Аnki-პაკეტის ფაილის ექსპორტი&#8230;</string>
-    <string name="export_success_title">კოლექციის ექსპორტი წარმატებით დასრულდა</string>
+    <string name="export_preparation_in_progress">Preparing export&#8230;</string>
+    <string name="export_ready_title">Export ready</string>
     <string name="export_send_no_handlers">არაა სხვა აპლიკაციები APKG-ფაილების გასახსნელად. ინახება…</string>
     <string name="export_save_apkg_successful">Anki-პაკეტი წარმატებით შეინახა</string>
     <string name="export_save_apkg_unsuccessful">Anki-პაკეტი ვერ შეინახა</string>
-    <string name="export_success_message">You may choose a file location to save it, or share it with another application.</string>
     <string name="export_share_title">Anki-პაკეტის გაგზავნა:</string>
     <string name="export_email_subject">AnkiDroid-მა წარმატებით განახორციელა ბარათების ექსპორტი: %s</string>
     <string name="export_email_text"><![CDATA[        გამარჯობა!
@@ -214,8 +213,8 @@
         [1] %1$s<br/>
         [2] %2$s
         ]]></string>
-    <string name="export_select_save_app">ფაილის შენახვის ადგილი აირჩიეთ</string>
-    <string name="export_select_share_app">აირჩიეთ აპლიკაცია გასაზიარებლად</string>
+    <string name="export_choice_share">Share</string>
+    <string name="export_choice_save_to">Save to</string>
     <string name="study_options" comment="Name for a preference category in Filtered deck (aka Cram deck, aka Custom study) options">პარამეტრები</string>
     <string name="menu__deck_options">დასტის პარამეტრები</string>
     <string name="menu__study_options" comment="Menu item that opens options for a Filtered deck (aka Cram deck, aka Custom study)">სწავლის პარამეტრები</string>
@@ -415,10 +414,10 @@
     <string name="toggle_browser_mode_help">ბარათების ან შენიშვნების საძიებოში ჩვენების გადართვა</string>
     <string name="truncate_content_help">ბრაუზერის თითო მწკრივის სიმაღლის ისე დამოკლება, რომ მხოლოდ შიგთავსის პირველი 3 სტრიქონი აჩვენოს</string>
     <string name="browser_options_dialog_heading">ბარათების საძიებოს პარამეტრები</string>
-    <string name="functionality_disabled_during_storage_migration" comment="Displayed when trying to access functionality which cannot be run while storage is being moved to a new location">        This functionality is unavailable during a storage migration
+    <string name="functionality_disabled_during_storage_migration" comment="Displayed when trying to access functionality which cannot be run while storage is being moved to a new location">        ეს ფუნქცია მიუწვდომელია საცავის მიგრაციისას
     </string>
     <string name="storage_migration_sync_notification" comment="Appears on a notification after the user has opted into a storage migration and provided consent to sync         and AnkiDroid was minimised when the sync completed">შეეხეთ საცავის მიგრაციისათვის</string>
     <string name="media_sync_required_title">საჭიროა მედიაფაილების სინქრონიზაცია</string>
-    <string name="media_sync_unavailable_message">Media sync is disabled in the settings. Please sync and backup any media which hasn\'t been synced before continuing</string>
+    <string name="media_sync_unavailable_message">მედიაფაილების სინქრონიზაცია გამორთულია პარამეტრებში. გთხოვთ დაასინქრონოთ და სარეზერვო ფაილად შეინახოთ ყველა მედიაფაილი, რომელიც ჯერ არაა სინქრონიზებული</string>
     <string name="remember_sync_metered_checkbox_msg">Don\'t ask again (this warning can be re-enabled from Sync Settings)</string>
 </resources>

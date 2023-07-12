@@ -45,7 +45,6 @@ import com.ichi2.async.TaskManager
 import com.ichi2.libanki.TemplateManager.TemplateRenderContext.TemplateRenderOutput
 import com.ichi2.libanki.exception.NoSuchDeckException
 import com.ichi2.libanki.exception.UnknownDatabaseVersionException
-import com.ichi2.libanki.hooks.ChessFilter
 import com.ichi2.libanki.sched.AbstractSched
 import com.ichi2.libanki.sched.Sched
 import com.ichi2.libanki.sched.SchedV2
@@ -1141,7 +1140,6 @@ open class Collection(
                 Timber.w(er)
                 er.message(context)
             }
-            html = ChessFilter.fenToChessboard(html, context)
             if (!browser) {
                 // browser don't show image. So compiling LaTeX actually remove information.
                 val svg = model.optBoolean("latexsvg", false)
@@ -1391,8 +1389,8 @@ open class Collection(
             c.did
         }
         val qa: HashMap<String, String> = if (browser) {
-            val bqfmt = t.getString("bqfmt")
-            val bafmt = t.getString("bafmt")
+            val bqfmt = t.optString("bqfmt")
+            val bafmt = t.optString("bafmt")
             _renderQA(
                 cid = c.id,
                 model = m,
