@@ -18,13 +18,14 @@ package com.ichi2.anki.preferences
 import android.os.Build
 import android.provider.MediaStore
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.app.ActivityCompat
 import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.SwitchPreferenceCompat
+import anki.config.ConfigKey
 import com.ichi2.anki.*
 import com.ichi2.anki.CollectionManager.withCol
 import com.ichi2.anki.snackbar.showSnackbar
-import com.ichi2.libanki.Utils
 import com.ichi2.themes.Theme
 import com.ichi2.themes.Themes
 import com.ichi2.themes.Themes.systemIsInNightMode
@@ -35,7 +36,7 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 
 class AppearanceSettingsFragment : SettingsFragment() {
-    private var mBackgroundImage: SwitchPreferenceCompat? = null
+    private var backgroundImage: SwitchPreferenceCompat? = null
     override val preferenceResource: Int
         get() = R.xml.preferences_appearance
     override val analyticsScreenNameConstant: String
@@ -43,17 +44,17 @@ class AppearanceSettingsFragment : SettingsFragment() {
 
     override fun initSubscreen() {
         // Configure background
-        mBackgroundImage = requirePreference<SwitchPreferenceCompat>("deckPickerBackground")
-        mBackgroundImage!!.onPreferenceClickListener = Preference.OnPreferenceClickListener {
-            if (mBackgroundImage!!.isChecked) {
+        backgroundImage = requirePreference<SwitchPreferenceCompat>("deckPickerBackground")
+        backgroundImage!!.onPreferenceClickListener = Preference.OnPreferenceClickListener {
+            if (backgroundImage!!.isChecked) {
                 try {
-                    mBackgroundImageResultLauncher.launch("image/*")
-                    mBackgroundImage!!.isChecked = true
+                    backgroundImageResultLauncher.launch("image/*")
+                    backgroundImage!!.isChecked = true
                 } catch (ex: Exception) {
                     Timber.e("%s", ex.localizedMessage)
                 }
             } else {
-                mBackgroundImage!!.isChecked = false
+                backgroundImage!!.isChecked = false
                 val currentAnkiDroidDirectory = CollectionHelper.getCurrentAnkiDroidDirectory(requireContext())
                 val imgFile = File(currentAnkiDroidDirectory, "DeckPickerBackground.png")
                 if (imgFile.exists()) {
@@ -102,76 +103,58 @@ class AppearanceSettingsFragment : SettingsFragment() {
                 updateCurrentTheme(requireContext())
 
                 if (previousThemeId != Themes.currentTheme.id) {
-                    requireActivity().recreate()
+                    ActivityCompat.recreate(requireActivity())
                 }
             }
         }
 
         dayThemePref.setOnPreferenceChangeListener { newValue ->
             if (newValue != dayThemePref.value && !systemIsInNightMode(requireContext()) && newValue != Themes.currentTheme.id) {
-                requireActivity().recreate()
+                ActivityCompat.recreate(requireActivity())
             }
         }
 
         nightThemePref.setOnPreferenceChangeListener { newValue ->
             if (newValue != nightThemePref.value && systemIsInNightMode(requireContext()) && newValue != Themes.currentTheme.id) {
-                requireActivity().recreate()
+                ActivityCompat.recreate(requireActivity())
             }
-        }
-
-        // Default font
-        requirePreference<ListPreference>(R.string.pref_default_font_key).apply {
-            entries = getCustomFonts("System default")
-            entryValues = getCustomFonts("")
-        }
-        // Browser and Note editor font
-        requirePreference<ListPreference>(R.string.pref_browser_and_editor_font_key).apply {
-            entries = getCustomFonts("System default")
-            entryValues = getCustomFonts("", useFullPath = true)
         }
 
         // Show estimate time
         // Represents the collection pref "estTime": i.e.
         // whether the buttons should indicate the duration of the interval if we click on them.
         requirePreference<SwitchPreferenceCompat>(R.string.show_estimates_preference).apply {
-            launchCatchingTask { isChecked = withCol { get_config_boolean("estTimes") } }
-            setOnPreferenceChangeListener { newETA ->
-                launchCatchingTask { withCol { set_config("estTimes", newETA) } }
+            launchCatchingTask { isChecked = withCol { config.get("estTimes") ?: true } }
+            setOnPreferenceChangeListener { _, newETA ->
+                val newETABool = newETA as? Boolean ?: return@setOnPreferenceChangeListener false
+                launchCatchingTask { withCol { config.set("estTimes", newETABool) } }
+                true
             }
         }
         // Show progress
         // Represents the collection pref "dueCounts": i.e.
         // whether the remaining number of cards should be shown.
         requirePreference<SwitchPreferenceCompat>(R.string.show_progress_preference).apply {
-            launchCatchingTask { isChecked = withCol { get_config_boolean("dueCounts") } }
-            setOnPreferenceChangeListener { newDueCountsValue ->
-                launchCatchingTask { withCol { set_config("dueCounts", newDueCountsValue) } }
+            launchCatchingTask { isChecked = withCol { config.get("dueCounts") ?: true } }
+            setOnPreferenceChangeListener { _, newDueCountsValue ->
+                val newDueCountsValueBool = newDueCountsValue as? Boolean ?: return@setOnPreferenceChangeListener false
+                launchCatchingTask { withCol { config.set("dueCounts", newDueCountsValueBool) } }
+                true
+            }
+        }
+
+        // Show play buttons on cards with audio
+        // Note: Stored inverted in the collection as HIDE_AUDIO_PLAY_BUTTONS
+        requirePreference<SwitchPreferenceCompat>(R.string.show_audio_play_buttons_key).apply {
+            title = CollectionManager.TR.preferencesShowPlayButtonsOnCardsWith()
+            launchCatchingTask { isChecked = withCol { !config.getBool(ConfigKey.Bool.HIDE_AUDIO_PLAY_BUTTONS) } }
+            setOnPreferenceChangeListener { newValue ->
+                launchCatchingTask { withCol { config.setBool(ConfigKey.Bool.HIDE_AUDIO_PLAY_BUTTONS, !(newValue as Boolean)) } }
             }
         }
     }
 
-    /** Returns a list of the names of the installed custom fonts */
-    private fun getCustomFonts(defaultValue: String, useFullPath: Boolean = false): Array<String?> {
-        val fonts = Utils.getCustomFonts(requireContext())
-        val count = fonts.size
-        Timber.d("There are %d custom fonts", count)
-        val names = arrayOfNulls<String>(count + 1)
-        names[0] = defaultValue
-        if (useFullPath) {
-            for (index in 1 until count + 1) {
-                names[index] = fonts[index - 1].path
-                Timber.d("Adding custom font: %s", names[index])
-            }
-        } else {
-            for (index in 1 until count + 1) {
-                names[index] = fonts[index - 1].name
-                Timber.d("Adding custom font: %s", names[index])
-            }
-        }
-        return names
-    }
-
-    private val mBackgroundImageResultLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { selectedImage ->
+    private val backgroundImageResultLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { selectedImage ->
         if (selectedImage != null) {
             // handling file may result in exception
             try {
@@ -192,7 +175,7 @@ class AppearanceSettingsFragment : SettingsFragment() {
                             }
                         }
                     } else {
-                        mBackgroundImage!!.isChecked = false
+                        backgroundImage!!.isChecked = false
                         UIUtils.showThemedToast(requireContext(), getString(R.string.image_max_size_allowed, 10), false)
                     }
                 }
@@ -204,7 +187,7 @@ class AppearanceSettingsFragment : SettingsFragment() {
                 showSnackbar(getString(R.string.error_selecting_image, e.localizedMessage))
             }
         } else {
-            mBackgroundImage!!.isChecked = false
+            backgroundImage!!.isChecked = false
             showSnackbar(R.string.no_image_selected)
         }
     }

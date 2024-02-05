@@ -18,7 +18,8 @@ package com.ichi2.anki.dialogs.tags
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
-import androidx.fragment.app.FragmentResultListener
+import com.ichi2.anki.model.CardStateFilter
+import com.ichi2.compat.CompatHelper.Companion.getSerializableCompat
 import com.ichi2.utils.KotlinCleanup
 import java.util.ArrayList
 
@@ -31,30 +32,31 @@ interface TagsDialogListener {
      * @param indeterminateTags a list of tags which can checked or unchecked, should be ignored if not expected
      * determining if tags in this list is checked or not is done by looking at the list of
      * previous tags. if the tag is found in both previous and indeterminate, it should be kept
-     * otherwise it should be removed @see [TagsUtil.getUpdatedTags]
-     * @param option selection radio option, should be ignored if not expected
+     * otherwise it should be removed @see [com.ichi2.utils.TagsUtil.getUpdatedTags]
+     * @param stateFilter selection radio option, should be ignored if not expected
      */
-    fun onSelectedTags(selectedTags: List<String>, indeterminateTags: List<String>, option: Int)
+    fun onSelectedTags(selectedTags: List<String>, indeterminateTags: List<String>, stateFilter: CardStateFilter)
     fun <F> F.registerFragmentResultReceiver() where F : Fragment, F : TagsDialogListener {
         parentFragmentManager.setFragmentResultListener(
             ON_SELECTED_TAGS_KEY,
-            this,
-            FragmentResultListener { _: String?, bundle: Bundle ->
-                val selectedTags: List<String> = bundle.getStringArrayList(ON_SELECTED_TAGS__SELECTED_TAGS)!!
-                val indeterminateTags: List<String> = bundle.getStringArrayList(ON_SELECTED_TAGS__INDETERMINATE_TAGS)!!
-                val option = bundle.getInt(ON_SELECTED_TAGS__OPTION)
-                onSelectedTags(selectedTags, indeterminateTags, option)
-            }
-        )
+            this
+        ) { _: String?, bundle: Bundle ->
+            val selectedTags: List<String> =
+                bundle.getStringArrayList(ON_SELECTED_TAGS__SELECTED_TAGS)!!
+            val indeterminateTags: List<String> =
+                bundle.getStringArrayList(ON_SELECTED_TAGS__INDETERMINATE_TAGS)!!
+            val option = bundle.getSerializableCompat<CardStateFilter>(ON_SELECTED_TAGS__OPTION)!!
+            onSelectedTags(selectedTags, indeterminateTags, option)
+        }
     }
 
     companion object {
         fun createFragmentResultSender(fragmentManager: FragmentManager) = object : TagsDialogListener {
-            override fun onSelectedTags(selectedTags: List<String>, indeterminateTags: List<String>, option: Int) {
+            override fun onSelectedTags(selectedTags: List<String>, indeterminateTags: List<String>, stateFilter: CardStateFilter) {
                 val bundle = Bundle().apply {
                     putStringArrayList(ON_SELECTED_TAGS__SELECTED_TAGS, ArrayList(selectedTags))
                     putStringArrayList(ON_SELECTED_TAGS__INDETERMINATE_TAGS, ArrayList(indeterminateTags))
-                    putInt(ON_SELECTED_TAGS__OPTION, option)
+                    putSerializable(ON_SELECTED_TAGS__OPTION, stateFilter)
                 }
                 fragmentManager.setFragmentResult(ON_SELECTED_TAGS_KEY, bundle)
             }

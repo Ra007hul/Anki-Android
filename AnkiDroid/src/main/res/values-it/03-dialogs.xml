@@ -46,16 +46,8 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="check_db_title">Controllare la banca dati?</string>
     <string name="check_db_warning">Può richiedere molto tempo</string>
-    <string name="check_db_acknowledge">Banca dati controllata</string>
-    <string name="check_db_acknowledge_shrunk">Banca dati controllata e ottimizzata.\nRidotta di %d MB.</string>
     <string name="contextmenu_deckpicker_delete_deck">Elimina il mazzo</string>
-    <string name="delete_deck_default_deck">Il mazzo predefinito non può essere eliminato.</string>
     <string name="delete_deck_title">Elimina il mazzo</string>
-    <plurals name="delete_deck_message">
-        <item quantity="one">Eliminare tutte le carte in %1$s? Esso contiene %2$d carta.</item>
-        <item quantity="other">Eliminare tutte le carte in %1$s? Esso contiene %2$d carte.</item>
-    </plurals>
-    <string name="delete_cram_deck_message">Sei sicuro di voler riportare tutte le carte in %s nel loro mazzo originale?</string>
     <string name="no_tts_available_message">Nessuna lingua per la sintesi vocale disponibile</string>
     <string name="initializing_tts">Inizializzo TTS&#8230;</string>
     <string name="tts_no_tts">Non parlare</string>
@@ -90,7 +82,6 @@
     </plurals>
     <string name="reschedule_card_dialog_new_card_warning">Una nuova carta è in fase di riprogrammazione. La riprogrammazione trasforma anche nuove carte in carte di revisione. Utilizzare l\'opzione \'riposiziona carta\' per cambiare la posizione di una nuova carta all\'interno della nuova coda</string>
     <string name="reschedule_card_dialog_warning_ease_reset">La riprogrammazione ripristina anche il modo in cui lo scheduler tratta la carta in futuro (la facilità sarà impostata a %d%%)</string>
-    <string name="firefox_workaround_launched_reviewer_opening_deck">Seleziona il mazzo nel gestitore di file o visita la pagina about:download per importarlo</string>
     <string name="answering_error_title">Errore database</string>
     <string name="answering_error_message">Scrittura della raccolta non riuscita. La banca dati potrebbe essere danneggiata o potrebbe non esserci abbastanza spazio vuoto sul disco.\n\nSe questo accade più spesso, prova a controllare la banca dati, a riparare la collezione o a ripristinarla da un backup. Tocca «opzioni» per quello.\n\O potrebbe essere anche un errore di AnkiDroid, per favore segnala l\'errore in modo da poterlo controllare.</string>
     <string name="answering_error_report">Segnala errori</string>
@@ -107,15 +98,6 @@
     <string name="custom_study_random">Seleziona x carte casualmente dal mazzo:</string>
     <string name="custom_study_preview">Anteprima carte nuove aggiunte negli ultimi x giorni:</string>
     <string name="custom_study_rebuild_deck_corrupt">Impossibile ricostruire il mazzo di studio personalizzato</string>
-    <string name="importing_collection">Importazione collezione.\nAttendi&#8230;</string>
-    <string name="import_media_count">Importazione file multimediali %1$d%%\nAttendi&#8230;</string>
-    <string name="import_progress">• Importazione note: %1$d%%\n• Importazione carte: %2$d%%\n• Post-elaborazione: %3$d%%</string>
-    <string name="import_update_details">Aggiornate %1$d di %2$d note esistenti.</string>
-    <string name="import_update_ignored">Alcuni aggiornamenti sono stati ignorati perché il tipo di nota è cambiato</string>
-    <plurals name="import_complete_message">
-        <item quantity="one">Carte importate: %2$d</item>
-        <item quantity="other">File importati: %1$d\nCarte importate in totale: %2$d</item>
-    </plurals>
     <string name="storage_full_title">Spazio di archiviazione pieno</string>
     <string name="storage_almost_full_title">Spazio di archiviazione quasi pieno</string>
     <string name="no_space_to_downgrade_title" tools:ignore="UnusedResources">Nessuno spazio</string>
@@ -135,18 +117,14 @@
     <!-- Currently unsued, should be useful in the future -->
     <string name="dialog_positive_disable" tools:ignore="UnusedResources">Disattiva</string>
     <string name="dialog_positive_overwrite">Sovrascrivi</string>
-    <string name="dialog_positive_remove">Rimuovi</string>
     <string name="dialog_positive_repair">Ripara</string>
     <string name="dialog_positive_replace">Sostituisci</string>
-    <string name="dialog_positive_restore">Ripristina</string>
-    <string name="dialog_positive_set">Imposta</string>
     <string name="dialog_collection_path_not_dir">Il percorso specificato non era una cartella valida</string>
     <!-- Media checking -->
     <string name="check_media_title">Controllare i media?</string>
     <string name="check_media_warning">Ciò può richiedere molto tempo con le collezioni multimediali di grandi dimensioni</string>
     <string name="check_media_message">Controllo i media&#8230;</string>
     <string name="check_media_acknowledge">Media controllati</string>
-    <string name="check_media_failed">Controllo dei media fallito</string>
     <string name="check_media_invalid">File con codifica non valida: %d</string>
     <string name="check_media_unused">File nella cartella media ma non utilizzati da nessuna carta: %d</string>
     <string name="check_media_nohave">File utilizzati sulle carte, ma non nella cartella media: %d</string>
@@ -180,18 +158,10 @@
     <string name="integrity_check_continue_anyway">Continua comunque</string>
     <string name="integrity_check_insufficient_space">Il controllo banca dati utilizza una grande quantità di memoria temporanea.\n\nSi raccomanda vivamente di avere almeno %s spazio libero sul dispositivo prima di continuare.</string>
     <string name="integrity_check_insufficient_space_extra_content">\n\nAttualmente hai %s liberi.</string>
-    <plurals name="integrity_check_fixed_no_home_deck_new">
-        <item quantity="one">%d card with incorrect home deck was recovered. Please see the manual for more information.</item>
-        <item quantity="other">%d cards with incorrect home decks were recovered. Please see the manual for more information.</item>
-    </plurals>
-    <string name="video_creation_error">Impossibile riprodurre il video</string>
     <!-- Card Browser -->
-    <string name="card_browser_deck_change_error">Impossibile cambiare mazzo</string>
     <!-- AbstractFlashCardViewer -->
     <string name="card_viewer_url_decode_error">Errore nella decodifica dei dati dalla carta</string>
-    <string name="undo_succeeded"> «%s» annullato</string>
     <!-- Deck Options -->
-    <string name="deck_options_corrupt">Elaborazione delle opzioni del mazzo non riuscita: %s</string>
     <!-- Database Errors-->
     <string name="database_locked_title">Banca dati bloccata</string>
     <string name="database_locked_summary">La banca dati di AnkiDroid è in uso da un\'altra applicazione. Chiudi l\'altra applicazione e riapri AnkiDroid.</string>
@@ -215,7 +185,7 @@
     <string name="boot_service_failed_to_schedule_notifications">Pianificazione dei promemoria fallita</string>
     <string name="boot_service_too_many_notifications">Troppi promemoria pianificati. Alcuni non appariranno.</string>
     <!-- Locale Selection Dialog -->
-    <string name="locale_selection_dialog_title">Selezione Suggerimento Tastiera</string>
+    <string name="locale_selection_dialog_title_new">Set Language</string>
     <string name="locale_selection_dialog_summary">Alcune tastiere multilingue, come GBoard, supportano il cambio di lingua durante la modifica del testo\n\nSi prega di richiedere la funzione “setImeHintLocales” dal produttore della tastiera se la tastiera non cambia lingua.</string>
     <!-- Help Dialog -->
     <string name="help_title_using_ankidroid">Usare AnkiDroid</string>

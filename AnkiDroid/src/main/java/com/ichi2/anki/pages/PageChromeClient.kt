@@ -15,16 +15,18 @@
  */
 package com.ichi2.anki.pages
 
+import android.view.WindowManager
 import android.webkit.JsResult
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import androidx.appcompat.app.AlertDialog
 import com.ichi2.anki.R
-import com.ichi2.anki.UIUtils
+import com.ichi2.utils.cancelable
 import com.ichi2.utils.message
 import com.ichi2.utils.negativeButton
 import com.ichi2.utils.positiveButton
 import com.ichi2.utils.show
+import timber.log.Timber
 
 open class PageChromeClient : WebChromeClient() {
     override fun onJsAlert(
@@ -33,7 +35,17 @@ open class PageChromeClient : WebChromeClient() {
         message: String?,
         result: JsResult?
     ): Boolean {
-        UIUtils.showThemedToast(view.context, message ?: "", shortLength = true)
+        try {
+            AlertDialog.Builder(view.context).show {
+                message?.let { message(text = message) }
+                positiveButton(R.string.dialog_ok) { result?.confirm() }
+                setOnCancelListener { result?.cancel() }
+            }
+        } catch (e: WindowManager.BadTokenException) {
+            Timber.w("onJsAlert", e)
+            return false
+        }
+
         return true
     }
 
@@ -43,10 +55,16 @@ open class PageChromeClient : WebChromeClient() {
         message: String?,
         result: JsResult?
     ): Boolean {
-        AlertDialog.Builder(view.context).show {
-            message?.let { message(text = message) }
-            positiveButton(R.string.dialog_ok) { result?.confirm() }
-            negativeButton(R.string.dialog_cancel) { result?.cancel() }
+        try {
+            AlertDialog.Builder(view.context).show {
+                message?.let { message(text = message) }
+                positiveButton(R.string.dialog_ok) { result?.confirm() }
+                negativeButton(R.string.dialog_cancel) { result?.cancel() }
+                cancelable(false)
+            }
+        } catch (e: WindowManager.BadTokenException) {
+            Timber.w("onJsConfirm", e)
+            return false // unhandled - shown in WebView
         }
         return true
     }

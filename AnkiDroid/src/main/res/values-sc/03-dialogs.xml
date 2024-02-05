@@ -46,17 +46,8 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="check_db_title">Verificare sa base de datos?</string>
     <string name="check_db_warning">Bi diat pòdere chèrrere tempus meda</string>
-    <string name="check_db_acknowledge">Base de datos verificada</string>
-    <string name="check_db_acknowledge_shrunk">Base de datos verificada e otimizada.\n
-                                                  Minimada de %d MB.</string>
     <string name="contextmenu_deckpicker_delete_deck">Iscantzella su matzu</string>
-    <string name="delete_deck_default_deck">Su matzu predefinidu non si podet iscantzellare</string>
     <string name="delete_deck_title">Iscantzellare su matzu?</string>
-    <plurals name="delete_deck_message">
-        <item quantity="one">Iscantzellare totu sas cartas in %1$s? Cuntenet %2$d carta.</item>
-        <item quantity="other">Iscantzellare totu sas cartas in %1$s? Cuntenet %2$d cartas.</item>
-    </plurals>
-    <string name="delete_cram_deck_message">Torrare a imbiare totu sas cartas in %s a sos matzos originales issoro?</string>
     <string name="no_tts_available_message">Non b\'est a disponimentu peruna limba de sìntesi vocale</string>
     <string name="initializing_tts">Initzializende sa sìntesi vocale TTS&#8230;</string>
     <string name="tts_no_tts">Non chistiones</string>
@@ -91,14 +82,13 @@
     </plurals>
     <string name="reschedule_card_dialog_new_card_warning">Una carta noes est in fase de ripranificatzione. Su de torrare a pranificare una carta trasformat fintzas sas cartas noas in cartas de revisione. also turns new cards into review cards. Imprea s\'optzione ‘torra a positzionare sa carta’ pro mudare sa positzione de una carta noa in sa lista noa</string>
     <string name="reschedule_card_dialog_warning_ease_reset">Sa ripranificatzione resetat fintzas sa manera de tratare sas cartas chi su pranificadore at a impreare in su benidore (sa fatzilidade s\'at a impostare %d%%)</string>
-    <string name="firefox_workaround_launched_reviewer_opening_deck">Ischerta su matzu in su navigadore de documentos tuo o bìsita sa pàgina about:downloads pro l\'importare</string>
     <string name="answering_error_title">Faddina de sa base de datos</string>
     <string name="answering_error_message">Iscritura in sa colletzione fallida. Sa base de datos diat pòdere èssere corrùmpida o bi diat pòdere no èssere logu bastante in su discu.\n
                                              \n
                                              Si custu acontesset prus de su sòlitu proa a verificare sa base de datos, ariparare sa colletzione o a la ripristinare dae una còpia de seguresa. Incarca in “optziones” pro lu fàghere.\n
                                              \\O diat pòdere èssere fintzas unu problema de AnkiDroid; pro praghere sinnala s\'errore pro nos permìtere de lu verificare.</string>
     <string name="answering_error_report">Sinnala una faddina</string>
-    <string name="storage_full_message">There is not enough free storage space to open AnkiDroid. Free up some space to continue. </string>
+    <string name="storage_full_message">Non b\'at ispàtziu de memòria bastante pro abèrrere AnkiDroid. Lìbera unu pagu de ispàtziu pro sighire.</string>
     <string name="repair_deck_dialog">Cheres a beru proare a riparare sa base de datos?\n
                    \n
                    In antis de incumintzare cun sa proa s\'at a creare una còpia in sa suta-cartella “%s”.</string>
@@ -113,17 +103,6 @@
     <string name="custom_study_random">Ischerta x cartas a casu dae su matzu:</string>
     <string name="custom_study_preview">Ammustra s\'antiprima de sas cartas noas annànghidas in sas ùrtimas x dies:</string>
     <string name="custom_study_rebuild_deck_corrupt">Ricostrutzione de su matzu de istùdiu personalizadu fallida</string>
-    <string name="importing_collection">Importende sa colletzione&#8230;</string>
-    <string name="import_media_count">Importende sos documentos multimediales %1$d%%&#8230;</string>
-    <string name="import_progress">• Importende notas: %1$d%%\n
-                              • Importende cartas: %2$d%%\n
-                              • Post-elaboratzione: %3$d%%</string>
-    <string name="import_update_details">%1$d de %2$d notas chi esistint atualizadas.</string>
-    <string name="import_update_ignored">Unas cantas atualizatziones sunt istadas ignoradas ca sa casta de nota est cambiada</string>
-    <plurals name="import_complete_message">
-        <item quantity="one">Cartas importadas: %2$d</item>
-        <item quantity="other">Documentos importados: %1$d\nTotale de cartas importadas: %2$d</item>
-    </plurals>
     <string name="storage_full_title">Memòria prena</string>
     <string name="storage_almost_full_title">Memòria belle prena</string>
     <string name="no_space_to_downgrade_title" tools:ignore="UnusedResources">Non b\'at ispàtziu</string>
@@ -143,18 +122,14 @@
     <!-- Currently unsued, should be useful in the future -->
     <string name="dialog_positive_disable" tools:ignore="UnusedResources">Disabìlita</string>
     <string name="dialog_positive_overwrite">Subraiscrie</string>
-    <string name="dialog_positive_remove">Boga</string>
     <string name="dialog_positive_repair">Acontza</string>
     <string name="dialog_positive_replace">Remplasa</string>
-    <string name="dialog_positive_restore">Riprìstina</string>
-    <string name="dialog_positive_set">Imposta</string>
     <string name="dialog_collection_path_not_dir">S\'àndala dislindada non fiat una cartella vàlida</string>
     <!-- Media checking -->
     <string name="check_media_title">Verificare sos mèdios?</string>
     <string name="check_media_warning">In casu de colletziones multimediales mannas bi diat pòdere chèrrere tempus meda</string>
     <string name="check_media_message">Vetifichende sos mèdios&#8230;</string>
     <string name="check_media_acknowledge">Mèdios verificados</string>
-    <string name="check_media_failed">Verìfica de sos mèdios fallida</string>
     <string name="check_media_invalid">Documentos cun una codìfica non vàlida: %d</string>
     <string name="check_media_unused">Documentos in sa cartella de sos mèdios ma chi non benint impreados dae peruna carta: %d</string>
     <string name="check_media_nohave">Documentos impreados in sas cartas ma chi mancant in sa cartella de sos mèdios: %d</string>
@@ -190,18 +165,10 @@
                               \n
                               Ti cunsigiamus de tènnere a su nessi %s de ispàtziu lìberu in su dispositivu tuo in antis de sighire.</string>
     <string name="integrity_check_insufficient_space_extra_content">Como tenes %s lìberos.</string>
-    <plurals name="integrity_check_fixed_no_home_deck_new">
-        <item quantity="one">%d card with incorrect home deck was recovered. Please see the manual for more information.</item>
-        <item quantity="other">%d cards with incorrect home decks were recovered. Please see the manual for more information.</item>
-    </plurals>
-    <string name="video_creation_error">Riprodutzione de su vìdeu fallida</string>
     <!-- Card Browser -->
-    <string name="card_browser_deck_change_error">Cambiamentu de su matzu fallidu</string>
     <!-- AbstractFlashCardViewer -->
     <string name="card_viewer_url_decode_error">Errore decodifichende sos datos dae sa carta</string>
-    <string name="undo_succeeded">\"%s\" annulladu</string>
     <!-- Deck Options -->
-    <string name="deck_options_corrupt">Elaboratzione de sas optziones de su matzu fallida: %s</string>
     <!-- Database Errors-->
     <string name="database_locked_title">Base de datos blocada</string>
     <string name="database_locked_summary">Sa base de datos de AnkiDroid l\'est giai impreende un\'àtera aplicatzione. Pro praghere serra s\'àtera aplicatzione e a pustis torra a abèrrere AnkiDroid.</string>
@@ -230,7 +197,7 @@
     <string name="boot_service_failed_to_schedule_notifications">Pranificatzione de sos avisos fallida</string>
     <string name="boot_service_too_many_notifications">Tropu avisos pranificados. Unos cantos no ant a apàrrere</string>
     <!-- Locale Selection Dialog -->
-    <string name="locale_selection_dialog_title">Issèberu de sa limba de su tecladu</string>
+    <string name="locale_selection_dialog_title_new">Set Language</string>
     <string name="locale_selection_dialog_summary">Unos cantos teclados a prus limbas, a esèmpiu GBoard, suportant su càmbiu de limba durante sa modìfica de su testu\'\n
                             \n
                             Pro praghere pedi sa funtzionalidade “setImeHintLocales” a su produtore de su tecladu tuo si cussu tecladu non mudat de limba.</string>
@@ -279,15 +246,15 @@
     <!-- Deck selection dialog -->
     <string name="cannot_create_subdeck_for_all_decks">Non podes creare unu suta-matzu pro totu sos matzos</string>
     <!-- scoped storage -->
-    <string name="backup_your_collection">Backup your collection</string>
-    <string name="backup_collection_message">You haven\'t backed up your collection in a while. You should do this now to prevent data loss</string>
-    <string name="button_backup">Backup</string>
-    <string name="button_disable_reminder">Disable reminder</string>
-    <string name="button_backup_later" comment="dismiss the \'Backup\' dialog for around 2 weeks">Later</string>
-    <string name="button_do_not_show_again" comment="permanently dismisses a dialog">Don\'t show again</string>
-    <string name="dismiss_backup_warning_title">Data loss warning</string>
-    <string name="dismiss_backup_warning_new_user">        Due to Android privacy changes, your data and automated backups will be deleted from your phone if the app is uninstalled
+    <string name="backup_your_collection">Faghe una còpia de seguresa de sa colletzione tua</string>
+    <string name="backup_collection_message">No as fatu una còpia de seguresa de sa colletzione tua dae unu pagu de tempus. Lu dias dèpere fàghere como pro prevènnere pèrdidas de datos</string>
+    <string name="button_backup">Faghe una còpia</string>
+    <string name="button_disable_reminder">Disabìlita su promemòria </string>
+    <string name="button_backup_later" comment="dismiss the \'Backup\' dialog for around 2 weeks">Prus a tardu</string>
+    <string name="button_do_not_show_again" comment="permanently dismisses a dialog">Non lu torres a mustrare</string>
+    <string name="dismiss_backup_warning_title">Avisu de pèrdida de datos</string>
+    <string name="dismiss_backup_warning_new_user">        Pro neghe de sas modìficas a sa riservadesa de Android, sos datos tuos e sas còpias de seguresa automàticas tuas s\'ant a iscantzellare dae su telèfonu tuo si as a disinstallare s\'aplicatzione
     </string>
-    <string name="dismiss_backup_warning_upgrade">        Due to Android privacy changes, your data and automated backups will be inaccessible if the app is uninstalled
+    <string name="dismiss_backup_warning_upgrade">        Pro neghe de sas modìficas a sa riservadesa de Android, non s\'at a pòdere atzèdere a sos datos tuos e a sas còpias de seguresa automàticas tuas si as a disinstallare s\'aplicatzione
     </string>
 </resources>

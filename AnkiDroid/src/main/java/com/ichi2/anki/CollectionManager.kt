@@ -24,7 +24,6 @@ import anki.backend.backendError
 import com.ichi2.anki.servicelayer.ValidatedMigrationSourceAndDestination
 import com.ichi2.anki.servicelayer.scopedstorage.MigrateEssentialFiles
 import com.ichi2.libanki.Collection
-import com.ichi2.libanki.CollectionV16
 import com.ichi2.libanki.Storage.collection
 import com.ichi2.libanki.importCollectionPackage
 import com.ichi2.utils.Threads
@@ -59,6 +58,10 @@ object CollectionManager {
 
     @VisibleForTesting
     var emulateOpenFailure = false
+
+    /** A speed optimisation to remove the logging function of the collection */
+    @VisibleForTesting
+    var disableLogFile: Boolean = false
 
     /**
      * Execute the provided block on a serial background queue, to ensure
@@ -128,11 +131,11 @@ object CollectionManager {
      * thread safe and can be accessed concurrently, if another thread closes the collection
      * and you call a routine that expects an open collection, it will result in an error.
      */
-    suspend fun getBackend(): Backend {
-        return withQueue {
-            ensureBackendInner()
-            backend!!
+    fun getBackend(): Backend {
+        if (backend == null) {
+            runBlocking { withQueue { ensureBackendInner() } }
         }
+        return backend!!
     }
 
     /**
@@ -140,13 +143,15 @@ object CollectionManager {
      */
     val TR: Translations
         get() {
-            if (backend == null) {
-                runBlocking { ensureBackend() }
-            }
             // we bypass the lock here so that translations are fast - conflicts are unlikely,
             // as the backend is only ever changed on language preference change or schema switch
-            return backend!!.tr
+            return getBackend().tr
         }
+
+    fun compareAnswer(expected: String, given: String): String {
+        // bypass the lock, as the type answer code is heavily nested in non-suspend functions
+        return getBackend().compareAnswer(expected, given)
+    }
 
     /**
      * Close the currently cached backend and discard it. Useful when enabling the V16 scheduler in the
@@ -179,26 +184,26 @@ object CollectionManager {
     /** See [ensureBackend]. This must only be run inside the queue. */
     private fun ensureBackendInner() {
         if (backend == null) {
-            backend = BackendFactory.getBackend(AnkiDroidApp.instance)
+            backend = BackendFactory.getBackend()
         }
     }
 
     /**
      * If the collection is open, close it.
      */
-    suspend fun ensureClosed(save: Boolean = true) {
+    suspend fun ensureClosed() {
         withQueue {
-            ensureClosedInner(save = save)
+            ensureClosedInner()
         }
     }
 
     /** See [ensureClosed]. This must only be run inside the queue. */
-    private fun ensureClosedInner(save: Boolean = true) {
+    private fun ensureClosedInner() {
         if (collection == null) {
             return
         }
         try {
-            collection!!.close(save = save)
+            collection!!.close()
         } catch (exc: Exception) {
             Timber.e("swallowing error on close: $exc")
         }
@@ -226,19 +231,20 @@ object CollectionManager {
         if (collection == null || collection!!.dbClosed) {
             val path = collectionPathInValidFolder()
             collection =
-                collection(AnkiDroidApp.instance, path, server = false, log = true, backend)
+                collection(path, log = !disableLogFile, backend)
         }
     }
 
     suspend fun deleteCollectionDirectory() {
         withQueue {
-            ensureClosedInner(save = false)
+            ensureClosedInner()
             getCollectionDirectory().deleteRecursively()
         }
     }
 
     fun getCollectionDirectory() =
-        File(CollectionHelper.getCurrentAnkiDroidDirectory(AnkiDroidApp.instance))
+        // Allow execution if AnkiDroidApp.instance is not initialized
+        File(CollectionHelper.getCurrentAnkiDroidDirectoryOptionalContext(AnkiDroidApp.sharedPrefs()) { AnkiDroidApp.instance })
 
     /** Ensures the AnkiDroid directory is created, then returns the path to the collection file
      * inside it. */
@@ -265,8 +271,8 @@ object CollectionManager {
         }
     }
 
-    fun closeCollectionBlocking(save: Boolean = true) {
-        runBlocking { ensureClosed(save = save) }
+    fun closeCollectionBlocking() {
+        runBlocking { ensureClosed() }
     }
 
     /**
@@ -315,7 +321,7 @@ object CollectionManager {
                     }
                     true
                 }.first()
-                Timber.e("blocked main thread for %dms:\n%s", elapsed, caller)
+                Timber.w("blocked main thread for %dms:\n%s", elapsed, caller)
             }
         }
     }
@@ -349,39 +355,6 @@ object CollectionManager {
     }
 
     /**
-     * Execute block with the collection upgraded to the latest schema.
-     * If it was previously using the legacy schema, the collection is downgraded
-     * again after the block completes.
-     */
-    private suspend fun <T> withNewSchema(block: CollectionV16.() -> T): T {
-        return withCol {
-            if (BackendFactory.defaultLegacySchema) {
-                // Temporarily update to the latest schema.
-                discardBackendInner()
-                BackendFactory.defaultLegacySchema = false
-                ensureOpenInner()
-                try {
-                    (collection!! as CollectionV16).block()
-                } finally {
-                    BackendFactory.defaultLegacySchema = true
-                    discardBackendInner()
-                }
-            } else {
-                (this as CollectionV16).block()
-            }
-        }
-    }
-
-    /** Upgrade from v1 to v2 scheduler.
-     * Caller must have confirmed schema modification already.
-     */
-    suspend fun updateScheduler() {
-        withNewSchema {
-            sched.upgradeToV2()
-        }
-    }
-
-    /**
      * Replace the collection with the provided colpkg file if it is valid.
      */
     suspend fun importColpkg(colpkgPath: String) {
@@ -399,7 +372,7 @@ object CollectionManager {
      */
     suspend fun migrateEssentialFiles(context: Context, folders: ValidatedMigrationSourceAndDestination) {
         withQueue {
-            ensureClosedInner(true)
+            ensureClosedInner()
             val migrator = MigrateEssentialFiles(context, folders)
             migrator.migrateFiles()
             migrator.updateCollectionPath()

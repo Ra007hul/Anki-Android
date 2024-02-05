@@ -15,7 +15,6 @@
  */
 package com.ichi2.anki.dialogs
 
-import androidx.core.view.get
 import androidx.fragment.app.testing.FragmentScenario
 import androidx.lifecycle.Lifecycle
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -28,15 +27,16 @@ import com.ichi2.anki.dialogs.customstudy.CustomStudyDialog
 import com.ichi2.anki.dialogs.customstudy.CustomStudyDialog.CustomStudyListener
 import com.ichi2.anki.dialogs.customstudy.CustomStudyDialogFactory
 import com.ichi2.libanki.Collection
-import com.ichi2.libanki.sched.AbstractSched
-import com.ichi2.testutils.JsonUtils.toOrderedString
+import com.ichi2.libanki.sched.Scheduler
 import com.ichi2.testutils.ParametersUtils
+import com.ichi2.testutils.isJsonEqual
 import com.ichi2.testutils.items
 import com.ichi2.utils.KotlinCleanup
 import org.hamcrest.CoreMatchers.notNullValue
 import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers
 import org.hamcrest.core.IsNull
+import org.json.JSONObject
 import org.junit.After
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -47,16 +47,16 @@ import org.robolectric.annotation.Config
 
 @RunWith(AndroidJUnit4::class)
 class CustomStudyDialogTest : RobolectricTest() {
-    private var mMockListener: CustomStudyListener? = null
+    private var mockListener: CustomStudyListener? = null
     override fun setUp() {
         super.setUp()
-        mMockListener = Mockito.mock(CustomStudyListener::class.java)
+        mockListener = Mockito.mock(CustomStudyListener::class.java)
     }
 
     @After
     override fun tearDown() {
         super.tearDown()
-        Mockito.reset(mMockListener)
+        Mockito.reset(mockListener)
     }
 
     @Test
@@ -65,7 +65,7 @@ class CustomStudyDialogTest : RobolectricTest() {
         val args = CustomStudyDialog(mock(), ParametersUtils.whatever())
             .withArguments(CustomStudyDialog.ContextMenuOption.STUDY_AHEAD, 1)
             .arguments
-        val factory = CustomStudyDialogFactory({ this.col }, mMockListener)
+        val factory = CustomStudyDialogFactory({ this.col }, mockListener)
         val scenario = FragmentScenario.launch(CustomStudyDialog::class.java, args, factory)
         scenario.moveToState(Lifecycle.State.STARTED)
         scenario.onFragment { f: CustomStudyDialog ->
@@ -74,7 +74,7 @@ class CustomStudyDialogTest : RobolectricTest() {
             dialog!!.getActionButton(WhichButton.POSITIVE).callOnClick()
         }
         val customStudy = col.decks.current()
-        MatcherAssert.assertThat("Custom Study should be dynamic", customStudy.isDyn)
+        MatcherAssert.assertThat("Custom Study should be dynamic", customStudy.isFiltered)
         MatcherAssert.assertThat("could not find deck: Custom study session", customStudy, notNullValue())
         customStudy.remove("id")
         customStudy.remove("mod")
@@ -87,7 +87,8 @@ class CustomStudyDialogTest : RobolectricTest() {
             "\"dyn\":1," +
             "\"lrnToday\":[0,0]," +
             "\"newToday\":[0,0]," +
-            "\"previewDelay\":10," +
+            "\"previewDelay\":0," +
+            "\"previewAgainSecs\":60,\"previewHardSecs\":600,\"previewGoodSecs\":0," +
             "\"resched\":true," +
             "\"revToday\":[0,0]," +
             "\"separate\":true," +
@@ -95,7 +96,7 @@ class CustomStudyDialogTest : RobolectricTest() {
             "\"timeToday\":[0,0]," +
             "\"usn\":-1" +
             "}"
-        MatcherAssert.assertThat(customStudy.toOrderedString(), Matchers.equalTo(expected))
+        MatcherAssert.assertThat(customStudy, isJsonEqual(JSONObject(expected)))
     }
 
     @Test
@@ -112,10 +113,10 @@ class CustomStudyDialogTest : RobolectricTest() {
         // so we don't get net/ankiweb/rsdroid/BackendException$BackendDbException$BackendDbLockedException
         ensureCollectionLoadIsSynchronous()
         val mockCollection = Mockito.mock(Collection::class.java, Mockito.RETURNS_DEEP_STUBS)
-        val mockSched = Mockito.mock(AbstractSched::class.java)
+        val mockSched = Mockito.mock(Scheduler::class.java)
         whenever(mockCollection.sched).thenReturn(mockSched)
         whenever(mockSched.newCount()).thenReturn(0)
-        val factory = CustomStudyDialogFactory({ mockCollection }, mMockListener)
+        val factory = CustomStudyDialogFactory({ mockCollection }, mockListener)
         val scenario = FragmentScenario.launch(CustomStudyDialog::class.java, args, androidx.appcompat.R.style.Theme_AppCompat, factory)
         scenario.moveToState(Lifecycle.State.STARTED)
         scenario.onFragment { f: CustomStudyDialog ->

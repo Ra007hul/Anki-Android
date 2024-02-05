@@ -17,6 +17,8 @@
 package com.ichi2.anki.dialogs
 
 import android.os.Bundle
+import androidx.annotation.CheckResult
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
 import com.ichi2.anki.R
 import com.ichi2.utils.negativeButton
@@ -26,8 +28,8 @@ import java.net.URLDecoder
 
 class ImportDialog : AsyncDialogFragment() {
     interface ImportDialogListener {
-        fun importAdd(importPath: List<String>)
-        fun importReplace(importPath: List<String>)
+        fun importAdd(importPath: String)
+        fun importReplace(importPath: String)
         fun dismissAllDialogFragments()
     }
 
@@ -36,16 +38,15 @@ class ImportDialog : AsyncDialogFragment() {
         val type = requireArguments().getInt("dialogType")
         val dialog = AlertDialog.Builder(requireActivity())
         dialog.setCancelable(true)
-        val dialogMessageList = requireArguments().getStringArrayList("dialogMessage")!!
-        // Iterate over dialog message list & create display filename
-        val displayFileName = dialogMessageList.joinToString("\n") { filenameFromPath(convertToDisplayName(it)) }
+        val packagePath = requireArguments().getString("packagePath")!!
+        val displayFileName = filenameFromPath(convertToDisplayName(packagePath))
 
         return when (type) {
             DIALOG_IMPORT_ADD_CONFIRM -> {
                 dialog.setTitle(R.string.import_title)
-                    .setMessage(res().getQuantityString(R.plurals.import_files_message_add_confirm, dialogMessageList.size, displayFileName))
+                    .setMessage(res().getString(R.string.import_dialog_message_add, displayFileName))
                     .positiveButton(R.string.import_message_add) {
-                        (activity as ImportDialogListener).importAdd(dialogMessageList)
+                        (activity as ImportDialogListener).importAdd(packagePath)
                         dismissAllDialogFragments()
                     }
                     .negativeButton(R.string.dialog_cancel)
@@ -55,7 +56,7 @@ class ImportDialog : AsyncDialogFragment() {
                 dialog.setTitle(R.string.import_title)
                     .setMessage(res().getString(R.string.import_message_replace_confirm, displayFileName))
                     .positiveButton(R.string.dialog_positive_replace) {
-                        (activity as ImportDialogListener).importReplace(dialogMessageList)
+                        (activity as ImportDialogListener).importReplace(packagePath)
                         dismissAllDialogFragments()
                     }
                     .negativeButton(R.string.dialog_cancel)
@@ -94,18 +95,24 @@ class ImportDialog : AsyncDialogFragment() {
         const val DIALOG_IMPORT_ADD_CONFIRM = 2
         const val DIALOG_IMPORT_REPLACE_CONFIRM = 3
 
+        @VisibleForTesting
+        val dialogTypes = arrayOf(
+            DIALOG_IMPORT_ADD_CONFIRM,
+            DIALOG_IMPORT_REPLACE_CONFIRM
+        )
+
         /**
          * A set of dialogs which deal with importing a file
          *
          * @param dialogType An integer which specifies which of the sub-dialogs to show
-         * @param dialogMessageList An optional ArrayList of string(s) which can be used to show a custom message
-         * or specify import path
+         * @param packagePath the path of the package to import
          */
-        fun newInstance(dialogType: Int, dialogMessageList: ArrayList<String>): ImportDialog {
+        @CheckResult
+        fun newInstance(dialogType: Int, packagePath: String): ImportDialog {
             val f = ImportDialog()
             val args = Bundle()
             args.putInt("dialogType", dialogType)
-            args.putStringArrayList("dialogMessage", dialogMessageList)
+            args.putString("packagePath", packagePath)
             f.arguments = args
             return f
         }

@@ -17,20 +17,18 @@
 
 package com.ichi2.libanki
 
+import androidx.annotation.CheckResult
 import androidx.annotation.VisibleForTesting
-import com.ichi2.libanki.utils.TimeManager.time
-import com.ichi2.utils.BlocksSchemaUpgrade
 import com.ichi2.utils.KotlinCleanup
-import net.ankiweb.rsdroid.BackendFactory
-import net.ankiweb.rsdroid.BackendFactory.defaultLegacySchema
+import com.ichi2.utils.emptyStringArray
+import com.ichi2.utils.emptyStringMutableList
+import net.ankiweb.rsdroid.RustCleanup
 import org.json.JSONObject
-import timber.log.Timber
 import java.util.*
 import java.util.regex.Pattern
 
 @KotlinCleanup("lots to do")
 class Note : Cloneable {
-    val col: Collection
 
     /**
      * Should only be mutated by addNote()
@@ -40,131 +38,76 @@ class Note : Cloneable {
     @get:VisibleForTesting
     var guId: String? = null
         private set
-    private lateinit var mModel: Model
+    lateinit var notetype: NotetypeJson
 
     var mid: Long = 0
         private set
-    lateinit var tags: ArrayList<String>
+    lateinit var tags: MutableList<String>
         private set
-    lateinit var fields: Array<String>
+    lateinit var fields: MutableList<String>
         private set
-    private var mFlags = 0
-    private var mData: String? = null
-    private var mFMap: Map<String, Pair<Int, JSONObject>>? = null
-    private var mScm: Long = 0
+    private var fMap: Map<String, Pair<Int, JSONObject>>? = null
     var usn = 0
         private set
-    var mod: Long = 0
+    var mod: Int = 0
         private set
-    private var mNewlyAdded = false
 
     constructor(col: Collection, id: Long) {
-        this.col = col
         this.id = id
-        load()
+        load(col)
     }
 
-    constructor(col: Collection, model: Model) {
-        this.col = col
-        this.id = if (BackendFactory.defaultLegacySchema) {
-            time.timestampID(col.db, "notes")
-        } else {
-            0
-        }
+    constructor(notetype: NotetypeJson) {
+        this.id = 0
         guId = Utils.guid64()
-        mModel = model
-        mid = model.getLong("id")
-        tags = ArrayList()
-        fields = Array(model.getJSONArray("flds").length()) { "" }
-        mFlags = 0
-        mData = ""
-        mFMap = Models.fieldMap(mModel)
-        mScm = col.scm
+        this.notetype = notetype
+        mid = notetype.getLong("id")
+        tags = mutableListOf()
+        fields = emptyStringMutableList(notetype.getJSONArray("flds").length())
+        fMap = Notetypes.fieldMap(this.notetype)
     }
 
-    fun load() {
-        Timber.d("load()")
-        col.db
-            .query(
-                "SELECT guid, mid, mod, usn, tags, flds, flags, data FROM notes WHERE id = ?",
-                this.id
-            ).use { cursor ->
-                if (!cursor.moveToFirst()) {
-                    throw WrongId(this.id, "note")
-                }
-                guId = cursor.getString(0)
-                mid = cursor.getLong(1)
-                mod = cursor.getLong(2)
-                usn = cursor.getInt(3)
-                tags = ArrayList(col.tags.split(cursor.getString(4)))
-                fields = Utils.splitFields(cursor.getString(5))
-                mFlags = cursor.getInt(6)
-                mData = cursor.getString(7)
-                mModel = col.models.get(mid)!!
-                mFMap = Models.fieldMap(mModel)
-                mScm = col.scm
-            }
+    fun load(col: Collection) {
+        val note = col.backend.getNote(this.id)
+        loadFromBackendNote(col, note)
     }
 
-    fun reloadModel() {
-        mModel = col.models.get(mid)!!
+    private fun loadFromBackendNote(col: Collection, note: anki.notes.Note) {
+        this.id = note.id
+        this.guId = note.guid
+        this.mid = note.notetypeId
+        this.notetype = col.notetypes.get(mid)!! // not in libAnki
+        this.mod = note.mtimeSecs
+        this.usn = note.usn
+        // the lists in the protobuf are NOT mutable, even though they cast to MutableList
+        this.tags = note.tagsList.toMutableList()
+        this.fields = note.fieldsList.toMutableList()
+        this.fMap = Notetypes.fieldMap(notetype)
+    }
+
+    fun reloadModel(col: Collection) {
+        notetype = col.notetypes.get(mid)!!
     }
 
     /*
      * If fields or tags have changed, write changes to disk.
      */
-    @BlocksSchemaUpgrade("new path must update to native note adding/updating routine")
-    fun flush(mod: Long? = null, changeUsn: Boolean = true) {
-        assert(mScm == col.scm)
-        preFlush()
-        if (changeUsn) {
-            usn = col.usn()
-        }
-        val csumAndStrippedFieldField = Utils.sfieldAndCsum(
-            fields,
-            col.models.sortIdx(mModel)
-        )
-        val sfld = csumAndStrippedFieldField.first
-        val tags = stringTags()
-        val fields = joinedFields()
-        if (mod == null && col.db.queryScalar(
-                "select 1 from notes where id = ? and tags = ? and flds = ?",
-                this.id.toString(),
-                tags,
-                fields
-            ) > 0
-        ) {
-            return
-        }
-        val csum = csumAndStrippedFieldField.second
-        this.mod = mod ?: time.intTime()
-        col.db.execute(
-            "insert or replace into notes values (?,?,?,?,?,?,?,?,?,?,?)",
-            this.id, guId!!, mid, this.mod, usn, tags, fields, sfld, csum, mFlags, mData!!
-        )
-        if (defaultLegacySchema) {
-            col.tags.register(this.tags)
-        } else {
-            // TODO: tags are not registered; calling code must switch to using backend add/update notes
-        }
-        postFlush()
+    @RustCleanup("code should call col.updateNote() instead, in undoableOp {}")
+    fun flush(col: Collection) {
+        col.updateNote(this)
     }
 
-    private fun joinedFields(): String {
-        return Utils.joinFields(fields)
-    }
-
-    fun numberOfCards(): Int {
+    fun numberOfCards(col: Collection): Int {
         return col.db.queryLongScalar("SELECT count() FROM cards WHERE nid = ?", this.id).toInt()
     }
 
-    fun cids(): List<Long> {
+    fun cids(col: Collection): List<Long> {
         return col.db.queryLongList("SELECT id FROM cards WHERE nid = ? ORDER BY ord", this.id)
     }
 
-    fun cards(): ArrayList<Card> {
-        val cards = ArrayList<Card>(cids().size)
-        for (cid in cids()) {
+    fun cards(col: Collection): ArrayList<Card> {
+        val cards = ArrayList<Card>(cids(col).size)
+        for (cid in cids(col)) {
             // each getCard access database. This is inefficient.
             // Seems impossible to solve without creating a constructor of a list of card.
             // Not a big trouble since most note have a small number of cards.
@@ -174,7 +117,8 @@ class Note : Cloneable {
     }
 
     /** The first card, assuming it exists. */
-    fun firstCard(): Card {
+    @CheckResult
+    fun firstCard(col: Collection): Card {
         return col.getCard(
             col.db.queryLongScalar(
                 "SELECT id FROM cards WHERE nid = ? ORDER BY ord LIMIT 1",
@@ -183,40 +127,35 @@ class Note : Cloneable {
         )
     }
 
-    @KotlinCleanup("replace with variable")
-    fun model(): Model {
-        return mModel
-    }
-
     /**
      * Dict interface
      * ***********************************************************
      */
     fun keys(): Array<String> {
-        return mFMap!!.keys.toTypedArray()
+        return fMap!!.keys.toTypedArray()
     }
 
-    fun values(): Array<String> {
+    @KotlinCleanup("see if we can make this immutable")
+    fun values(): MutableList<String> {
         return fields
     }
 
-    @KotlinCleanup("make non-null")
-    fun items(): Array<Array<String?>> {
+    fun items(): Array<Array<String>> {
         // TODO: Revisit this method. The field order returned differs from Anki.
         // The items here are only used in the note editor, so it's a low priority.
         val result = Array(
-            mFMap!!.size
-        ) { arrayOfNulls<String>(2) }
-        for (fname in mFMap!!.keys) {
-            val i = mFMap!![fname]!!.first
+            fMap!!.size
+        ) { emptyStringArray(2) }
+        for (fname in fMap!!.keys) {
+            val i = fMap!![fname]!!.first
             result[i][0] = fname
             result[i][1] = fields[i]
         }
         return result
     }
 
-    private fun fieldOrd(key: String): Int {
-        val fieldPair = mFMap!![key]
+    private fun fieldIndex(key: String): Int {
+        val fieldPair = fMap!![key]
             ?: throw IllegalArgumentException(
                 String.format(
                     "No field named '%s' found",
@@ -227,31 +166,31 @@ class Note : Cloneable {
     }
 
     fun getItem(key: String): String {
-        return fields[fieldOrd(key)]
+        return fields[fieldIndex(key)]
     }
 
     fun setItem(key: String, value: String) {
-        fields[fieldOrd(key)] = value
+        fields[fieldIndex(key)] = value
     }
 
     operator fun contains(key: String): Boolean {
-        return mFMap!!.containsKey(key)
+        return fMap!!.containsKey(key)
     }
 
     /**
      * Tags
      * ***********************************************************
      */
-    fun hasTag(tag: String?): Boolean {
+    fun hasTag(col: Collection, tag: String?): Boolean {
         return col.tags.inList(tag!!, tags)
     }
 
-    fun stringTags(): String {
+    fun stringTags(col: Collection): String {
         return col.tags.join(col.tags.canonify(tags))
     }
 
-    fun setTagsFromStr(str: String?) {
-        tags = ArrayList(col.tags.split(str!!))
+    fun setTagsFromStr(col: Collection, str: String?) {
+        tags = col.tags.split(str!!)
     }
 
     fun delTag(tag: String?) {
@@ -291,7 +230,7 @@ class Note : Cloneable {
      *
      * @return whether it has no content, dupe first field, or nothing remarkable.
      */
-    fun dupeOrEmpty(): DupeOrEmpty {
+    fun dupeOrEmpty(col: Collection): DupeOrEmpty {
         if (fields[0].trim { it <= ' ' }.isEmpty()) {
             return DupeOrEmpty.EMPTY
         }
@@ -319,28 +258,7 @@ class Note : Cloneable {
         return DupeOrEmpty.CORRECT
     }
 
-    /**
-     * Flushing cloze notes
-     * ***********************************************************
-     */
-    /*
-     * have we been added yet?
-     */
-    private fun preFlush() {
-        mNewlyAdded = col.db.queryScalar("SELECT 1 FROM cards WHERE nid = ?", this.id) == 0
-    }
-
-    /*
-     * generate missing cards
-     */
-    private fun postFlush() {
-        if (!mNewlyAdded) {
-            col.genCards(this.id, mModel)
-        }
-    }
-
-    val sFld: String
-        get() = col.db.queryString("SELECT sfld FROM notes WHERE id = ?", this.id)
+    fun sFld(col: Collection): String = col.db.queryString("SELECT sfld FROM notes WHERE id = ?", this.id)
 
     fun setField(index: Int, value: String) {
         fields[index] = value
@@ -394,3 +312,15 @@ class Note : Cloneable {
         }
     }
 }
+
+/** @see Note.hasTag */
+context (Collection)
+fun Note.hasTag(tag: String) = this.hasTag(this@Collection, tag)
+
+/** @see Note.setTagsFromStr */
+context (Collection)
+fun Note.setTagsFromStr(str: String?) = this.setTagsFromStr(this@Collection, str)
+
+/** @see Note.load */
+context (Collection)
+fun Note.load() = this.load(this@Collection)

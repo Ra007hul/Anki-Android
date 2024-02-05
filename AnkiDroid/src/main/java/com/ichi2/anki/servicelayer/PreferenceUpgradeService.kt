@@ -22,6 +22,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.edit
 import androidx.core.os.LocaleListCompat
+import com.ichi2.anki.analytics.UsageAnalytics
 import com.ichi2.anki.cardviewer.Gesture
 import com.ichi2.anki.cardviewer.ViewerCommand
 import com.ichi2.anki.noteeditor.CustomToolbarButton
@@ -31,8 +32,10 @@ import com.ichi2.anki.reviewer.Binding.Companion.keyCode
 import com.ichi2.anki.reviewer.CardSide
 import com.ichi2.anki.reviewer.FullScreenMode
 import com.ichi2.anki.reviewer.MappableBinding
+import com.ichi2.anki.reviewer.MappableBinding.Companion.toPreferenceString
+import com.ichi2.anki.reviewer.screenBuilder
 import com.ichi2.libanki.Consts
-import com.ichi2.utils.HashUtil.HashSetInit
+import com.ichi2.utils.HashUtil.hashSetInit
 import timber.log.Timber
 import java.util.*
 import kotlin.collections.ArrayList
@@ -60,7 +63,7 @@ object PreferenceUpgradeService {
      * Typically because the app has been run for the first time, or the preferences
      * have been deleted
      */
-    @JvmStatic // reqired for mockito for now
+    @JvmStatic // required for mockito for now
     fun setPreferencesUpToDate(preferences: SharedPreferences) {
         Timber.i("Marking preferences as up to date")
         PreferenceUpgrade.setPreferenceToLatestVersion(preferences)
@@ -81,13 +84,20 @@ object PreferenceUpgradeService {
             const val upgradeVersionPrefKey = "preferenceUpgradeVersion"
 
             /** Returns all instances of preference upgrade classes */
-            internal fun getAllInstances(legacyPreviousVersionCode: LegacyVersionIdentifier) = sequence<PreferenceUpgrade> {
+            private fun getAllInstances(legacyPreviousVersionCode: LegacyVersionIdentifier) = sequence {
                 yield(LegacyPreferenceUpgrade(legacyPreviousVersionCode))
                 yield(UpdateNoteEditorToolbarPrefs())
                 yield(UpgradeGesturesToControls())
                 yield(UpgradeDayAndNightThemes())
                 yield(UpgradeFetchMedia())
                 yield(UpgradeAppLocale())
+                yield(RemoveScrollingButtons())
+                yield(RemoveAnswerRecommended())
+                yield(RemoveBackupMax())
+                yield(RemoveInCardsMode())
+                yield(RemoveReviewerETA())
+                yield(SetShowDeckTitle())
+                yield(ResetAnalyticsOptIn())
             }
 
             /** Returns a list of preference upgrade classes which have not been applied */
@@ -203,7 +213,7 @@ object PreferenceUpgradeService {
 
             private fun getNewToolbarButtons(preferences: SharedPreferences): ArrayList<CustomToolbarButton> {
                 // get old toolbar prefs
-                val set = preferences.getStringSet("note_editor_custom_buttons", HashSetInit<String>(0)) as Set<String?>
+                val set = preferences.getStringSet("note_editor_custom_buttons", hashSetInit<String>(0)) as Set<String?>
                 // new list with buttons size
                 val buttons = ArrayList<CustomToolbarButton>(set.size)
 
@@ -239,8 +249,6 @@ object PreferenceUpgradeService {
                 Pair(3, ViewerCommand.FLIP_OR_ANSWER_EASE2),
                 Pair(4, ViewerCommand.FLIP_OR_ANSWER_EASE3),
                 Pair(5, ViewerCommand.FLIP_OR_ANSWER_EASE4),
-                Pair(6, ViewerCommand.FLIP_OR_ANSWER_RECOMMENDED),
-                Pair(7, ViewerCommand.FLIP_OR_ANSWER_BETTER_THAN_RECOMMENDED),
                 Pair(8, ViewerCommand.UNDO),
                 Pair(9, ViewerCommand.EDIT),
                 Pair(10, ViewerCommand.MARK),
@@ -266,6 +274,7 @@ object PreferenceUpgradeService {
                 Pair(34, ViewerCommand.ABORT_AND_SYNC),
                 Pair(35, ViewerCommand.RECORD_VOICE),
                 Pair(36, ViewerCommand.REPLAY_VOICE),
+                Pair(46, ViewerCommand.SAVE_VOICE),
                 Pair(37, ViewerCommand.TOGGLE_WHITEBOARD),
                 Pair(44, ViewerCommand.CLEAR_WHITEBOARD),
                 Pair(45, ViewerCommand.CHANGE_WHITEBOARD_PEN_COLOR),
@@ -332,7 +341,7 @@ object PreferenceUpgradeService {
                 Timber.i("Moving preference from '%s' to '%s'", oldGesturePreferenceKey, command.preferenceKey)
 
                 // add to the binding_COMMANDNAME preference
-                val mappableBinding = MappableBinding(binding, MappableBinding.Screen.Reviewer(CardSide.BOTH))
+                val mappableBinding = MappableBinding(binding, command.screenBuilder(CardSide.BOTH))
                 command.addBindingAtEnd(preferences, mappableBinding)
             }
         }
@@ -400,6 +409,88 @@ object PreferenceUpgradeService {
                 val localeList = LocaleListCompat.forLanguageTags(languageTag)
                 AppCompatDelegate.setApplicationLocales(localeList)
             }
+        }
+
+        internal class RemoveScrollingButtons : PreferenceUpgrade(11) {
+            override fun upgrade(preferences: SharedPreferences) {
+                preferences.edit { remove("scrolling_buttons") }
+            }
+        }
+
+        internal class RemoveAnswerRecommended : PreferenceUpgrade(12) {
+            override fun upgrade(preferences: SharedPreferences) {
+                moveControlBindings(preferences, "binding_FLIP_OR_ANSWER_RECOMMENDED", ViewerCommand.FLIP_OR_ANSWER_EASE3.preferenceKey)
+                moveControlBindings(preferences, "binding_FLIP_OR_ANSWER_BETTER_THAN_RECOMMENDED", ViewerCommand.FLIP_OR_ANSWER_EASE4.preferenceKey)
+            }
+
+            private fun moveControlBindings(preferences: SharedPreferences, sourcePrefKey: String, destinyPrefKey: String) {
+                val sourcePrefValue = preferences.getString(sourcePrefKey, null) ?: return
+                val destinyPrefValue = preferences.getString(destinyPrefKey, null)
+
+                val joinedBindings = MappableBinding.fromPreferenceString(destinyPrefValue) + MappableBinding.fromPreferenceString(sourcePrefValue)
+                preferences.edit {
+                    putString(destinyPrefKey, joinedBindings.toPreferenceString())
+                    remove(sourcePrefKey)
+                }
+            }
+        }
+
+        /**
+         * Switch from using a single backup option to using separate preferences for
+         * daily/weekly/monthly as well as frequency of backups.
+         */
+        internal class RemoveBackupMax : PreferenceUpgrade(13) {
+            override fun upgrade(preferences: SharedPreferences) {
+                val legacyValue = preferences.getInt("backupMax", 4)
+                preferences.edit {
+                    remove("backupMax")
+                    putInt("minutes_between_automatic_backups", 30) // 30 minutes default
+                    putInt("daily_backups_to_keep", legacyValue)
+                    putInt("weekly_backups_to_keep", legacyValue)
+                    putInt("monthly_backups_to_keep", legacyValue)
+                }
+            }
+        }
+
+        /** We should have used [anki.config.ConfigKey.Bool.BROWSER_TABLE_SHOW_NOTES_MODE] */
+        internal class RemoveInCardsMode : PreferenceUpgrade(14) {
+            override fun upgrade(preferences: SharedPreferences) {
+                preferences.edit {
+                    remove("inCardsMode")
+                }
+            }
+        }
+
+        internal class RemoveReviewerETA : PreferenceUpgrade(15) {
+            override fun upgrade(preferences: SharedPreferences) =
+                preferences.edit { remove("showETA") }
+        }
+
+        /** default to true for existing users  */
+        internal class SetShowDeckTitle : PreferenceUpgrade(16) {
+            override fun upgrade(preferences: SharedPreferences) {
+                if (!preferences.contains("showDeckTitle")) {
+                    preferences.edit { putBoolean("showDeckTitle", true) }
+                }
+            }
+        }
+
+        /**
+         * Issue 14386: Opening preferences opted users in to analytics in 2.16 due to an oversight
+         *
+         * Despite the fact that analytics were broken at the time due to Google's migration from
+         * Universal Analytics to Google Analytics 4, we want analytics to STRICTLY be opt-in
+         *
+         * As we likely have inadvertent opt-ins, we stated that we would opt everyone out:
+         * https://ankidroid.org/docs/changelog.html#_version_2_16_5_20230906
+         *
+         * We now use "analytics_opt_in"
+         *
+         * @see [UsageAnalytics.ANALYTICS_OPTIN_KEY]
+         */
+        internal class ResetAnalyticsOptIn : PreferenceUpgrade(17) {
+            override fun upgrade(preferences: SharedPreferences) =
+                preferences.edit { remove("analyticsOptIn") }
         }
     }
 }

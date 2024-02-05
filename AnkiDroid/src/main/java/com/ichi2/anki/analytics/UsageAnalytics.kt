@@ -39,7 +39,7 @@ import timber.log.Timber
 
 @KotlinCleanup("see if we can make variables lazy, or properties without the `s` prefix")
 object UsageAnalytics {
-    const val ANALYTICS_OPTIN_KEY = "analyticsOptIn"
+    const val ANALYTICS_OPTIN_KEY = "analytics_opt_in"
 
     @KotlinCleanup("lateinit")
     private var sAnalytics: GoogleAnalytics? = null
@@ -71,7 +71,7 @@ object UsageAnalytics {
                     AndroidDefaultRequest()
                         .setAndroidRequestParameters(context)
                         .applicationName(context.getString(R.string.app_name))
-                        .applicationVersion(Integer.toString(BuildConfig.VERSION_CODE))
+                        .applicationVersion(BuildConfig.VERSION_CODE.toString())
                         .applicationId(BuildConfig.APPLICATION_ID)
                         .trackingId(getAnalyticsTag(context))
                         .clientId(Installation.id(context))
@@ -206,17 +206,6 @@ object UsageAnalytics {
     }
 
     /**
-     * Send an arbitrary analytics event - these should be noun/verb pairs, e.g. "text to speech", "enabled"
-     *
-     * @param category the category of event, make your own but use a constant so reporting is good
-     * @param action   the action the user performed
-     */
-    @KotlinCleanup("remove when all callers are Kotlin")
-    fun sendAnalyticsEvent(category: String, action: String) {
-        sendAnalyticsEvent(category, action, Integer.MIN_VALUE, null)
-    }
-
-    /**
      * Send a detailed arbitrary analytics event, with noun/verb pairs and extra data if needed
      *
      * @param category the category of event, make your own but use a constant so reporting is good
@@ -224,7 +213,7 @@ object UsageAnalytics {
      * @param value    A value for the event, Integer.MIN_VALUE signifies caller shouldn't send the value
      * @param label    A label for the event, may be null
      */
-    fun sendAnalyticsEvent(category: String, action: String, value: Int = Int.MIN_VALUE, label: String? = null) {
+    fun sendAnalyticsEvent(category: String, action: String, value: Int? = null, label: String? = null) {
         Timber.d("sendAnalyticsEvent() category/action/value/label: %s/%s/%s/%s", category, action, value, label)
         if (!optIn) {
             return
@@ -233,7 +222,7 @@ object UsageAnalytics {
         if (label != null) {
             event.eventLabel(label)
         }
-        if (value > Int.MIN_VALUE) {
+        if (value != null) {
             event.eventValue(value)
         }
         event.sendAsync()
@@ -351,6 +340,7 @@ object UsageAnalytics {
     object Category {
         const val SYNC = "Sync"
         const val LINK_CLICKED = "LinkClicked"
+        const val SETTING = "Setting"
     }
 
     /**
@@ -446,5 +436,142 @@ object UsageAnalytics {
 
         @AnalyticsConstant
         val IMPORT_CSV_FILE = "Import CSV"
+
+        @AnalyticsConstant
+        val TAPPED_SETTING = "Tapped setting"
+
+        @AnalyticsConstant
+        val CHANGED_SETTING = "Changed setting"
     }
+
+    // TODO use some kind of constants instead of directly strings
+    val preferencesWhoseChangesShouldBeReported = setOf(
+        // General
+        "reportErrorMode", // Error reporting mode
+        "pastePNG", // Paste clipboard images as PNG
+        "useCurrent", // Deck for new cards
+        "exitViaDoubleTapBack", // Press back twice to go back/exit
+        "anki_card_enable_external_context_menu", // ‘Anki Card’ Menu
+        "card_browser_enable_external_context_menu", // ‘Card Browser’ Menu
+        // Reviewing
+        "dayOffset", // Start of next day
+        "learnCutoff", // Learn ahead limit
+        "timeLimit", // Timebox time limit
+        "timeoutAnswer", // Automatic display answer
+        "keepScreenOn", // Disable screen timeout
+        "newTimezoneHandling", // New timezone handling
+        "doubleTapTimeInterval", // Double tap time interval (milliseconds)
+        // Sync
+        "syncFetchMedia", // Fetch media on sync
+        "automaticSyncMode", // Automatic synchronization
+        "showSyncStatusBadge", // Display synchronization status
+        "allowMetered", // Allow sync on metered connections
+        "force_full_sync", // Force full sync
+        // Backup
+        "minutes_between_automatic_backups",
+        "daily_backups_to_keep",
+        "weekly_backups_to_keep",
+        "monthly_backups_to_keep",
+        // Appearance
+        "appTheme", // Theme
+        "dayTheme", // Day theme
+        "nightTheme", // Night theme
+        "deckPickerBackground", // Background image
+        "fullscreenMode", // Fullscreen mode
+        "centerVertically", // Center align
+        "showEstimates", // Show button time
+        "answerButtonPosition", // Answer buttons position
+        "showTopbar", // Show top bar
+        "showProgress", // Show remaining
+        "showAudioPlayButtons", // Show play buttons on cards with audio (reversed in collection: HIDE_AUDIO_PLAY_BUTTONS)
+        "card_browser_show_media_filenames", // Display filenames in card browser
+        "showDeckTitle", // Show deck title
+        // Controls
+        "gestures", // Enable gestures
+        "gestureCornerTouch", // 9-point touch
+        "gestureFullScreenNavigationDrawer", // Full screen navigation drawer
+        "swipeSensitivity", // Swipe sensitivity
+        "binding_SHOW_ANSWER",
+        "binding_FLIP_OR_ANSWER_EASE1",
+        "binding_FLIP_OR_ANSWER_EASE2",
+        "binding_FLIP_OR_ANSWER_EASE3",
+        "binding_FLIP_OR_ANSWER_EASE4",
+        "binding_UNDO",
+        "binding_REDO",
+        "binding_EDIT",
+        "binding_MARK",
+        "binding_BURY_CARD",
+        "binding_SUSPEND_CARD",
+        "binding_DELETE",
+        "binding_PLAY_MEDIA",
+        "binding_EXIT",
+        "binding_BURY_NOTE",
+        "binding_SUSPEND_NOTE",
+        "binding_TOGGLE_FLAG_RED",
+        "binding_TOGGLE_FLAG_ORANGE",
+        "binding_TOGGLE_FLAG_GREEN",
+        "binding_TOGGLE_FLAG_BLUE",
+        "binding_TOGGLE_FLAG_PINK",
+        "binding_TOGGLE_FLAG_TURQUOISE",
+        "binding_TOGGLE_FLAG_PURPLE",
+        "binding_UNSET_FLAG",
+        "binding_PAGE_UP",
+        "binding_PAGE_DOWN",
+        "binding_TAG",
+        "binding_CARD_INFO",
+        "binding_ABORT_AND_SYNC",
+        "binding_RECORD_VOICE",
+        "binding_REPLAY_VOICE",
+        "binding_SAVE_VOICE",
+        "binding_TOGGLE_WHITEBOARD",
+        "binding_CLEAR_WHITEBOARD",
+        "binding_CHANGE_WHITEBOARD_PEN_COLOR",
+        "binding_SHOW_HINT",
+        "binding_SHOW_ALL_HINTS",
+        "binding_ADD_NOTE",
+        "binding_RESCHEDULE_NOTE",
+        // Accessibility
+        "cardZoom",
+        "imageZoom",
+        "answerButtonSize",
+        "showLargeAnswerButtons",
+        "relativeCardBrowserFontSize",
+        "showCardAnswerButtonTime",
+        // Advanced
+        "deckPath", // AnkiDroid directory
+        "double_scrolling", // Double scrolling
+        "softwareRender", // Disable card hardware render
+        "safeDisplay", // Safe display mode
+        "useInputTag", // Type answer into the card
+        "disableExtendedTextUi", // Disable Single-Field Edit Mode
+        "noteEditorNewlineReplace", // Replace newlines with HTML
+        "noCodeFormatting", // Simple typed answer formatting
+        "autoFocusTypeInAnswer", // Focus ‘type in answer’
+        "mediaImportAllowAllFiles", // Allow all files in media imports
+        "providerEnabled", // Enable AnkiDroid API
+        // App bar buttons
+        "reset_custom_buttons",
+        "customButtonUndo",
+        "customButtonRedo",
+        "customButtonScheduleCard",
+        "customButtonFlag",
+        "customButtonEditCard",
+        "customButtonTags",
+        "customButtonAddCard",
+        "customButtonReplay",
+        "customButtonCardInfo",
+        "customButtonSelectTts",
+        "customButtonDeckOptions",
+        "customButtonMarkCard",
+        "customButtonToggleMicToolBar",
+        "customButtonBury",
+        "customButtonSuspend",
+        "customButtonDelete",
+        "customButtonEnableWhiteboard",
+        "customButtonToggleStylus",
+        "customButtonSaveWhiteboard",
+        "customButtonWhiteboardPenColor",
+        "customButtonShowHideWhiteboard",
+        "customButtonClearWhiteboard"
+    )
 }

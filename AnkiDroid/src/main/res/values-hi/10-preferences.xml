@@ -43,27 +43,28 @@
 ~ You should have received a copy of the GNU General Public License along with
 ~ this program.  If not, see <http://www.gnu.org/licenses/>.
 -->
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <!-- generic strings -->
     <string name="disabled">अक्षम</string>
-    <string name="enabled">सक्षम</string>
-    <string name="pref_summary_seconds">%s s</string>
-    <string name="pref_summary_minutes">%s min</string>
+    <plurals name="pref_summ_minutes">
+        <item quantity="one">%d मिनट</item>
+        <item quantity="other">%d मिनट</item>
+    </plurals>
     <string comment="Percentage value of a preference. %s represents the number to be replaced. Use \%% to represent a single percent sign (%)" name="pref_summary_percentage">%s\%%</string>
-    <string name="pref_search_no_results">No results</string>
+    <string name="pref_search_no_results">कोई परिणाम नहीं </string>
     <!-- preferences.xml categories-->
-    <string name="pref_cat_general" comment="name of the general preference category" maxLength="41">General</string>
-    <string name="pref_cat_studying" maxLength="41">Studying</string>
-    <string name="pref_cat_system_wide" maxLength="41">System-wide</string>
+    <string name="pref_cat_general" comment="name of the general preference category" maxLength="41">सामान्य</string>
+    <string name="pref_cat_studying" maxLength="41">पढा जा रहा है </string>
+    <string name="pref_cat_system_wide" maxLength="41">विस्तृत - प्रणाली</string>
     <string name="pref_cat_reviewing" maxLength="41">समीक्षा</string>
-    <string name="pref_cat_sync" comment="title of the sync preferences category" maxLength="41">Sync</string>
-    <string name="pref_cat_scheduling" maxLength="41">Scheduling</string>
+    <string name="pref_cat_sync" comment="title of the sync preferences category" maxLength="41">साथ साथ करना</string>
+    <string name="pref_cat_scheduling" maxLength="41">निर्धारण </string>
     <string name="pref_cat_whiteboard" maxLength="41">श्वेतपट्ट</string>
     <string name="pref_cat_appearance" maxLength="41">दिखावट</string>
     <string name="pref_cat_themes" maxLength="41">थीम</string>
     <string name="pref_cat_fonts" maxLength="41">फ़ॉन्ट</string>
     <string name="pref_cat_gestures" maxLength="41">इशारे</string>
-    <string name="pref_cat_controls" maxLength="41">Controls</string>
+    <string name="pref_cat_controls" maxLength="41">नियंत्रणे </string>
     <string name="pref_cat_advanced" maxLength="41">उन्नत</string>
     <string name="pref_cat_workarounds" maxLength="41">वैकल्पिक हल</string>
     <string name="pref_cat_plugins" maxLength="41">प्लगइन</string>
@@ -80,7 +81,7 @@
     <string name="button_size" maxLength="41">उत्तर बटन आकार</string>
     <string name="card_browser_font_size" maxLength="41">कार्ड ब्राउज़र फ़ॉन्ट स्केलिंग</string>
     <string name="card_browser_hide_media" maxLength="41">फाइलों के नाम कार्ड ब्राउज़र में दिखाएं</string>
-    <string name="card_browser_hide_media_summary">Display media filenames in the card browser question/answer fields</string>
+    <string name="card_browser_hide_media_summary">कार्ड ब्राउज़र प्रश्न/उत्तर फ़ील्ड में मीडिया फ़ाइल नाम प्रदर्शित करें</string>
     <string name="col_path" maxLength="41">AnkiDroid निर्देशिका</string>
     <string name="fullscreen_review" maxLength="41">फुल स्क्रीन मोड</string>
     <string name="full_screen_off">ऑफ</string>
@@ -90,7 +91,7 @@
     <string-array name="answer_buttons_position_labels">
         <item>सर्वोच्च</item>
         <item>तल</item>
-        <item>None</item>
+        <item>कोई नही</item>
     </string-array>
     <string name="gestures" maxLength="41">जेस्चर सक्षम करें</string>
     <string name="gestures_summ">ऐसे जवाब और संपादन कार्ड के रूप में कार्रवाई करने के लिए इशारों निरुपित ।</string>
@@ -98,26 +99,25 @@
     <string name="gestures_corner_touch_summary">स्क्रीन कोनों में स्पर्श इशारों की अनुमति दें</string>
     <string name="gestures_full_screen_nav_drawer" maxLength="41">फुल स्क्रीन नेविगेशन दराज</string>
     <string name="gestures_fullscreen_nav_drawer_summary">स्क्रीन पर कहीं से भी स्वाइप किए जाने पर नेविगेशन दराज खोलें</string>
-    <string name="gestures_none" maxLength="41">None</string>
+    <string name="gestures_none" maxLength="41">कोई नहीं </string>
     <string name="gestures_swipe_up" maxLength="41">ऊपर की ओर स्वाइप</string>
     <string name="gestures_swipe_down" maxLength="41">निचे की ओर स्वाइप</string>
     <string name="gestures_swipe_left" maxLength="41">बाएं स्वाइप करें</string>
     <string name="gestures_swipe_right" maxLength="41">दाएं स्वाइप करें</string>
     <string name="gestures_double_tap" maxLength="41">डबल टच</string>
-    <string name="gestures_long_tap" maxLength="41">Long touch</string>
+    <string name="gestures_long_tap" maxLength="41">लंबा स्पर्श</string>
     <string name="gestures_tap_top" maxLength="41">टच टॉप</string>
     <string name="gestures_tap_left" maxLength="41">बाएं स्पर्श करें</string>
     <string name="gestures_tap_right" maxLength="41">दाएं स्पर्श करें</string>
     <string name="gestures_tap_bottom" maxLength="41">नीचे स्पर्श करें</string>
-    <string name="gestures_corner_tap_top_left" maxLength="41">Touch top left</string>
-    <string name="gestures_corner_tap_top_right" maxLength="41">Touch top right</string>
-    <string name="gestures_corner_tap_middle_center" maxLength="41">Touch middle center</string>
-    <string name="gestures_corner_tap_bottom_left" maxLength="41">Touch bottom left</string>
-    <string name="gestures_corner_tap_bottom_right" maxLength="41">Touch bottom right</string>
-    <string name="more_scrolling_buttons" maxLength="41">ई-रीडर</string>
-    <string name="more_scrolling_buttons_summ">साथ ही स्क्रॉलिंग के लिए कांजी/कतकान, इमोजी/काओ-मोजी बटन का उपयोग करें</string>
+    <string name="gestures_corner_tap_top_left" maxLength="41">ऊपर से बाएं को छुएं </string>
+    <string name="gestures_corner_tap_top_right" maxLength="41">ऊपर से दाएं को छुएं </string>
+    <string name="gestures_corner_tap_middle_center" maxLength="41">मध्य में केंद्र को स्पर्श करें</string>
+    <string name="gestures_corner_tap_bottom_left" maxLength="41">नीचे से बाएं से छुएं </string>
+    <string name="gestures_corner_tap_bottom_right" maxLength="41">नीचे से दाएं को छुएं </string>
+    <string name="gestures_shake" maxLength="41">डिवाइस हिलाओ</string>
     <string name="card_browser_enable_external_context_menu">‘%s’ मेन्यू</string>
-    <string name="card_browser_enable_external_context_menu_summary">Enables the ‘%s’ context menu globally</string>
+    <string name="card_browser_enable_external_context_menu_summary">विश्व स्तर पर \'%s\' संदर्भ मेनू को सक्षम करता है</string>
     <string name="double_scrolling_gap" maxLength="41">डबल स्क्रॉल</string>
     <string name="double_scrolling_gap_summ">ई-रीडर के साथ स्क्रॉल गैप डबल</string>
     <string name="swipe_sensitivity" maxLength="41">उच्च संवेदनशीलता</string>
@@ -129,18 +129,18 @@
     <string name="sync_account_summ_logged_out">लॉगिन नहीं हैं</string>
     <string name="automatic_sync_choice" maxLength="41">स्वचालित सिंक्रनाइज़ेशन</string>
     <string name="automatic_sync_choice_summ">यदि अंतिम सिंक्रनाइज़ेशन 10 मिनट पहले से अधिक था, तो अनुप्रयोग प्रारंभ/निकास पर स्वचालित रूप से सिंक्रनाइज़ करें ।</string>
-    <string name="sync_media_always" comment="Option to always fetch media when syncing">Always</string>
-    <string name="sync_media_only_unmetered">Only on unmetered connections</string>
-    <string name="sync_media_never">Never</string>
-    <string name="sync_status_badge" maxLength="41">Display synchronization status</string>
-    <string name="sync_status_badge_summ">Change the sync icon when changes can be uploaded</string>
-    <string name="metered_sync_title" maxLength="41">Allow sync on metered connections</string>
-    <string name="metered_sync_summary">If disabled, you will be warned if you try to sync on a metered connection</string>
-    <string name="app_theme" maxLength="41">Theme</string>
+    <string name="sync_media_always" comment="Option to always fetch media when syncing">हमेशा </string>
+    <string name="sync_media_only_unmetered">केवल बिना जांचे गए कनेक्शन पर</string>
+    <string name="sync_media_never">कभीं नहीं</string>
+    <string name="sync_status_badge" maxLength="41">सिंक्रनाइज़ेशन स्थिति को दिखाएं</string>
+    <string name="sync_status_badge_summ">जब बदलाव अपलोड किए जा सकें तो सिंक आइकन बदलें</string>
+    <string name="metered_sync_title" maxLength="41">मीटर वाले कनेक्शनों पर समन्वयन की अनुमति दें</string>
+    <string name="metered_sync_summary">यदि अक्षम है, तो मीटर वाले कनेक्शन पर सिंक करने का प्रयास करने पर आपको चेतावनी दी जाएगी</string>
+    <string name="backup_limits_frequency">फ्रीक्वेंसी</string>
+    <string name="backup_limits_lifetime">समय सीमा</string>
+    <string name="app_theme" maxLength="41">थीम </string>
     <string name="day_theme" maxLength="41">दिवस थीम</string>
     <string name="night_theme" maxLength="41">रात विषय</string>
-    <string name="default_font" maxLength="41">डिफ़ॉल्ट फ़ॉंट</string>
-    <string name="override_font" maxLength="41">डिफ़ॉल्ट फ़ॉंट लागू</string>
     <string name="language" maxLength="41">भाषा</string>
     <string name="language_system">सिस्टम भाषा</string>
     <string name="notification_pref" maxLength="41">सूचनाएँ</string>
@@ -151,24 +151,21 @@
     <string name="notification_minimum_cards_due_vibrate" maxLength="41">वाइब्रेट</string>
     <string name="notification_minimum_cards_due_blink" maxLength="41">पलक लाइट</string>
     <string name="timeout_answer_text" maxLength="41">स्वचालित उत्तर प्रदर्शन</string>
-    <string name="timeout_answer" maxLength="41">Timeout answer</string>
-    <string name="timeout_answer_summ">उपयोगकर्ता इनपुट के बिना स्वचालित रूप से उत्तर दिखाएं । देरी स्वचालित रूप से खेला ऑडियो फ़ाइलों के लिए समय शामिल है ।</string>
-    <string name="timeout_answer_seconds" maxLength="41">जवाब दिखाने के लिए समय</string>
-    <string name="timeout_answer_seconds_summ" comment="The time to wait (in seconds) in the reviewer before automatically showing the next question or answer">XXX s</string>
-    <string name="timeout_question_seconds" maxLength="41">अगला प्रश्न दिखाने का समय</string>
+    <string name="timeout_answer_summ2">Show answer automatically without user input. Configure from deck options.</string>
     <string name="select_locale_title">भाषा चुनें</string>
-    <string name="software_render" maxLength="41">Disable card hardware render</string>
-    <string name="software_render_summ">Hardware render is faster but may have problems, specifically on Android 8/8.1. If you cannot see parts of the card review user interface, try this setting.</string>
+    <string name="software_render" maxLength="41">कार्ड हार्डवेयर रेंडर अक्षम करें</string>
+    <string name="software_render_summ">हार्डवेयर रेंडर तेज़ है लेकिन इसमें समस्याएँ हो सकती हैं, विशेष रूप से Android 8/8.1 पर।  यदि आप कार्ड समीक्षा उपयोगकर्ता इंटरफ़ेस के कुछ हिस्सों को नहीं देख पा रहे हैं, तो इस सेटिंग को आज़माएँ।</string>
     <string name="safe_display" maxLength="41">सुरक्षित प्रदर्शन मोड</string>
-    <string name="safe_display_summ">Disable all animations and use safer method for drawing cards. E-ink devices may require this.</string>
-    <string name="disable_extended_text_ui" maxLength="41">Disable Single-Field Edit Mode</string>
+    <string name="safe_display_summ">सभी एनिमेशन अक्षम करें और कार्ड बनाने के लिए सुरक्षित विधि का उपयोग करें। ई-इंक उपकरणों को इसकी आवश्यकता हो सकती है।</string>
+    <string name="disable_extended_text_ui" maxLength="41">एकल फ़ील्ड मोड अक्षम करें</string>
     <!--See: multimedia_editor_popup_cloze. We can\'t use format strings as this is auto-generated-->
-    <string name="disable_extended_text_ui_summ">Allows \'Cloze Deletion\' context menu when in landscape mode.</string>
+    <string name="disable_extended_text_ui_summ">लैंडस्केप मोड में होने पर \'क्लोज़ डिलीशन\' संदर्भ मेनू की अनुमति देता है।</string>
     <string name="vertical_centering" maxLength="41">मध्य संरेखित करें</string>
     <string name="vertical_centering_summ">कार्ड की सामग्री को अनुलंब रूप से केंद्रित करना</string>
-    <string name="pref_backup_max" maxLength="41">बैकअप की अधिकतम संख्या</string>
-    <string name="pref_double_tap_time_interval" maxLength="41">Double tap time interval (milliseconds)</string>
-    <string name="pref_double_tap_time_interval_summary">A second tap of the answer buttons will be ignored if this time has not elapsed. This prevents accidental double taps</string>
+    <string name="pref_double_tap_time_interval" maxLength="41">डबल टैप समय अंतराल (मिलीसेकंड)</string>
+    <string name="pref_double_tap_time_interval_summary">यदि यह समय बीत नहीं गया है तो उत्तर बटनों पर दूसरी बार टैप करने पर ध्यान नहीं दिया जाएगा। यह आकस्मिक डबल टैप को रोकता है</string>
+    <string name="pref_show_answer_long_press" maxLength="41">उत्तर देखने  के लिए देर तक दबाने का समय (एमएस))</string>
+    <string name="pref_show_answer_long_press_summary">उत्तर दिखाएं बटन पर स्पर्श दर्ज करने से पहले न्यूनतम लंबे समय तक प्रेस करने का समय। आकस्मिक रूप से अतिरिक्त बटन दबाने की संभावना कम हो सकती है। डिफ़ॉल्ट 0ms है</string>
     <string name="show_estimates" maxLength="41">बटन समय दिखाएं</string>
     <string name="show_estimates_summ">उत्तर बटंस पर अगली समीक्षा समय दिखाएं</string>
     <string name="show_large_answer_buttons" maxLength="41">बड़े उत्तर बटन दिखाएं</string>
@@ -177,15 +174,15 @@
     <string name="show_top_bar_summ">शीर्ष बार में कार्ड की संख्या, ध्वज और चिह्न दिखाएं</string>
     <string name="show_progress" maxLength="41">शेष दिखाएं</string>
     <string name="show_progress_summ">शेष कार्ड गणना दिखाएं</string>
-    <string name="show_eta" maxLength="41">ईटीए दिखाएं</string>
-    <string name="show_eta_summ">शेष समय दिखाएँ</string>
     <string name="use_current" maxLength="41">नए कार्ड के लिए डेक</string>
-    <string name="new_spread" maxLength="41">नए कार्ड की स्थिति</string>
     <string name="learn_cutoff" maxLength="41">आगे की सीमा जानें</string>
     <string name="time_limit" maxLength="41">Timebox समय सीमा</string>
-    <string name="new_timezone" maxLength="41">New timezone handling</string>
+    <string name="new_timezone" maxLength="41">नया समय क्षेत्र प्रबंधन</string>
     <string name="day_offset_with_description" maxLength="41">अगले दिन की शुरुआत (0 आधी रात है, 23 11PM है)</string>
-    <string name="day_offset_summary">%s hours past midnight</string>
+    <plurals name="day_offset_summ" comment="%d is going to be replaced with the number of hours past midnight. It can be replaced if something else suits better the translation">
+        <item quantity="one">आधी रात से %d घंटा पहले</item>
+        <item quantity="other">आधी रात से %d घंटे पहले</item>
+    </plurals>
     <string name="pref_keep_screen_on" maxLength="41">स्क्रीन चालू रखें</string>
     <string name="pref_keep_screen_on_summ">स्क्रीन टाइमआउट अक्षम करें</string>
     <string name="enable_api_title" maxLength="41">AnkiDroid API सक्षम करें</string>
@@ -196,107 +193,44 @@
     <string name="custom_buttons_setting_if_room">यदि कक्ष दिखाएं</string>
     <string name="custom_buttons_setting_menu_only">केवल मेनू</string>
     <string name="reset_custom_buttons" maxLength="41">डिफ़ॉल्ट पर रीसेट करें</string>
-    <string name="reset_settings_to_default">Reset settings to default</string>
-    <string name="reset">Reset</string>
+    <string name="reset_settings_to_default">सेटिंग्स को डिफ़ॉल्ट पर रीसेट करें</string>
+    <string name="reset">रीसेट</string>
     <string name="thirdparty_apps_title" maxLength="41">तृतीय-पक्ष API ऐप्स</string>
-    <string name="thirdparty_apps_summary">See a list of applications which make use of the AnkiDroid API such as dictionaries, utilities.</string>
-    <string name="html_javascript_debugging" maxLength="41">HTML / Javascript Debugging</string>
-    <string name="html_javascript_debugging_summ">Enable remote WebView connections, and save card HTML to AnkiDroid directory</string>
+    <string name="thirdparty_apps_summary">शब्दकोशों और उपयोगिताओं सहित AnkiDroid का उपयोग करने वाले ऐप्स की सूची देखने के लिए यहां टैप करें</string>
+    <string name="html_javascript_debugging" maxLength="41">हटम्ल/जावास्क्रिप्ट डिबगिंग</string>
+    <string name="html_javascript_debugging_summ">दूरस्थ वेब्वयेव कनेक्शन सक्षम करें और कार्ड हटम्ल को अंकिड़रोइड निर्देशिका में सहेजें</string>
     <!-- Appearance settings -->
-    <string name="pref_cat_reviewer" maxLength="41">Reviewer</string>
-    <string name="accessibility" maxLength="41">Accessibility</string>
+    <string name="pref_cat_reviewer" maxLength="41">समीक्षक</string>
+    <string name="show_deck_title" maxLength="41">Show deck title</string>
+    <string name="accessibility" maxLength="41">सरल उपयोग</string>
     <!-- Paste clipboard image as png option -->
-    <string name="paste_as_png" maxLength="41">Paste clipboard images as PNG</string>
-    <string name="paste_as_png_summary">By default Anki pastes images on the clipboard as JPG files to save disk space. You can use this option to paste as PNG images instead.</string>
-    <string name="exit_via_double_tap_back" maxLength="41">Press back twice to go back/exit</string>
-    <string name="exit_via_double_tap_back_summ">To avoid accidentally leaving the reviewer or the app</string>
+    <string name="paste_as_png" maxLength="41">क्लिपबोर्ड इमेजेज को पीएनजी प्रारूप में चिपकाएँ</string>
+    <string name="paste_as_png_summary">डिफ़ॉल्ट रूप से एंड्रॉइड डिस्क स्थान को बचाने के लिए छवियों को JPG फ़ाइलों के रूप में क्लिपबोर्ड पर चिपकाता है। आप इसके बजाय पीएनजी छवियों के रूप में पेस्ट करने के लिए इस विकल्प का उपयोग कर सकते हैं।</string>
+    <string name="exit_via_double_tap_back" maxLength="41">वापस जाने/बाहर निकलने के लिए दो बार बैक दबाएँ</string>
+    <string name="exit_via_double_tap_back_summ">समीक्षक या ऐप को गलती से छोड़ने से बचने के लिए</string>
     <!-- Allow all files in media imports -->
-    <string name="media_import_allow_all_files" maxLength="41">Allow all files in media imports</string>
-    <string name="media_import_allow_all_files_summ">If Android doesn’t recognize a media file</string>
-    <!-- Statistics settings -->
-    <string name="stats_default_deck_title" maxLength="41">Default deck when opening statistics</string>
-    <string name="stats_default_deck_current">Show stats for most recent deck</string>
-    <string name="stats_default_deck_all">Show stats for all decks</string>
-    <!-- Advanced statistics settings -->
-    <string name="advanced_statistics_title" maxLength="41">उंनत सांख्यिकी</string>
-    <string name="enable_advanced_statistics_title" maxLength="41">उंनत आंकड़े सक्षम करें</string>
-    <string name="enable_advanced_statistics_summ">एक गणना या भविष्य की समीक्षा (सक्षम) के अनुकरण पर या भविष्य की समीक्षा पहले से ही अनुसूचित (विकलांग) पर आधारित पूर्वानुमान आंकड़े प्रदर्शित करें ।</string>
-    <string name="advanced_forecast_stats_compute_n_days_title" maxLength="41">गणना पहले n दिन, शेष अनुकरण</string>
-    <string name="advanced_forecast_stats_compute_precision_title" maxLength="41">परिकलन की शुद्धता</string>
-    <string name="advanced_forecast_stats_mc_n_iterations_title" maxLength="41">अनुकरण की पुनरावृत्तियों की संख्या</string>
+    <string name="media_import_allow_all_files" maxLength="41">मीडिया आयात में सभी फ़ाइलो को अनुमति दें</string>
+    <string name="media_import_allow_all_files_summ">यदि एंड्रॉइड किसी मीडिया फ़ाइल को नहीं पहचानता है</string>
     <!-- Custom sync server settings -->
     <string name="custom_sync_server_title" maxLength="41">कस्टम सिंक्रनाइज़ेशन सर्वर</string>
-    <string name="custom_sync_server_summary_none_of_the_two_servers_used" comment="This summary is shown when neither of the two custom sync servers are used,         which is the default.">Not used</string>
-    <string name="custom_sync_server_help2"><![CDATA[        As an alternative to synchronizing with AnkiWeb,
-        you may use your own server for synchronization.
-        If not set, the default AnkiWeb server will be used instead.
-        <a href="%s">Learn more</a>
-        ]]></string>
+    <string name="custom_sync_server_summary_none_of_the_two_servers_used" comment="This summary is shown when neither of the two custom sync servers are used,         which is the default.">उपयोग नहीं किया</string>
+    <string name="custom_sync_server_help2"><![CDATA[एंकीवेब के साथ सिंक्रोनाइज़ करने के विकल्प के रूप में, आप सिंक्रोनाइज़ेशन के लिए अपने स्वयं के सर्वर का उपयोग कर सकते हैं।
+यदि सेट नहीं किया गया है, तो इसके स्थान पर डिफ़ॉल्ट एंकीवेब सर्वर का उपयोग किया जाएगा।<a href=\'%s\'>और जानें</a>]]></string>
     <string name="custom_sync_server_base_url_title" maxLength="41">सिंक्रनाइज़ेशन url</string>
     <!-- Key Bindings -->
-    <string name="keyboard">Keyboard</string>
-    <string name="bluetooth">Bluetooth</string>
-    <string name="controls_main_category" maxLength="41">Command mapping</string>
+    <string name="keyboard">कीबोर्ड</string>
+    <string name="bluetooth">ब्लूटूथ</string>
+    <string name="answer_buttons" maxLength="41">उत्तर बटन</string>
+    <string name="card" maxLength="41">कार्ड</string>
+    <string name="note" maxLength="41">टिप्पणी</string>
+    <string name="navigation" maxLength="41">नेविगेशन</string>
+    <string name="media" maxLength="41">मिडिया</string>
+    <string name="misc" maxLength="41">विविध</string>
     <!-- studyoptions -->
-    <string name="deck_conf_group_summ">Changes to deck group options will affect multiple decks. If you wish to change only the current deck, please add a new options group first</string>
     <string name="studyoptions_limit_select_tags">टैग का चयन करें</string>
     <!-- Deck configurations -->
-    <string name="deck_conf_deck_description" maxLength="41">Deck description (current deck only)</string>
-    <string name="deck_conf_group" maxLength="41">विकल्प समूह</string>
-    <plurals name="deck_conf_group_summ">
-        <item quantity="one">%1$s\n%2$d डेक इस समूह का उपयोग करता है</item>
-        <item quantity="other">%1$s\n%2$d डेक इस समूह का उपयोग करता है</item>
-    </plurals>
-    <string name="deck_conf_new_cards" maxLength="41">नए कार्ड</string>
-    <string name="deck_conf_rev_cards" maxLength="41" comment="Name of the deck options submenu for configuring reviews of due cards.">समीक्षाएँ</string>
-    <string name="deck_conf_lps_cards" maxLength="41" comment="Label of the submenu stating how lapses cards are treated.">चूक</string>
     <string name="deck_conf_general" maxLength="41" comment="Label of the submenu for the general options of new deck">सामान्य</string>
     <string name="deck_conf_reminders" maxLength="41">रिमाइंडर्स</string>
-    <string name="deck_conf_steps" maxLength="41">चरण (मिनटों में)</string>
-    <string name="deck_conf_order" maxLength="41">आर्डर्स</string>
-    <string name="deck_conf_new_cards_day" maxLength="41">नया कार्ड / दिन</string>
-    <string name="deck_conf_graduating_ivl" maxLength="41">ग्रेजुएशन अंतराल</string>
-    <string name="deck_conf_days">XXX दिवस (s)</string>
-    <string name="deck_conf_easy_ivl" maxLength="41">आसान अंतराल</string>
-    <string name="deck_conf_start_ease" maxLength="41">आसानी शुरू</string>
-    <string name="deck_conf_max_rev" maxLength="41">अधिकतम समीक्षा/</string>
-    <string name="deck_conf_new_bury" maxLength="41">संबंधित नए कार्ड स्थगित करें</string>
-    <string name="deck_conf_new_bury_summ">संबंधित नए पत्ते अगले दिन तक दफन कर दिए जाते हैं</string>
-    <string name="deck_conf_rev_bury" maxLength="41">संबंधित समीक्षाएं स्थगित करें</string>
-    <string name="deck_conf_rev_bury_summ">संबंधित समीक्षाओं को अगले दिन तक स्थगित किया जाता है</string>
-    <string name="deck_conf_use_general_timeout_settings" maxLength="41">सामान्य सेटिंग्स का उपयोग करें</string>
-    <string name="deck_conf_use_general_timeout_settings_summ">Use general \'Automatic display answer\' settings instead of using the settings for this group.</string>
-    <string name="deck_conf_easy_bonus" maxLength="41">आसान बोनस</string>
-    <string name="deck_conf_hard_factor" maxLength="41">Hard interval</string>
-    <string name="deck_conf_ivl_fct" maxLength="41">अंतराल संशोधक</string>
-    <string name="deck_conf_max_ivl" maxLength="41">अधिकतम अंतराल</string>
-    <string name="deck_conf_new_lps_ivl" maxLength="41">नया अंतराल</string>
-    <string name="deck_conf_min_ivl" maxLength="41">न्यूनतम अंतराल</string>
-    <string name="deck_conf_leech_thres" maxLength="41">जोंक दहलीज</string>
-    <string name="deck_conf_fails">XXX चूक (ओं)</string>
-    <string name="deck_conf_leech_action" maxLength="41">जोंक कार्रवाई</string>
-    <string name="deck_conf_max_time" maxLength="41">अधिक से अधिक उत्तर समय</string>
-    <string name="deck_conf_seconds">XXX सेकंड</string>
-    <string name="deck_conf_timer" maxLength="41">उत्तर टाइमर दिखाएं</string>
-    <string name="deck_conf_autoplay" maxLength="41">स्वचालित रूप से ऑडियो चलाएं</string>
-    <string name="deck_conf_replayq" maxLength="41">फिर से खेलना सवाल</string>
-    <string name="deck_conf_replayq_summ">जब जवाब दिखाया, फिर से खेलना दोनों प्रश्न और उत्तर ऑडियो</string>
-    <string name="deck_conf_manage" maxLength="41">समूह प्रबंधन</string>
-    <string name="deck_conf_manage_summ">Add and change options groups</string>
-    <string name="deck_conf_current_group" maxLength="41">वर्तमान समूह</string>
-    <string name="deck_conf_rename" maxLength="41" comment="Menu entry to rename a deck">नाम बदलें</string>
-    <string name="deck_conf_reset" maxLength="41">मूल पुनस्थापित करें</string>
-    <string name="deck_conf_reset_message">वर्तमान विकल्प समूह को डिफ़ॉल्ट मानों में पुनर्स्थापित करें?</string>
-    <string name="deck_conf_add" maxLength="41" comment="Adding a new deck option group">जोड़ें</string>
-    <string name="deck_conf_add_summ">वर्तमान विकल्प समूह की प्रतिलिपि बनाएं</string>
-    <string name="deck_conf_remove_message">वर्तमान विकल्प समूह निकालें?</string>
-    <string name="deck_conf_set_subdecks" maxLength="41">सभी उपडेक के लिए सेट करें</string>
-    <plurals name="deck_conf_set_subdecks_summ">
-        <item quantity="one">%s subdeck इस समूह का उपयोग करेगा</item>
-        <item quantity="other">%s subdeck इस समूह का उपयोग करेगा</item>
-    </plurals>
-    <string name="deck_conf_set_subdecks_message">इस डेक उपडेक के सभी के लिए वर्तमान विकल्प समूह सेट करें?</string>
-    <string name="pref_browser_editor_font" maxLength="41">ब्राउज़र और संपादक फ़ॉन्ट</string>
     <string name="deck_conf_cram_filter" maxLength="41">फ़िल्टर</string>
     <string name="deck_conf_cram_search" maxLength="41">खोज</string>
     <string name="deck_conf_cram_limit" maxLength="41">करने के लिए सीमा</string>
@@ -304,34 +238,35 @@
     <string name="deck_conf_cram_reschedule" maxLength="41" comment="Title of the box labelled by deck_conf_cram_reschedule_summ">पुनः शेड्यूल करें</string>
     <string name="deck_conf_cram_reschedule_summ">इस डेक में मेरे जवाब के आधार पर कार्ड पुनर्निर्धारित</string>
     <string name="deck_conf_cram_filter_2_check">दूसरा फ़िल्टर सक्षम करें</string>
-    <string name="deck_conf_cram_steps" maxLength="41">कस्टम चरण (मिनटों में)</string>
     <string name="deck_conf_cram_steps_summ" maxLength="41">कस्टम चरणों को परिभाषित करें</string>
-    <string name="deck_conf_reminders_enabled" maxLength="41">Enable notifications for this deck group</string>
-    <string name="deck_conf_reminders_time" maxLength="41">पर याद दिलाना</string>
+    <string name="deck_conf_cram_preview_delays" maxLength="41">Preview delays</string>
+    <string name="deck_conf_cram_preview_delays_summ">Delays are in seconds. 0 returns card to original deck.</string>
     <!-- analytics options -->
     <string name="analytics_dialog_title">AnkiDroid को बेहतर बनाने में मदद करें!</string>
     <string name="analytics_title" maxLength="41">सुविधा उपयोग साझा करें</string>
     <string name="analytics_summ">आप AnkiDroid में योगदान कर सकते हैं, आप AnkiDroid Team को यह देखने में मदद कर सकते हैं कि लोग किन सुविधाओं का उपयोग करते हैं</string>
-    <string name="note_editor_replace_newlines" maxLength="41">Replace newlines with HTML</string>
-    <string name="note_editor_replace_newlines_summ">In the Note Editor, convert any instances of &lt;br&gt; to newlines when editing a card.</string>
-    <string name="no_code_formatting" maxLength="41">Simple typed answer formatting</string>
+    <string name="note_editor_replace_newlines" maxLength="41">न्यूलाइन को हटम्ल से बदलें</string>
+    <string name="note_editor_replace_newlines_summ">नोट संपादक में, &lt;br&gt; के किसी भी उदाहरण को रूपांतरित करें। किसी कार्ड को संपादित करते समय नई पंक्तियों में।</string>
+    <string name="no_code_formatting" maxLength="41">टेक्स्ट इनपुट उत्तरों के लिए सरल फ़ॉन्ट का उपयोग करें</string>
     <string name="no_code_formatting_summ">टाइप किए गए उत्तर परिणामों में प्रदर्शित होने वाले ‘􏿾’ को ठीक करता है</string>
-    <string name="type_in_answer_focus" maxLength="41">Focus ‘type in answer’</string>
-    <string name="type_in_answer_focus_summ">Automatically focus the ‘type in answer’ field in the reviewer</string>
+    <string name="type_in_answer_focus" maxLength="41">\'उत्तर टाइप करें\' पर ध्यान दें</string>
+    <string name="type_in_answer_focus_summ">यदि कार्ड में कोई फ़ील्ड है जहां आप कीबोर्ड का उपयोग करके उत्तर दर्ज कर सकते हैं, तो कर्सर स्वचालित रूप से रखा जाएगा ताकि आप तुरंत टेक्स्ट दर्ज कर सकें।</string>
     <!-- About -->
     <string name="open_changelog">परिवर्तन लॉग खोलें</string>
-    <string name="pref_cat_about_title" maxLength="41">About</string>
-    <string name="contributors_title">Contributors</string>
-    <string name="about_contributors_description"><![CDATA[These are our awesome <a href=\"%1$s\">contributors</a>. You can help AnkiDroid too by programming, translating, donating and <a href=\"%2$s\">more</a>!]]></string>
-    <string name="license">License</string>
-    <string name="license_description"><![CDATA[AnkiDroid is released under the <a href=\"%1$s\">GPL-3.0</a> and <a href=\"%2$s\">AGPL-3.0</a> licenses, with the source code available <a href=\"%3$s\">on GitHub</a>]]></string>
-    <string name="donate_description"><![CDATA[You can support AnkiDroid\'s development by <a href=\"%1$s\">donating</a>. Any amount is deeply appreciated.]]></string>
+    <string name="pref_cat_about_title" maxLength="41">इसके बारे में</string>
+    <string name="contributors_title">योगदान देने वाला</string>
+    <string name="about_contributors_description"><![CDATA[ये हमारे अद्भुत <a href=\"%1$s\">योगदानकर्ता</a> हैं। आप प्रोग्रामिंग, अनुवाद, दान और <a href=\"%2$s\">और</a> करके एंड्रॉइड की भी मदद कर सकते हैं!]]></string>
+    <string name="license">लाइसेंस</string>
+    <string name="license_description"><![CDATA[AnkiDroid को <a href=\"%1$s\">GPL-3.0</a> और <a href=\"%2$s\">AGPL-3.0</a> लाइसेंस के तहत जारी किया गया है। स्रोत कोड <a href=\"%3$s\">GitHub</a> पर उपलब्ध है]]></string>
+    <string name="donate_description"><![CDATA[आप <a href=\"%1$s\">दान</a> करके AnkiDroid\ के विकास में सहायता कर सकते हैं। किसी भी राशि की अत्यधिक सराहना की जाती है।]]></string>
     <!-- Controls -->
     <string name="binding_add_gesture">इशारा जोड़ें</string>
-    <string name="binding_replace_gesture">Replace gesture</string>
-    <string name="binding_add_key">Add key</string>
-    <string name="binding_replace_key">Replace key</string>
-    <string name="key_picker_default_press_key">Press a key</string>
+    <string name="binding_replace_gesture">इशारा बदलें</string>
+    <string name="binding_add_key">कुंजी जोड़ें</string>
+    <string name="binding_replace_key">कुंजी बदलें</string>
+    <string name="key_picker_default_press_key">कोई कुंजी दबाएं</string>
+    <string name="binding_add_axis">जॉयस्टिक/मोशन कंट्रोलर को जोड़ें</string>
+    <string name="axis_picker_move_joystick">जॉयस्टिक/मोशन कंट्रोलर को स्थानांतरित करें</string>
     <!-- Select card side -->
     <string name="card_side_selection_title">कार्ड साइड चुनें</string>
     <string name="card_side_question">प्रश्न</string>
@@ -341,81 +276,67 @@
     <string name="display_binding_card_side_answer" comment="When displaying a key bind on a preference this formatter is used if the bind only applies to the answer">उ: %s</string>
     <string name="display_binding_card_side_both" comment="When displaying a key bind on a preference this formatter is used if the bind only applies to both the question and the answer">%s</string>
     <!-- Binding Preference -->
-    <string name="binding_remove_binding" comment="The parameter is the name of the key/gesture.     Keys cannot be translated yet.">Remove ‘%s’</string>
-    <string name="bindings_already_bound">Already bound to ‘%s’</string>
+    <string name="binding_remove_binding" comment="The parameter is the name of the key/gesture.     Keys cannot be translated yet.">%s हटाएँ</string>
+    <string name="bindings_already_bound">पहले से ही \'%s\' से बंधा हुआ है</string>
     <!-- Advanced -->
-    <string name="pref_cat_experimental" maxLength="41">Experimental</string>
-    <string name="experimental_pref_confirmation" maxLength="41">Enable ‘%s’</string>
-    <string name="use_rust_backend_title" maxLength="41">Use the new backend</string>
-    <string name="use_rust_backend_summary">Enables newer Anki features, such as the v3 scheduler\nUNSTABLE. Do not use on a collection you care about. NOT reverted on app close</string>
-    <string name="use_rust_backend_warning">There is a chance this could corrupt your installation completely, requiring app uninstall and deletion of the AnkiDroid folder, and has a chance of propagating corruption via sync to AnkiWeb.\n\nWe welcome the testing, but please make sure you have a valid non-AnkiWeb backup.</string>
-    <string name="enable_v3_sched_title" maxLength="41">Use the v3 scheduler</string>
+    <string name="pref_cat_experimental" maxLength="41" tools:ignore="UnusedResources">प्रयोगात्मक</string>
     <!-- Developer options -->
-    <string name="pref_cat_dev_options" maxLength="41">Developer options</string>
-    <string name="dev_options_enabled_pref" maxLength="41">Enable developer options</string>
-    <string name="disable_dev_options">Disable developer options</string>
-    <string name="dev_options_warning">        Please be sure before enabling developer options. These options are dangerous and could break the app or corrupt your collection.\n\nNote that these options are not suited for most users and therefore are not translated, so they are in English.
-    </string>
+    <string name="pref_cat_dev_options" maxLength="41">डेवलपर विकल्प</string>
+    <string name="dev_options_enabled_pref" maxLength="41">डेवलपर विकल्प सक्षम करें</string>
+    <string name="disable_dev_options">डेवलपर विकल्प अक्षम करें</string>
+    <string name="dev_options_warning">ध्यान दें: डेवलपर विकल्प ऐप या आपके संग्रह को नुकसान पहुंचा सकते हैं, यह इस बात पर निर्भर करता है कि आप उनका उपयोग कैसे करते हैं। \n\nये विकल्प अधिकांश उपयोगकर्ताओं के लिए उपयुक्त नहीं हैं और केवल अंग्रेज़ी में प्रदर्शित होते हैं।</string>
     <!-- #######################################################################################
          #################################### Backup options ###################################
          ####################################################################################### -->
-    <string name="pref__backup_options__title" maxLength="41">Backup options</string>
-    <string name="pref__backups_help__summary"><![CDATA[        AnkiDroid periodically backs up your collection.
-        After backups are more than two days old,
-        AnkiDroid will start removing some of them to free up disk space.
-        <br><br>
-        Note that media files are not backed up.
-        To be safe, please periodically synchronize your collection, or back up exports of it.
-        <br><br>
-        You can restore from a backup and export your collection in the deck list menu.
-    ]]></string>
-    <string name="pref__minutes_between_automatic_backups__title" maxLength="41">Minutes between automatic backups</string>
-    <string name="pref__daily_backups_to_keep__title" maxLength="41">Daily backups to keep</string>
-    <string name="pref__weekly_backups_to_keep__title" maxLength="41">Weekly backups to keep</string>
-    <string name="pref__monthly_backups_to_keep__title" maxLength="41">Monthly backups to keep</string>
+    <string name="pref__backups_help__summary"><![CDATA[एंड्रॉइड समय-समय पर आपके संग्रह का बैकअप लेता है। बैकअप दो दिन से अधिक पुराना होने के बाद, डिस्क स्थान खाली करने के लिए एंड्रॉइड उनमें से कुछ को हटाना शुरू कर देगा। <br><br> ध्यान दें कि मीडिया फ़ाइलों का बैकअप नहीं लिया जाता है.सुरक्षित रहने के लिए, कृपया समय-समय पर अपने संग्रह को सिंक्रनाइज़ करें, या इसके निर्यात का बैकअप लें।
+ <br><br> आप बैकअप से पुनर्स्थापित कर सकते हैं और डेक सूची मेनू में अपना संग्रह निर्यात कर सकते हैं।]]></string>
+    <string name="pref__minutes_between_automatic_backups__title" maxLength="41">स्वचालित बैकअप अंतराल (मिनट)</string>
+    <string name="pref__daily_backups_to_keep__title" maxLength="41">प्रतिदिन में कितने बैकअप रखे जायेंगे</string>
+    <string name="pref__weekly_backups_to_keep__title" maxLength="41">साप्ताहिक में कितने बैकअप रखे जायेंगे</string>
+    <string name="pref__monthly_backups_to_keep__title" maxLength="41">मासिक में कितने बैकअप रखे जायेंगे</string>
     <!-- #######################################################################################
          ################################# Manage space activity ###############################
          ####################################################################################### -->
-    <string name="pref__manage_space__screen_title">Manage space</string>
+    <string name="pref__manage_space__screen_title">स्थान प्रबंधित करें</string>
     <!-- TextWidgetPreference widget text -->
-    <string name="pref__widget_text__error" comment="Text in a small box on the end of a preference, indicating a generic error.         Must be VERY short. Can be one or two lines.">Error</string>
-    <string name="pref__widget_text__calculating" comment="Text in a small box on the end of a preference,         indicating that the value, such as folder size on disk, is being calculated.         Must be VERY short. Can be one or two lines.">Calcu-\nlating&#8230;</string>
+    <string name="pref__widget_text__error" comment="Text in a small box on the end of a preference, indicating a generic error.         Must be VERY short. Can be one or two lines.">एरर</string>
+    <string name="pref__widget_text__calculating" comment="Text in a small box on the end of a preference,         indicating that the value, such as folder size on disk, is being calculated.         Must be VERY short. Can be one or two lines.">गणना \nप्रगति पर है...</string>
     <plurals name="pref__widget_text__n_files_n_bytes" comment="Text in a small box on the end of a preference,         showing some statistics about a folder on disk if a form of “12 files\n26 MB”.         Must be VERY short. Can be one or two lines.">
-        <item quantity="one">%1$d file\n%2$s</item>
-        <item quantity="other">%1$d files\n%2$s</item>
+        <item quantity="one">%1$d फ़ाइलें\n%2$s</item>
+        <item quantity="other">%1$d फ़ाइलें\n%2$s</item>
     </plurals>
     <!-- Delete unused media -->
-    <string name="pref__delete_unused_media_files__title" maxLength="41" comment="Preference title">Delete unused media files</string>
-    <string name="pref__delete_unused_media_files__summary">Delete images and other media that are not prefixed with _ and are not referenced by any notes</string>
-    <string name="dialog__media_check_required__message">A media check is required to find unused media files</string>
-    <string name="dialog__delete_unused_media_files__title" comment="Title for a dialog where you can select unused media files to delete">Delete unused media files</string>
+    <string name="pref__delete_unused_media_files__title" maxLength="41" comment="Preference title">अनावश्यक मीडिया फ़ाइलें हटाएँ</string>
+    <string name="pref__delete_unused_media_files__summary">उन इमेज और अन्य मीडिया को हटा दें जिनके उपसर्ग में _ नहीं लगा है और किसी भी नोट द्वारा संदर्भित नहीं किया गया है</string>
+    <string name="dialog__delete_unused_media_files__title" comment="Title for a dialog where you can select unused media files to delete">अप्रयुक्त मीडिया फ़ाइलें  को हटाएँ</string>
     <!-- Delete backups -->
-    <string name="pref__delete_backups__title" maxLength="41" comment="Preference title">Delete backups</string>
-    <string name="dialog__delete_backups__title" comment="Title for a dialog where you can choose backups to delete">Delete backups</string>
-    <string name="progress__deleting_backups">Deleting backups&#8230;</string>
+    <string name="pref__delete_backups__title" maxLength="41" comment="Preference title">बैकअप हटाएँ</string>
+    <string name="dialog__delete_backups__title" comment="Title for a dialog where you can choose backups to delete">बैकअप हटाएँ</string>
+    <string name="progress__deleting_backups">बैकअप हटाया जा रहा है...</string>
     <!-- Delete collection -->
-    <string name="pref__delete_collection__title" maxLength="41" comment="Preference title">Delete collection</string>
-    <string name="pref__delete_collection__summary">Delete collection, media, and backups. App settings are not deleted</string>
-    <string name="dialog__delete_collection__title" comment="Confirmation dialog title">Delete collection</string>
-    <string name="dialog__delete_collection__message" comment="“Close the window” here refers to the activity that the user is currently seeing.        When the collection is deleted, we exit the process, which closes the activity without animation.         On some devices the entire settings app may be closed.         User might not realize that this activity comes directly from AnkiDroid,         so it might be wise to avoid words such as “AnkiDroid or “app”.">Are you sure you want to delete your collection, media, and backups?\n\nNote: this action will close the window.</string>
-    <string name="progress__deleting_collection">Deleting collection&#8230;</string>
+    <string name="pref__delete_collection__title" maxLength="41" comment="Preference title">संग्रह को हटाएँ</string>
+    <string name="pref__delete_collection__summary">संग्रह, मीडिया और बैकअप हटाएँ। ऐप सेटिंग हटाई नहीं जातीं</string>
+    <string name="dialog__delete_collection__title" comment="Confirmation dialog title">संग्रह  को हटाएँ</string>
+    <string name="dialog__delete_collection__message" comment="“Close the window” here refers to the activity that the user is currently seeing.        When the collection is deleted, we exit the process, which closes the activity without animation.         On some devices the entire settings app may be closed.         User might not realize that this activity comes directly from AnkiDroid,         so it might be wise to avoid words such as “AnkiDroid or “app”.">क्या आप वाकई अपने संग्रह, मीडिया और बैकअप हटाना चाहते हैं? \n\nध्यान दें: यह ऑपरेशन इस सेटिंग स्क्रीन को बंद कर देगा।</string>
+    <string name="progress__deleting_collection">संग्रह  को हटाया जा रहा है...</string>
     <!-- Delete everything -->
-    <string name="pref__delete_everything__title" maxLength="41" comment="Preference title">Delete everything</string>
-    <string name="pref__delete_everything__summary">Delete collection, media, backups, and settings</string>
-    <string name="dialog__delete_everything__title" comment="Confirmation dialog title">Delete everything</string>
-    <string name="dialog__delete_everything__message" comment="“Close the window” here refers to the activity that the user is currently seeing.         Deleting app data forcibly closes AnkiDroid, which closes the activity without animation.         On some devices the entire settings app may be closed.         User might not realize that this activity comes directly from AnkiDroid,         so it might be wise to avoid words such as “AnkiDroid or “app”.">Are you sure you want to delete all data? This includes your collection, media, backups and preferences.\n\nNote: this action will close the window.</string>
+    <string name="pref__delete_everything__title" maxLength="41" comment="Preference title">सब कुछ मिटा दो</string>
+    <string name="pref__delete_everything__summary">संग्रह, मीडिया, बैकअप और सेटिंग्स को हटाएं</string>
+    <string name="dialog__delete_everything__title" comment="Confirmation dialog title">सब कुछ हटा दो</string>
+    <string name="dialog__delete_everything__message" comment="“Close the window” here refers to the activity that the user is currently seeing.         Deleting app data forcibly closes AnkiDroid, which closes the activity without animation.         On some devices the entire settings app may be closed.         User might not realize that this activity comes directly from AnkiDroid,         so it might be wise to avoid words such as “AnkiDroid or “app”.">क्या आप वाकई ऐप डेटा हटाना चाहते हैं? इसमें आपका संग्रह, मीडिया, बैकअप और   प्रैफरेंसेज
+शामिल हैं। \n\nध्यान दें: यह ऑपरेशन इस सेटिंग स्क्रीन को बंद कर देगा।</string>
     <!-- Delete app data -->
-    <string name="pref__delete_app_data__title" maxLength="41" comment="Preference title">Delete app data</string>
-    <string name="pref__delete_app_data__summary">Delete settings and other app data</string>
-    <string name="dialog__delete_app_data__title" comment="Confirmation dialog title">Delete app data</string>
-    <string name="dialog__delete_app_data__message" comment="“Close the window” here refers to the activity that the user is currently seeing.         Deleting app data forcibly closes AnkiDroid, which closes the activity without animation.         On some devices the entire settings app may be closed.         User might not realize that this activity comes directly from AnkiDroid,         so it might be wise to avoid words such as “AnkiDroid or “app”.">Are you sure you want to delete app data? This includes settings and other app data.\n\nNote: this action will close the window.</string>
+    <string name="pref__delete_app_data__title" maxLength="41" comment="Preference title">ऐप डेटा को हटाएं</string>
+    <string name="pref__delete_app_data__summary">सेटिंग्स और अन्य ऐप डेटा को हटाएं</string>
+    <string name="dialog__delete_app_data__title" comment="Confirmation dialog title">ऐप डेटा को हटाएं</string>
+    <string name="dialog__delete_app_data__message" comment="“Close the window” here refers to the activity that the user is currently seeing.         Deleting app data forcibly closes AnkiDroid, which closes the activity without animation.         On some devices the entire settings app may be closed.         User might not realize that this activity comes directly from AnkiDroid,         so it might be wise to avoid words such as “AnkiDroid or “app”.">क्या आप वाकई ऐप डेटा हटाना चाहते हैं? हटाने के लक्ष्य में इन-ऐप सेटिंग्स और अन्य डेटा भी शामिल हैं। \n\nध्यान दें: यह ऑपरेशन इस सेटिंग स्क्रीन को बंद कर देगा।</string>
     <!-- #######################################################################################
          ##### Generic preference summaries & snackbars that are shown on preference click #####
          ####################################################################################### -->
     <string name="pref__etc__summary__fetching" comment="Generic preference summary to be shown when the value is being fetched">&#8230;</string>
-    <string name="pref__etc__summary__no_collection" comment="Generic preference summary to be shown when a preference is not usable         because the collection does not exist">No collection</string>
-    <string name="pref__etc__summary__error" comment="Generic preference summary to be shown when there was an error fetching the value.         For example, this is shown when the permission to access collection is lacking">Error</string>
-    <string name="pref__etc__snackbar__fetching" comment="Generic snackbar message to be shown when user taps on a preference,         the value of which is being fetched">Fetching&#8230;</string>
-    <string name="pref__etc__snackbar__calculating" comment="Generic snackbar message to be shown when user taps on a preference,         the value of which, such as folder size on disk, is being calculated">Calculating&#8230;</string>
-    <string name="pref__etc__snackbar__no_collection" comment="Generic snackbar message to be shown when user taps on a preference         that is not usable because the collection does not exist">Collection does not exist</string>
+    <string name="pref__etc__summary__no_collection" comment="Generic preference summary to be shown when a preference is not usable         because the collection does not exist">कोई संग्रह नहीं है</string>
+    <string name="pref__etc__summary__error" comment="Generic preference summary to be shown when there was an error fetching the value.         For example, this is shown when the permission to access collection is lacking">एरर</string>
+    <string name="pref__etc__snackbar__fetching" comment="Generic snackbar message to be shown when user taps on a preference,         the value of which is being fetched">जानकारी प्राप्त हो रही है...</string>
+    <string name="pref__etc__snackbar__calculating" comment="Generic snackbar message to be shown when user taps on a preference,         the value of which, such as folder size on disk, is being calculated">गणना हो रही है...</string>
+    <string name="pref__etc__snackbar__no_collection" comment="Generic snackbar message to be shown when user taps on a preference         that is not usable because the collection does not exist">संग्रह मौजूद नहीं है</string>
 </resources>

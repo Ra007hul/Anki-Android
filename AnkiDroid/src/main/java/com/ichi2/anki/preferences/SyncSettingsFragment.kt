@@ -54,18 +54,14 @@ class SyncSettingsFragment : SettingsFragment() {
                 }
                 setNegativeButton(R.string.dialog_cancel) { _, _ -> }
             }
-            true
+            false
         }
         // Custom sync server
         requirePreference<Preference>(R.string.custom_sync_server_key).setSummaryProvider {
             val preferences = requireContext().sharedPrefs()
             val url = customSyncBase(preferences)
 
-            if (url == null) {
-                getString(R.string.custom_sync_server_summary_none_of_the_two_servers_used)
-            } else {
-                url
-            }
+            url ?: getString(R.string.custom_sync_server_summary_none_of_the_two_servers_used)
         }
     }
 

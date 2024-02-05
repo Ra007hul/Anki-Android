@@ -1,39 +1,28 @@
 import org.gradle.internal.jvm.Jvm
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompilerExecutionStrategy
 
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
-
 buildscript {
     // The version for the Kotlin plugin and dependencies
-    ext.kotlin_version = '1.8.22'
-    ext.lint_version = '31.0.2' // 31.0.1 stopped running lint checks in CI
-    ext.acra_version = '5.10.1'
-    ext.ankidroid_backend_version = '0.1.21-anki2.1.61'
+    // If changing this, make sure to update org.jetbrains.kotlin.plugin.serialization version too
+    ext.kotlin_version = '1.9.22'
+    ext.lint_version = '31.1.1'
+    ext.acra_version = '5.11.3'
+    ext.ankidroid_backend_version = '0.1.34-anki23.12.1'
     ext.hamcrest_version = '2.2'
-    ext.junit_version = '5.9.3'
-    ext.coroutines_version = '1.7.2'
-    ext.fragments_version = "1.6.0"
+    ext.junit_version = '5.10.1'
+    ext.coroutines_version = '1.7.3'
+    ext.fragments_version = "1.6.2"
     ext.espresso_version = '3.5.1'
     ext.androidx_test_version = '1.5.0'
     ext.androidx_test_junit_version = '1.1.5'
-    ext.robolectric_version = '4.10.3'
+    ext.robolectric_version = '4.11.1'
+    ext.android_gradle_plugin = "8.2.2"
+    ext.dokka_version = "1.9.10" // not the same with kotlin version!
+    ext.uiautomator_version = "2.3.0-beta01"
 
-    repositories {
-        google()
-        maven {
-            url "https://plugins.gradle.org/m2/"
-        }
-        maven { url 'https://jitpack.io' }
-    }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:8.0.2'
-        // NOTE: Do not place your application dependencies here; they belong
-        // in the individual module build.gradle files
-        classpath "com.github.BrantApps.gradle-amazon-app-store-publisher:amazonappstorepublisher:master-SNAPSHOT"
-
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath "org.jlleitschuh.gradle:ktlint-gradle:11.4.2"
-    }
-    configurations.all {
+    configurations.configureEach {
         resolutionStrategy.eachDependency { details ->
             if (details.requested.group == 'org.jetbrains.kotlinx'
                     && details.requested.name.contains('kotlinx-serialization-runtime')
@@ -44,12 +33,15 @@ buildscript {
     }
 }
 
-repositories {
-    mavenCentral()
-}
-
-allprojects {
-    apply plugin: "org.jlleitschuh.gradle.ktlint"
+plugins {
+    id 'com.android.application' version "$android_gradle_plugin" apply false
+    id 'com.android.library' version "$android_gradle_plugin" apply false
+    id 'org.jetbrains.kotlin.jvm' version "$kotlin_version" apply false
+    id 'org.jetbrains.kotlin.android' version "$kotlin_version" apply false
+    id 'org.jetbrains.kotlin.plugin.parcelize' version "$kotlin_version" apply false
+    id 'org.jetbrains.kotlin.plugin.serialization' version "$kotlin_version" apply false
+    id 'org.jlleitschuh.gradle.ktlint' version '11.6.1' apply false
+    id 'org.jetbrains.dokka' version "$dokka_version" apply false
 }
 
 Properties localProperties = new Properties()
@@ -60,8 +52,9 @@ Boolean fatalWarnings = !(localProperties['fatal_warnings'] == "false")
 
 // Here we extract per-module "best practices" settings to a single top-level evaluation
 subprojects {
-    afterEvaluate { project ->
+    apply plugin: "org.jlleitschuh.gradle.ktlint"
 
+    afterEvaluate { project ->
         if (project.hasProperty('android')) {
             project.android.testOptions.unitTests {
                 includeAndroidResources = true
@@ -100,10 +93,10 @@ subprojects {
             result in a warning but we treat warnings as errors.
             (see https://youtrack.jetbrains.com/issue/KT-28777/Using-experimental-coroutines-api-causes-unresolved-dependency)
         */
-        tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
-            kotlinOptions {
+        tasks.withType(KotlinCompile).configureEach {
+            compilerOptions {
                 allWarningsAsErrors = fatalWarnings
-                def compilerArgs = ['-Xjvm-default=all']
+                def compilerArgs = ['-Xjvm-default=all', '-Xcontext-receivers']
                 if (project.name != "api") {
                     compilerArgs += ['-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi']
                 }
@@ -116,16 +109,16 @@ subprojects {
 ext {
 
     jvmVersion = Jvm.current().javaVersion.majorVersion
-    if (jvmVersion != "17" && jvmVersion != "18") {
+    if (jvmVersion != "17" && jvmVersion != "21") {
         println "\n\n\n"
         println "**************************************************************************************************************"
         println "\n\n\n"
-        println "ERROR: AnkiDroid builds with JVM version 17 or 18."
+        println "ERROR: AnkiDroid builds with JVM version 17 or 21."
         println "  Incompatible major version detected: '" + jvmVersion + "'"
         println "\n\n\n"
         println "  If you receive this error because you want to use a newer JDK, we may accept PRs to support new versions."
         println "  Edit the main build.gradle file, find this message in the file, and add support for the new version."
-        println "  Please make sure the `jacocoTestReport` target works on an emulator with our minSdkVersion (currently 21)."
+        println "  Please make sure the `jacocoTestReport` target works on an emulator with our minSdkVersion (currently 23)."
         println "\n\n\n"
         println "**************************************************************************************************************"
         println "\n\n\n"
@@ -141,19 +134,13 @@ ext {
         // macOS reports hardware cores. This is accurate for CI, Intel (halved due to SMT) and Apple Silicon
         gradleTestMaxParallelForks = "sysctl -n hw.physicalcpu".execute().text.toInteger()
     } else if (ciBuild) {
-        // GitHub Actions (Standard_DS2_v2) are 1:1 on Linux/Windows with two vCPU cores
-        // Sources:
-        // Standard_DS2_v2 https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#cloud-hosts-for-github-hosted-runners
-        // Which is 1:1 https://docs.microsoft.com/en-gb/azure/virtual-machines/acu : DS1_v2 - DS15_v2 | 1:1
-        gradleTestMaxParallelForks = 2
-
-        // separate gradle compile process is a major speed improvement, but consumes 2x RAM
-        // the CI machines don't have enough RAM to do that without going in to swap quite a bit
-        // so for CI machines only - to improve reliability despite compilation speed hit, compile kotlin in process
-        println "CI build detected: setting compiler execution strategy to IN_PROCESS"
-        tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
-            compilerExecutionStrategy.set(org.jetbrains.kotlin.gradle.tasks.KotlinCompilerExecutionStrategy.IN_PROCESS)
-        }
+        // GitHub Actions run on Standard_D4ads_v5 Azure Compute Units with 4 vCPUs
+        // They appear to be 2:1 vCPU to CPU on Linux/Windows with two vCPU cores but with performance 1:1-similar
+        // Sources to determine the correct Azure Compute Unit (and get CPU count) to tune this:
+        // Which Azure compute unit in use? https://github.com/github/docs/blob/a25a33bb6cbf86a629d0a0c7bef624743991f97e/content/actions/using-github-hosted-runners/about-github-hosted-runners/about-github-hosted-runners.md?plain=1#L176
+        // What is that compute unit? https://learn.microsoft.com/en-us/azure/virtual-machines/dasv5-dadsv5-series#dadsv5-series
+        // How does it perform? https://learn.microsoft.com/en-gb/azure/virtual-machines/linux/compute-benchmark-scores#dadsv5 (vs previous Standard_DS2_v2 https://learn.microsoft.com/en-gb/azure/virtual-machines/linux/compute-benchmark-scores#dv2---general-compute)
+        gradleTestMaxParallelForks = 4
     } else {
         // Use 50% of cores to account for SMT which doesn't help this workload
         gradleTestMaxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1

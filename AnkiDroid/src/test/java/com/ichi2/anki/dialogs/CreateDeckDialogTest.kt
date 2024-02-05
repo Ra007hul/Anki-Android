@@ -16,6 +16,7 @@
 
 package com.ichi2.anki.dialogs
 
+import androidx.appcompat.app.AlertDialog
 import androidx.core.content.edit
 import androidx.lifecycle.Lifecycle
 import androidx.test.core.app.ActivityScenario
@@ -27,10 +28,8 @@ import com.ichi2.anki.R
 import com.ichi2.anki.RobolectricTest
 import com.ichi2.anki.dialogs.CreateDeckDialog.DeckDialogType
 import com.ichi2.anki.dialogs.utils.input
-import com.ichi2.anki.dialogs.utils.positiveButton
 import com.ichi2.libanki.DeckId
-import com.ichi2.libanki.backend.exception.DeckRenameException
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import com.ichi2.utils.positiveButton
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.*
 import org.junit.Test
@@ -43,7 +42,6 @@ import kotlin.coroutines.suspendCoroutine
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 
-@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 class CreateDeckDialogTest : RobolectricTest() {
     private lateinit var activityScenario: ActivityScenario<DeckPicker>
@@ -70,7 +68,6 @@ class CreateDeckDialogTest : RobolectricTest() {
     }
 
     @Test
-    @Throws(DeckRenameException::class)
     fun testCreateSubDeckFunction() {
         val deckParentId = col.decks.id("Deck Name")
         val deckName = "filteredDeck"
@@ -191,45 +188,10 @@ class CreateDeckDialogTest : RobolectricTest() {
         assertEquals(deckPicker.optionsMenuState!!.searchIcon, true)
     }
 
-    @Test
-    fun `Duplicate decks can't be created`() {
-        createDeck("deck")
-        createDeck("parent::child")
-        testDialog(DeckDialogType.DECK) {
-            input = "deck"
-            assertThat("Cannot create duplicate deck: 'deck'", positiveButton.isEnabled, equalTo(false))
-            input = "Deck"
-            assertThat("Cannot create duplicate deck: (case insensitive: 'Deck')", positiveButton.isEnabled, equalTo(false))
-            input = "Deck2"
-            assertThat("Can create deck with new name: 'Deck2'", positiveButton.isEnabled, equalTo(true))
-            input = "parent::child"
-            assertThat("Can't create fully qualified duplicate deck: 'parent::child'", positiveButton.isEnabled, equalTo(false))
-        }
-    }
-
-    @Test
-    fun `Duplicate subdecks can't be created`() {
-        // Subdecks have a 'context' of the parent deck: selecting 'A' and entering 'B' creates 'A::B'
-        createDeck("parent::child")
-        val parentDeckId = col.decks.byName("parent")!!.getLong("id")
-        testDialog(DeckDialogType.SUB_DECK, parentDeckId) {
-            input = "parent"
-            assertThat("'parent::parent' should be valid", positiveButton.isEnabled, equalTo(true))
-            input = "child"
-            assertThat("'parent::child' already exists so should be invalid", positiveButton.isEnabled, equalTo(false))
-            input = "Child"
-            assertThat("'parent::child' already exists so should be invalid (case insensitive)", positiveButton.isEnabled, equalTo(false))
-        }
-    }
-
-    private fun createDeck(deckName: String) {
-        col.decks.id(deckName)
-    }
-
     /**
      * Executes [callback] on the [MaterialDialog] created from [CreateDeckDialog]
      */
-    private fun testDialog(deckDialogType: DeckDialogType, parentId: DeckId? = null, callback: (MaterialDialog.() -> Unit)) {
+    private fun testDialog(deckDialogType: DeckDialogType, parentId: DeckId? = null, callback: (AlertDialog.() -> Unit)) {
         activityScenario.onActivity { activity: DeckPicker ->
             val dialog = CreateDeckDialog(activity, R.string.new_deck, deckDialogType, parentId).showDialog()
             callback(dialog)

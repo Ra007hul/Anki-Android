@@ -21,30 +21,19 @@ import android.os.Build
 import android.webkit.WebView
 import com.ichi2.anki.BuildConfig
 import com.ichi2.anki.CrashReportService
-import com.ichi2.libanki.Collection
 import com.ichi2.utils.VersionUtils.pkgVersionName
-import net.ankiweb.rsdroid.BackendFactory
-import net.ankiweb.rsdroid.RustCleanup
 import org.acra.util.Installation
-import timber.log.Timber
-import java.util.function.Supplier
+import net.ankiweb.rsdroid.BuildConfig as BackendBuildConfig
 
 object DebugInfoService {
-    @RustCleanup("remove newSchema")
-    fun getDebugInfo(info: Context, col: Supplier<Collection>): String {
-        var schedName = "Not found"
-        try {
-            schedName = col.get().sched.name
-        } catch (e: Throwable) {
-            Timber.e(e, "Sched name not found")
-        }
-        var dbV2Enabled = true
+    fun getDebugInfo(info: Context): String {
         val webviewUserAgent = getWebviewUserAgent(info)
-        val newSchema = !BackendFactory.defaultLegacySchema
         return """
-               AnkiDroid Version = $pkgVersionName
+               AnkiDroid Version = $pkgVersionName (${BuildConfig.GIT_COMMIT_HASH})
                
-               Android Version = ${Build.VERSION.RELEASE}
+               Backend Version = ${BuildConfig.BACKEND_VERSION} (${BackendBuildConfig.ANKI_DESKTOP_VERSION} ${BackendBuildConfig.ANKI_COMMIT_HASH})
+              
+               Android Version = ${Build.VERSION.RELEASE} (SDK ${Build.VERSION.SDK_INT})
                
                ProductFlavor = ${BuildConfig.FLAVOR}
                
@@ -58,14 +47,7 @@ object DebugInfoService {
                
                ACRA UUID = ${Installation.id(info)}
                
-               New schema = $newSchema
-               
-               Scheduler = $schedName
-               
                Crash Reports Enabled = ${isSendingCrashReports(info)}
-               
-               DatabaseV2 Enabled = $dbV2Enabled
-               
         """.trimIndent()
     }
 

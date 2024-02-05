@@ -48,11 +48,12 @@ import java.util.*
  * This technique can be used with an [android.app.Activity] class, not just
  * [android.preference.PreferenceActivity].
  */
+@KotlinCleanup("replace _delegate with `field`")
 abstract class AppCompatPreferenceActivity<PreferenceHack : AppCompatPreferenceActivity<PreferenceHack>.AbstractPreferenceHack> :
     PreferenceActivity(),
     CoroutineScope by MainScope(),
     SharedPreferences.OnSharedPreferenceChangeListener {
-    private var mDelegate: AppCompatDelegate? = null
+    private var _delegate: AppCompatDelegate? = null
     fun isColInitialized() = ::col.isInitialized
     protected var prefChanged = false
     lateinit var unmountReceiver: BroadcastReceiver
@@ -62,8 +63,8 @@ abstract class AppCompatPreferenceActivity<PreferenceHack : AppCompatPreferenceA
     protected lateinit var deck: Deck
 
     abstract inner class AbstractPreferenceHack : SharedPreferences {
-        val mValues: MutableMap<String, String> = HashUtil.HashMapInit(30) // At most as many as in cacheValues
-        val mSummaries: MutableMap<String, String?> = HashMap()
+        val values: MutableMap<String, String> = HashUtil.hashMapInit(30) // At most as many as in cacheValues
+        val summaries: MutableMap<String, String?> = HashMap()
         protected val listeners: MutableList<SharedPreferences.OnSharedPreferenceChangeListener> = LinkedList()
 
         @KotlinCleanup("scope function")
@@ -126,11 +127,11 @@ abstract class AppCompatPreferenceActivity<PreferenceHack : AppCompatPreferenceA
         }
 
         override fun contains(key: String): Boolean {
-            return mValues.containsKey(key)
+            return values.containsKey(key)
         }
 
         override fun getAll(): Map<String, *> {
-            return mValues
+            return values
         }
 
         override fun getBoolean(key: String, defValue: Boolean): Boolean {
@@ -151,10 +152,10 @@ abstract class AppCompatPreferenceActivity<PreferenceHack : AppCompatPreferenceA
 
         override fun getString(key: String, defValue: String?): String? {
             Timber.d("getString(key=%s, defValue=%s)", key, defValue)
-            return if (!mValues.containsKey(key)) {
+            return if (!values.containsKey(key)) {
                 defValue
             } else {
-                mValues[key]
+                values[key]
             }
         }
 
@@ -182,7 +183,7 @@ abstract class AppCompatPreferenceActivity<PreferenceHack : AppCompatPreferenceA
         delegate.installViewFactory()
         delegate.onCreate(savedInstanceState)
         super.onCreate(savedInstanceState)
-        val col = CollectionHelper.instance.getCol(this)
+        val col = CollectionHelper.instance.getColUnsafe(this)
         if (col != null) {
             this.col = col
         } else {
@@ -264,10 +265,10 @@ abstract class AppCompatPreferenceActivity<PreferenceHack : AppCompatPreferenceA
 
     private val delegate: AppCompatDelegate
         get() {
-            if (mDelegate == null) {
-                mDelegate = AppCompatDelegate.create(this, null)
+            if (_delegate == null) {
+                _delegate = AppCompatDelegate.create(this, null)
             }
-            return mDelegate!! // safe as mDelegate is only initialized here, before being returned
+            return _delegate!! // safe as mDelegate is only initialized here, before being returned
         }
 
     /**

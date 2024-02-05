@@ -22,13 +22,15 @@ package com.ichi2.anki.multimediacard
 
 import android.content.Context
 import android.media.MediaRecorder
+import android.os.Build
 import com.ichi2.compat.CompatHelper
 import timber.log.Timber
 import java.io.IOException
 
 class AudioRecorder {
-    private lateinit var mRecorder: MediaRecorder
-    private var mOnRecordingInitialized: Runnable? = null
+    private lateinit var recorder: MediaRecorder
+    private var onRecordingInitialized: Runnable? = null
+    private var previousNonZeroAmplitude = 0
     private fun initMediaRecorder(context: Context, audioPath: String): MediaRecorder {
         val mr = CompatHelper.compat.getMediaRecorder(context)
         mr.setAudioSource(MediaRecorder.AudioSource.MIC)
@@ -39,9 +41,7 @@ class AudioRecorder {
     }
 
     private fun onRecordingInitialized() {
-        if (mOnRecordingInitialized != null) {
-            mOnRecordingInitialized!!.run()
-        }
+        onRecordingInitialized?.run()
     }
 
     @Throws(IOException::class)
@@ -50,14 +50,14 @@ class AudioRecorder {
         try {
             // try high quality AAC @ 44.1kHz / 192kbps first
             // can throw IllegalArgumentException if codec isn't supported
-            mRecorder = initMediaRecorder(context, audioPath)
-            mRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
-            mRecorder.setAudioChannels(2)
-            mRecorder.setAudioSamplingRate(44100)
-            mRecorder.setAudioEncodingBitRate(192000)
+            recorder = initMediaRecorder(context, audioPath)
+            recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
+            recorder.setAudioChannels(2)
+            recorder.setAudioSamplingRate(44100)
+            recorder.setAudioEncodingBitRate(192000)
             // this can also throw IOException if output path is invalid
-            mRecorder.prepare()
-            mRecorder.start()
+            recorder.prepare()
+            recorder.start()
             highSampling = true
         } catch (e: Exception) {
             Timber.w(e)
@@ -66,26 +66,61 @@ class AudioRecorder {
         if (!highSampling) {
             // if we are here, either the codec didn't work or output file was invalid
             // fall back on default
-            mRecorder = initMediaRecorder(context, audioPath)
-            mRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
-            mRecorder.prepare()
-            mRecorder.start()
+            recorder = initMediaRecorder(context, audioPath)
+            recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
+            recorder.prepare()
+            recorder.start()
         }
     }
 
     fun stopRecording() {
-        if (this::mRecorder.isInitialized) {
-            mRecorder.stop()
+        if (this::recorder.isInitialized) {
+            recorder.stop()
         }
     }
 
     fun setOnRecordingInitializedHandler(onRecordingInitialized: Runnable?) {
-        mOnRecordingInitialized = onRecordingInitialized
+        this.onRecordingInitialized = onRecordingInitialized
     }
 
     fun release() {
-        if (this::mRecorder.isInitialized) {
-            mRecorder.release()
+        if (this::recorder.isInitialized) {
+            recorder.release()
+        }
+    }
+
+    fun maxAmplitude(): Int {
+        val currentAmplitude = if (this::recorder.isInitialized) {
+            recorder.maxAmplitude
+        } else {
+            0
+        }
+        return if (currentAmplitude == 0) {
+            previousNonZeroAmplitude
+        } else {
+            previousNonZeroAmplitude = currentAmplitude
+            currentAmplitude
+        }
+    }
+
+    fun pause() {
+        if (!this::recorder.isInitialized) {
+            return
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            recorder.pause()
+        } else {
+            recorder.stop()
+        }
+    }
+
+    fun resume() {
+        if (this::recorder.isInitialized) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                recorder.resume()
+            } else {
+                recorder.start()
+            }
         }
     }
 }

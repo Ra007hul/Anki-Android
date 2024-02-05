@@ -16,97 +16,82 @@
 
 package com.ichi2.anki.dialogs
 
-import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
-import com.afollestad.materialdialogs.MaterialDialog
-import com.afollestad.materialdialogs.WhichButton
-import com.afollestad.materialdialogs.actions.setActionButtonEnabled
-import com.afollestad.materialdialogs.input.getInputField
-import com.afollestad.materialdialogs.input.input
+import androidx.appcompat.app.AlertDialog
+import com.google.android.material.snackbar.Snackbar
 import com.ichi2.anki.CollectionHelper
 import com.ichi2.anki.CollectionManager.withCol
 import com.ichi2.anki.R
 import com.ichi2.anki.UIUtils.showThemedToast
-import com.ichi2.anki.servicelayer.DeckService.deckExists
+import com.ichi2.anki.snackbar.showSnackbar
 import com.ichi2.annotations.NeedsTest
 import com.ichi2.libanki.DeckId
 import com.ichi2.libanki.Decks
-import com.ichi2.libanki.backend.exception.DeckRenameException
 import com.ichi2.libanki.getOrCreateFilteredDeck
-import com.ichi2.utils.displayKeyboard
-import net.ankiweb.rsdroid.BackendFactory
+import com.ichi2.utils.getInputField
+import com.ichi2.utils.input
+import com.ichi2.utils.negativeButton
+import com.ichi2.utils.positiveButton
+import com.ichi2.utils.show
+import com.ichi2.utils.title
+import net.ankiweb.rsdroid.exceptions.BackendDeckIsFilteredException
 import timber.log.Timber
 import java.util.function.Consumer
 
 // TODO: Use snackbars instead of toasts: https://github.com/ankidroid/Anki-Android/pull/12139#issuecomment-1224963182
 @NeedsTest("Ensure a toast is shown on a successful action")
-class CreateDeckDialog(private val context: Context, private val title: Int, private val deckDialogType: DeckDialogType, private val parentId: Long?) {
-    private var mPreviousDeckName: String? = null
-    private var mOnNewDeckCreated: Consumer<Long>? = null
-    private var mInitialDeckName = ""
-    private var mShownDialog: MaterialDialog? = null
+class CreateDeckDialog(
+    private val context: Context,
+    private val title: Int,
+    private val deckDialogType: DeckDialogType,
+    private val parentId: Long?
+) {
+    private var previousDeckName: String? = null
+    private var onNewDeckCreated: Consumer<Long>? = null
+    private var initialDeckName = ""
+    private var shownDialog: AlertDialog? = null
 
     enum class DeckDialogType {
         FILTERED_DECK, DECK, SUB_DECK, RENAME_DECK
     }
 
     private val col
-        get() = CollectionHelper.instance.getCol(context)!!
+        get() = CollectionHelper.instance.getColUnsafe(context)!!
 
     suspend fun showFilteredDeckDialog() {
         Timber.i("CreateDeckDialog::showFilteredDeckDialog")
-        mInitialDeckName = withCol {
-            if (!BackendFactory.defaultLegacySchema) {
-                newBackend.getOrCreateFilteredDeck(did = 0).name
-            } else {
-                val names = decks.allNames()
-                var n = 1
-                val namePrefix = context.resources.getString(R.string.filtered_deck_name) + " "
-                while (names.contains(namePrefix + n)) {
-                    n++
-                }
-                namePrefix + n
-            }
+        initialDeckName = withCol {
+            getOrCreateFilteredDeck(did = 0).name
         }
         showDialog()
     }
 
     /** Used for rename  */
     var deckName: String
-        get() = mShownDialog!!.getInputField().text.toString()
+        get() = shownDialog!!.getInputField().text.toString()
         set(deckName) {
-            mPreviousDeckName = deckName
-            mInitialDeckName = deckName
+            previousDeckName = deckName
+            initialDeckName = deckName
         }
 
-    fun showDialog(): MaterialDialog {
-        @SuppressLint("CheckResult")
-        val dialog = MaterialDialog(context).show {
+    fun showDialog(): AlertDialog {
+        val dialog = AlertDialog.Builder(context).show {
             title(title)
-            positiveButton(R.string.dialog_ok) {
-                onPositiveButtonClicked()
-            }
+            positiveButton(R.string.dialog_ok) { onPositiveButtonClicked() }
             negativeButton(R.string.dialog_cancel)
-            input(prefill = mInitialDeckName, waitForPositiveButton = false) { dialog, text ->
-                // we need the fully-qualified name for subdecks
-                val fullyQualifiedDeckName = fullyQualifyDeckName(dialogText = text)
-                // if the name is empty, it seems distracting to show an error
-                if (!Decks.isValidDeckName(fullyQualifiedDeckName)) {
-                    dialog.setActionButtonEnabled(WhichButton.POSITIVE, false)
-                    return@input
-                }
-
-                if (deckExists(col, fullyQualifiedDeckName!!)) {
-                    dialog.setActionButtonEnabled(WhichButton.POSITIVE, false)
-                    dialog.getInputField().error = context.getString(R.string.validation_deck_already_exists)
-                    return@input
-                }
-
-                dialog.setActionButtonEnabled(WhichButton.POSITIVE, true)
+            setView(R.layout.dialog_generic_text_input)
+        }.input(prefill = initialDeckName, displayKeyboard = true, waitForPositiveButton = false) { dialog, text ->
+            // we need the fully-qualified name for subdecks
+            val maybeDeckName = fullyQualifyDeckName(dialogText = text)
+            // if the name is empty, it seems distracting to show an error
+            if (maybeDeckName == null || !Decks.isValidDeckName(maybeDeckName)) {
+                dialog.positiveButton.isEnabled = false
+                return@input
             }
-            displayKeyboard(getInputField())
+            dialog.positiveButton.isEnabled = true
         }
-        mShownDialog = dialog
+        shownDialog = dialog
         return dialog
     }
 
@@ -122,7 +107,7 @@ class CreateDeckDialog(private val context: Context, private val title: Int, pri
         }
 
     fun closeDialog() {
-        mShownDialog?.dismiss()
+        shownDialog?.dismiss()
     }
 
     fun createSubDeck(did: DeckId, deckName: String?) {
@@ -134,10 +119,10 @@ class CreateDeckDialog(private val context: Context, private val title: Int, pri
         if (Decks.isValidDeckName(deckName)) {
             createNewDeck(deckName)
             // 11668: Display feedback if a deck is created
-            showThemedToast(context, R.string.deck_created, true)
+            displayFeedback(context.getString(R.string.deck_created))
         } else {
             Timber.d("CreateDeckDialog::createDeck - Not creating invalid deck name '%s'", deckName)
-            showThemedToast(context, context.getString(R.string.invalid_deck_name), false)
+            displayFeedback(context.getString(R.string.invalid_deck_name), Snackbar.LENGTH_LONG)
         }
         closeDialog()
     }
@@ -147,9 +132,9 @@ class CreateDeckDialog(private val context: Context, private val title: Int, pri
             // create filtered deck
             Timber.i("CreateDeckDialog::createFilteredDeck...")
             val newDeckId = col.decks.newDyn(deckName)
-            mOnNewDeckCreated!!.accept(newDeckId)
-        } catch (ex: DeckRenameException) {
-            showThemedToast(context, ex.getLocalizedMessage(context.resources), false)
+            onNewDeckCreated!!.accept(newDeckId)
+        } catch (ex: BackendDeckIsFilteredException) {
+            displayFeedback(ex.localizedMessage ?: ex.message ?: "", Snackbar.LENGTH_LONG)
             return false
         }
         return true
@@ -160,8 +145,8 @@ class CreateDeckDialog(private val context: Context, private val title: Int, pri
             // create normal deck or sub deck
             Timber.i("CreateDeckDialog::createNewDeck")
             val newDeckId = col.decks.id(deckName)
-            mOnNewDeckCreated!!.accept(newDeckId)
-        } catch (filteredAncestor: DeckRenameException) {
+            onNewDeckCreated!!.accept(newDeckId)
+        } catch (filteredAncestor: BackendDeckIsFilteredException) {
             Timber.w(filteredAncestor)
             return false
         }
@@ -194,24 +179,32 @@ class CreateDeckDialog(private val context: Context, private val title: Int, pri
         val newName = newDeckName.replace("\"".toRegex(), "")
         if (!Decks.isValidDeckName(newName)) {
             Timber.i("CreateDeckDialog::renameDeck not renaming deck to invalid name '%s'", newName)
-            showThemedToast(context, context.getString(R.string.invalid_deck_name), false)
-        } else if (newName != mPreviousDeckName) {
+            displayFeedback(context.getString(R.string.invalid_deck_name), Snackbar.LENGTH_LONG)
+        } else if (newName != previousDeckName) {
             try {
                 val decks = col.decks
-                val deckId = decks.id(mPreviousDeckName!!)
-                decks.rename(decks.get(deckId), newName)
-                mOnNewDeckCreated!!.accept(deckId)
+                val deckId = decks.id(previousDeckName!!)
+                decks.rename(decks.get(deckId)!!, newName)
+                onNewDeckCreated!!.accept(deckId)
                 // 11668: Display feedback if a deck is renamed
-                showThemedToast(context, R.string.deck_renamed, true)
-            } catch (e: DeckRenameException) {
+                displayFeedback(context.getString(R.string.deck_renamed))
+            } catch (e: BackendDeckIsFilteredException) {
                 Timber.w(e)
                 // We get a localized string from libanki to explain the error
-                showThemedToast(context, e.getLocalizedMessage(context.resources), false)
+                displayFeedback(e.localizedMessage ?: e.message ?: "", Snackbar.LENGTH_LONG)
             }
         }
     }
 
+    private fun displayFeedback(message: String, duration: Int = Snackbar.LENGTH_SHORT) {
+        if (context is Activity) {
+            context.showSnackbar(message, duration)
+        } else {
+            showThemedToast(context, message, duration == Snackbar.LENGTH_SHORT)
+        }
+    }
+
     fun setOnNewDeckCreated(c: Consumer<Long>?) {
-        mOnNewDeckCreated = c
+        onNewDeckCreated = c
     }
 }

@@ -21,10 +21,6 @@ import android.os.Build
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.edit
-import com.afollestad.materialdialogs.MaterialDialog
-import com.afollestad.materialdialogs.WhichButton
-import com.afollestad.materialdialogs.actions.setActionButtonEnabled
-import com.afollestad.materialdialogs.checkbox.checkBoxPrompt
 import com.ichi2.anki.*
 import com.ichi2.anki.CollectionManager.withCol
 import com.ichi2.anki.preferences.sharedPrefs
@@ -48,7 +44,7 @@ import timber.log.Timber
  */
 class BackupPromptDialog private constructor(private val windowContext: Context) {
 
-    private lateinit var materialDialog: MaterialDialog
+    private lateinit var alertDialog: AlertDialog
 
     /**
      * After 2 dismissals, allow ignoring
@@ -89,11 +85,11 @@ class BackupPromptDialog private constructor(private val windowContext: Context)
         if (userCheckedDoNotShowAgain) {
             showPermanentlyDismissDialog(
                 this.windowContext,
-                onCancel = { dialogPermanentlyDismissed = true },
-                onDisableReminder = {
+                onCancel = {
                     userCheckedDoNotShowAgain = false
                     onDismiss()
-                }
+                },
+                onDisableReminder = { dialogPermanentlyDismissed = true }
             )
         } else {
             timesDialogDismissed += 1
@@ -113,8 +109,8 @@ class BackupPromptDialog private constructor(private val windowContext: Context)
     }
 
     private fun build(isLoggedIn: Boolean, performBackup: () -> Unit) {
-        this.materialDialog = MaterialDialog(windowContext).apply {
-            icon(if (isLoggedIn) R.drawable.ic_baseline_backup_24 else R.drawable.ic_backup_restore)
+        this.alertDialog = AlertDialog.Builder(windowContext).apply {
+            setIcon(if (isLoggedIn) R.drawable.ic_baseline_backup_24 else R.drawable.ic_backup_restore)
             title(R.string.backup_your_collection)
             message(R.string.backup_collection_message)
             positiveButton(if (isLoggedIn) R.string.button_sync else R.string.button_backup) {
@@ -123,15 +119,15 @@ class BackupPromptDialog private constructor(private val windowContext: Context)
                 performBackup()
             }
             if (allowUserToPermanentlyDismissDialog) {
-                checkBoxPrompt(R.string.button_do_not_show_again) { checked ->
+                checkBoxPrompt(R.string.button_do_not_show_again, isCheckedDefault = false) { checked ->
                     Timber.d("Don't show again checked: %b", checked)
                     userCheckedDoNotShowAgain = checked
-                    setActionButtonEnabled(WhichButton.POSITIVE, !checked)
+                    alertDialog.positiveButton.isEnabled = !checked
                 }
             }
             negativeButton(R.string.button_backup_later) { onDismiss() }
             cancelable(false)
-        }
+        }.create()
     }
 
     companion object {
@@ -140,20 +136,20 @@ class BackupPromptDialog private constructor(private val windowContext: Context)
         /** @return Whether the dialog was shown */
         suspend fun showIfAvailable(deckPicker: DeckPicker): Boolean {
             val backupPrompt = BackupPromptDialog(deckPicker)
+
             if (!backupPrompt.shouldShowDialog()) {
                 return false
             }
-
             val isLoggedIn = isLoggedIn()
             backupPrompt.apply {
                 build(isLoggedIn) {
                     if (isLoggedIn) {
                         deckPicker.sync(conflict = null)
                     } else {
-                        deckPicker.exportCollection(includeMedia = true)
+                        deckPicker.exportCollection()
                     }
                 }
-                materialDialog.show()
+                alertDialog.show()
             }
             return true
         }
@@ -212,7 +208,7 @@ class BackupPromptDialog private constructor(private val windowContext: Context)
             AlertDialog.Builder(context).show {
                 title(R.string.dismiss_backup_warning_title)
                 message(message)
-                iconAttr(R.attr.dialogErrorIcon)
+                setIcon(R.drawable.ic_warning)
                 positiveButton(R.string.dialog_cancel) { onCancel() }
                 negativeButton(R.string.button_disable_reminder) { onDisableReminder() }
             }
@@ -255,7 +251,7 @@ class BackupPromptDialog private constructor(private val windowContext: Context)
     }
 
     private fun timeToShowDialogAgain(): Boolean =
-        nextTimeToShowDialog <= TimeManager.time.intTimeMS()
+        !dialogPermanentlyDismissed && nextTimeToShowDialog <= TimeManager.time.intTimeMS()
 
     private suspend fun userIsNewToAnkiDroid(): Boolean {
         // A user is new if the app was installed > 7 days ago  OR if they have no cards
@@ -266,7 +262,7 @@ class BackupPromptDialog private constructor(private val windowContext: Context)
 
         // if for some reason the user has no cards after 7 days, don't bother
         return withCol {
-            this.cardCount() == 0
+            cardCount() == 0
         }
     }
 

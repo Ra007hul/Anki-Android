@@ -25,13 +25,12 @@
  * displayed flag, without redrawing the entire review screen).
  */
 
-// BackendFactory.defaultLegacySchema must be false to use this code.
-
 package com.ichi2.libanki
 
 import androidx.annotation.VisibleForTesting
 import anki.collection.OpChanges
 import anki.collection.OpChangesAfterUndo
+import anki.collection.OpChangesOnly
 import anki.collection.OpChangesWithCount
 import anki.collection.OpChangesWithId
 import anki.import_export.ImportResponse
@@ -82,6 +81,7 @@ object ChangeManager {
             is OpChangesWithCount -> changes.changes
             is OpChangesWithId -> changes.changes
             is OpChangesAfterUndo -> changes.changes
+            is OpChangesOnly -> changes.changes
             is ImportResponse -> changes.changes
             else -> TODO("unhandled change type")
         }
@@ -91,14 +91,9 @@ object ChangeManager {
 
 /** Wrap a routine that returns OpChanges* or similar undo info with this
  * to notify change subscribers of the changes. */
-suspend fun <T> undoableOp(handler: Any? = null, block: CollectionV16.() -> T): T {
+suspend fun <T> undoableOp(handler: Any? = null, block: Collection.() -> T): T {
     return withCol {
-        val result = newBackend.block()
-        // any backend operation clears legacy undo and resets study queues if it
-        // succeeds
-        clearUndo()
-        reset()
-        result
+        block()
     }.also {
         withContext(Dispatchers.Main) {
             ChangeManager.notifySubscribers(it, handler)

@@ -52,6 +52,7 @@
     <string name="CardEditorModel">ノートタイプ:</string>
     <string name="CardEditorTags">タグ: %1$s</string>
     <string name="CardEditorCards">カード: %1$s</string>
+    <string name="edit_occlusions">画像穴埋め問題を編集</string>
     <string name="tag_name">タグ名</string>
     <string name="add_new_filter_tags">タグフィルター / 新規タグ追加</string>
     <string name="add_tag">タグを追加</string>
@@ -68,10 +69,9 @@
     <string name="show_whiteboard">ホワイトボードを表示</string>
     <string name="hide_whiteboard">ホワイトボードを隠す</string>
     <string name="clear_whiteboard">ホワイトボードの内容を消去</string>
-    <string name="replay_audio">音声・動画を再生</string>
-    <string name="leech_suspend_notification">このカードに \"leech\"  (無駄、習得困難) というタグを付け、学習を休止しました</string>
-    <string name="leech_notification">このカードに \"leech\" (無駄、習得困難) というタグを付けました</string>
-    <string name="corrupt_font">使用できないフォントファイル %s</string>
+    <string name="replay_audio">音声を再生</string>
+    <string name="leech_suspend_notification">このカードに \"leech\"  (苦戦、忘却多発) というタグを付け、学習を休止しました</string>
+    <string name="leech_notification">このカードに \"leech\" (苦戦、忘却多発) というタグを付けました</string>
     <string name="webview_crash_unknown">原因不明のエラー</string>
     <string name="webview_crash_unknwon_detailed">これはWebViewの内部エラーによって引き起こされました。</string>
     <string name="webview_crash_oom">メモリ不足</string>
@@ -87,12 +87,12 @@
     </string-array>
     <string-array name="browser_column2_headings">
         <item>解答</item>
-        <item>カード</item>
+        <item>カードタイプ</item>
         <item>デッキ</item>
         <item>ノートタイプ</item>
         <item>質問</item>
         <item>タグ</item>
-        <item>忘却回数</item>
+        <item>復習での忘却回数</item>
         <item>学習回数</item>
         <item>間隔</item>
         <item>易しさ</item>
@@ -101,8 +101,6 @@
         <item>作成日</item>
         <item>ノート編集日</item>
     </string-array>
-    <!-- Filter Sheet -->
-    <string name="apply_filter">適用</string>
     <string name="filter_by_flags">フラグ</string>
     <!-- Custom study options -->
     <string name="custom_study_increase_new_limit">今日の新規カード上限を変更</string>
@@ -117,15 +115,14 @@
     <string name="discard_unsaved_changes">閉じて現在の入力を破棄しますか？</string>
     <string name="note_editor_no_cards_created">カードが作成されていません。他のフィールドにも入力してください。</string>
     <string name="note_editor_no_first_field">最初のフィールドが空です</string>
-    <string name="note_editor_no_cloze_delations">このノートタイプには穴埋め箇所が含まれている必要があります</string>
+    <string name="note_editor_no_cloze_delations">このノートタイプには穴埋め問題の箇所が含まれている必要があります</string>
     <string name="note_editor_no_cards_created_all_fields">現在のノートタイプではカードを生成できませんでした。\n別のノートタイプを選択するか、「カード」をタップしてフィールドを挿入してください。</string>
-    <string name="note_editor_insert_cloze_no_cloze_note_type">穴埋め箇所を示す文字列は、穴埋め型のノートタイプでのみ機能します</string>
+    <string name="note_editor_insert_cloze_no_cloze_note_type">穴埋め問題箇所を示す文字列は、穴埋め問題型のノートタイプでのみ機能します</string>
     <string name="saving_facts">ノートを保存しています</string>
     <string name="saving_model">ノートタイプを保存しています</string>
     <string name="save">保存</string>
     <string name="close">閉じる</string>
     <string name="select">選択</string>
-    <string name="reordering_cards">カードを並べ替えています...</string>
     <string name="field_remapping">%1$s (\'%2$s\'から)</string>
     <string name="confirm_map_cards_to_nothing">割り当て先のないカードは削除されます。カードがすべて削除されたノートは、そのノート自体が削除されます。続行してもよろしいですか？</string>
     <!-- Timebox -->
@@ -144,16 +141,11 @@
     <string name="card_editor_reschedule_card" comment="Action to reschedule a card">スケジュールを変更</string>
     <string name="card_editor_preview_card" comment="Button offering to preview some card(s)">プレビュー</string>
     <string name="preview_progress_bar_text" comment="What card we are on out of how many in card previewer progress bar">%1$d / %2$d</string>
-    <string name="error_insufficient_memory">メモリ不足のため操作できませんでした。</string>
     <string name="rename" comment="Confirm that the renaming action should be processed.">名前を変更</string>
-    <string name="default_conf_delete_error">デフォルトのオプショングループは削除できません</string>
-    <plurals name="factadder_cards_added">
-        <item quantity="other">%d枚のカードを追加しました</item>
-    </plurals>
+    <string name="checks_action">チェック</string>
     <string name="check_db">データベースをチェック</string>
     <string name="check_media">メディアをチェック</string>
     <string name="empty_cards">白紙カードをチェック</string>
-    <string name="check_db_message">データベースをチェックしています...</string>
     <string name="empty_card_warning">このカードは白紙カード（表側に表示する内容がないカード）です。このような白紙カードを一括削除するには、デッキリスト画面のメニューから「白紙カードをチェック」を選択してください。</string>
     <string name="unknown_type_field_warning">タイピングして答えを入力: 不明なフィールド %s</string>
     <string name="delete_deck">デッキを削除しています...</string>
@@ -161,43 +153,20 @@
     <string name="import_title">インポート</string>
     <string name="import_message_add" comment="Adding a new deck to the collection (import)">追加</string>
     <string name="import_message_replace_confirm">現在のコレクションはすべて削除され、ファイル \"%s\" のデータによって上書きされます。よろしいですか？</string>
-    <plurals name="import_files_message_add_confirm">
-        <item quantity="other">%s\nの内容をコレクションに追加しますか？　時間がかかる場合があります</item>
-    </plurals>
+    <string name="import_dialog_message_add">\"%s\" をコレクションに追加しますか？　長い時間がかかる場合があります</string>
     <string name="import_log_no_apkg">これは読み込み可能なAnkiパッケージファイル（*.apkg）ではありません</string>
     <string name="import_title_error" comment="Title of error dialog">エラー</string>
-    <string name="import_log_failed_unzip">apkgファイルの解凍に失敗しました: %s</string>
-    <string name="import_log_failed_copy_to">apkgファイルを %s にコピーできませんでした</string>
-    <string name="import_log_failed_validate">apkgファイルの検証に失敗しました</string>
-    <string name="import_log_insufficient_space_error">パッケージをインポートするために十分な空き容量がありません。\n必要な容量 - %1$s \n空き容量 - %2$s.\n\nお困りですか？　可能であれば、端末の空き容量を確保してみてください。あるいは、容量に余裕のある端末（Anki Desktopをインストール済みのPCなど）でパッケージをインポートし、そのデータをAnkiWeb経由でこの端末と同期するという方法で解決できる可能性もあります。</string>
-    <string name="import_log_file_cache_cleared">ファイルのインポート中にエラーが発生しました。処理中にキャッシュがクリアされた可能性があります。\nもう一度やり直してください</string>
-    <string name="import_succeeded_but_check_database">データのインポートに成功しましたが、インポート後のクリーンアップに失敗しました。後で「データベースをチェック」を実行してください。\n\n原因: %s</string>
-    <string name="import_error_corrupt_zip">apkgファイルが壊れています。削除して再ダウンロードしてください。\n\n原因: %s</string>
     <string name="import_error_handle_exception">ファイル\n\n%s\n\nのインポートに失敗しました</string>
     <string name="import_error_not_apkg_extension">ファイル名 \"%s\" は拡張子が .apkg か .colpkg ではありません。</string>
     <string name="import_error_load_imported_database">Anki Database (.anki2) の置換はまだサポートされていません。マニュアルを参照してください。</string>
     <string name="import_error_content_provider">選択されたファイルをAnkiDroidによって自動的にインポートできませんでした。Ankiファイルを手動でインポートする方法については、マニュアルをご覧ください: \n %s</string>
     <string name="import_error_copy_to_cache">一時ファイルの作成に失敗しました（ストレージ容量が不足している可能性があります）</string>
-    <string name="import_error_multiple_colpkg">複数の colpkgファイルが選択されました。</string>
-    <string name="import_error_colpkg_apkg">apkgファイルとcolpkgファイルが選択されました。それらを一度にインポートすることはできません。</string>
-    <string name="import_stats_error">下記のファイルをインポートする際にエラーが発生しました:\n%s</string>
-    <string name="import_replacing">コレクションを上書きしています...</string>
     <string name="import_interrupted">インポートが中断されました: AnkiDroidが閉じられました</string>
-    <string name="export_include_schedule">スケジュール情報を含める</string>
-    <string name="export_include_media">メディアファイルを含める</string>
-    <string name="confirm_apkg_export">コレクションのバックアップ（Ankiパッケージファイル）を作成しますか？</string>
-    <string name="confirm_apkg_export_deck">デッキ \"%s\" のAnkiパッケージファイル（*.apkg）を作成します。よろしいですか？</string>
-    <plurals name="confirm_apkg_export_selected_cards">
-        <item quantity="other">選択した%d枚のカードをapkgファイルとしてエクスポートしますか？</item>
-    </plurals>
-    <plurals name="confirm_apkg_export_selected_notes">
-        <item quantity="other">選択した%d枚のノートを apkgファイルとしてエクスポートしますか？</item>
-    </plurals>
     <string name="export_preparation_in_progress">エクスポートの準備中...</string>
     <string name="export_ready_title">エクスポートの準備完了</string>
     <string name="export_send_no_handlers">Ankiパッケージに対応する他のアプリがありません。ファイルを保存します...</string>
-    <string name="export_save_apkg_successful">Ankiパッケージを保存しました</string>
-    <string name="export_save_apkg_unsuccessful">Ankiパッケージの保存に失敗しました</string>
+    <string name="export_save_apkg_successful">パッケージファイルを保存しました</string>
+    <string name="export_save_apkg_unsuccessful">パッケージファイルの保存に失敗しました</string>
     <string name="export_share_title">Ankiパッケージを送信:</string>
     <string name="export_email_subject">[AnkiDroid] %s</string>
     <string name="export_email_text"><![CDATA[        こんにちは！
@@ -212,47 +181,15 @@
     <string name="study_options" comment="Name for a preference category in Filtered deck (aka Cram deck, aka Custom study) options">オプション</string>
     <string name="menu__deck_options">デッキオプション</string>
     <string name="menu__study_options" comment="Menu item that opens options for a Filtered deck (aka Cram deck, aka Custom study)">学習オプション</string>
-    <string name="select_tts">テキスト読み上げ機能の言語設定</string>
+    <string name="select_tts">読み上げ用の言語を選択</string>
     <string name="custom_study">カスタム学習</string>
     <string name="more_options">その他</string>
     <string name="dyn_deck_desc">これは標準のスケジュールから外れて学習する特別なデッキです。 復習が終わったカードは自動的に元のデッキに戻ります。 このデッキを削除すると、残りのカードもすべて元のデッキに戻ります。</string>
     <string name="steps_error">習得ステップには1以上の数字を入力してください</string>
     <string name="steps_min_error">少なくとも 1 つの習得ステップが必要です</string>
-    <string name="sched_end">（終了）</string>
-    <string name="sched_unbury_action">今それらを見る場合は、メニューの「パスを取り消す」をタップしてください</string>
-    <string name="sched_has_buried">関連カード、パスカードの学習は明日まで延期されます</string>
     <string name="tag_editor_add_feedback">「%1$s」の追加を確定するには「%2$s」をタップしてください</string>
-    <string name="tag_editor_add_feedback_existing">既存のタグ「%1$s」が選択されました</string>
+    <string name="tag_editor_add_feedback_existing">既存のタグ「%1$s」を選択しました</string>
     <!-- Time spans -->
-    <plurals name="time_span_seconds">
-        <item quantity="other">%s秒</item>
-    </plurals>
-    <plurals name="time_span_minutes">
-        <item quantity="other">%s分</item>
-    </plurals>
-    <plurals name="time_span_hours">
-        <item quantity="other">%s時間</item>
-    </plurals>
-    <plurals name="time_span_days">
-        <item quantity="other">%s日間</item>
-    </plurals>
-    <plurals name="time_span_months">
-        <item quantity="other">%sか月</item>
-    </plurals>
-    <plurals name="time_span_years">
-        <item quantity="other">%s年</item>
-    </plurals>
-    <!-- A decimal number of seconds.
-    Please give this a best-effort translation and explain the requirements for
-    formatting decimals in your language in the CrowdIn comments -->
-    <string name="time_span_decimal_seconds">%s秒</string>
-    <!-- The reason for making a simple “< x” translatable are RTL
-         languages which apparently use the other symbol to mean less
-         than. -->
-    <string name="less_than_time">&lt; %s</string>
-    <string name="decks_rename_exists">そのデッキ名はすでに使用されています</string>
-    <string name="decks_rename_filtered_nosubdecks">フィルターデッキ内にはサブデッキを作成できません</string>
-    <string name="filtered_deck_name">フィルターデッキ</string>
     <string name="reminder_title">今日も学習しましょう！</string>
     <plurals name="reminder_text">
         <item quantity="other">課題: %2$d枚 （%1$s）</item>
@@ -260,14 +197,11 @@
     <!-- Currently only used if exporting APKG fails -->
     <string name="apk_share_error">Ankiファイル（*.apkg）の共有中にエラーが発生しました</string>
     <!-- Import and export v2 feedback -->
-    <string name="export_v2_dummy_note">このファイルを使用するには新しいバージョンのAnkiが必要です。</string>
     <string name="activity_start_failed">この操作を実行できるアプリがインストールされていません。</string>
     <string name="multimedia_editor_image_compression_failed"><![CDATA[撮影画像のデータ量が多い可能性があります。メディアディレクトリ内の画像を圧縮してサイズを変更したほうがよいかもしれません。]]></string>
     <string name="no_browser_notification">ブラウザが見つかりません。PCまたはスマートフォンのブラウザで次のウェブページをご覧ください： </string>
     <string name="web_page_error">ページの読み込みエラー: %s</string>
-    <string name="no_outgoing_link_in_cardbrowser">カード内の外部ページリンクはサポートされていません。</string>
     <!-- The name of the deck which corrupt cards will be moved to -->
-    <string name="check_integrity_recovered_deck_name">回収したカード</string>
     <!-- Deckpicker Background -->
     <string name="background_image_title">デッキリスト画面の背景</string>
     <string name="choose_an_image">画像を選択</string>
@@ -277,9 +211,6 @@
     <string name="basic_answer_sample_text_user" comment="has a typo, so that user sees a highlighted difference in basic answer model     ">exomple</string>
     <string name="basic_answer_sample_text">an example</string>
     <string name="reviewer_tts_cloze_spoken_replacement">空白</string>
-    <!-- in options menu & Navigation Drawer -->
-    <string name="ankidroid_turn_on_fullscreen_nav_drawer">JavaScriptでナビゲーションドロワーを表示するには、フルスクリーンモードをオンにしてください。</string>
-    <string name="ankidroid_turn_on_fullscreen_options_menu">JavaScriptでオプションメニューを表示するには、フルスクリーンモードをオンにしてください。</string>
     <!-- Whiteboard save image message in Reviewer -->
     <string name="white_board_image_save_failed">ホワイトボード画像の保存に失敗しました。 %s</string>
     <string name="white_board_image_saved">ホワイトボードの画像を \"%s\" に保存しました</string>
@@ -298,13 +229,11 @@
     <string name="about_ankidroid_error_copy_debug_info">デバッグ情報をクリップボードにコピー中にエラーが発生しました</string>
     <!-- Card Viewer -->
     <string name="card_viewer_could_not_find_image">カードコンテンツエラー: ’%s’ の読み込みに失敗しました</string>
-    <string name="card_viewer_media_relative_protocol">カードコンテンツエラー: メディアの更新が必要です</string>
     <!-- Deck Picker -->
-    <string name="deck_picker_failed_deck_load">デッキ \'%s\' の読み込みに失敗しました</string>
     <string name="search_decks">デッキ名を検索</string>
     <string name="show_migration_progress" comment="Title for a button in deck picker\'s toolbar that shows ongoing migration progress.         Usually shown as a tooltip. The button opens a dialog with a more detailed progress information.">移行の進行状況を表示</string>
     <string name="ankidroid_init_failed_webview_title">重大なエラー</string>
-    <string name="ankidroid_init_failed_webview">AnkiDroidはシステムのWebViewに依存していますが、このWebViewが現在使用できません。この状況は、システムがアップデートプログラムをインストールしている場合に発生する可能性があります。数分後に再試行してください。\n\n%s</string>
+    <string name="ankidroid_init_failed_webview">AnkiDroidはAndroidシステムのWebViewに依存していますが、このWebViewが現在使用できません。この状況は、システムがアップデートプログラムをインストールしている場合に発生する可能性があります。数分後に再試行してください。\n\n%s</string>
     <!-- A Menu item to change the Font Size (currently in the Note Editor) -->
     <string name="menu_font_size">フォントサイズ</string>
     <string name="menu_show_toolbar" comment="Checkable item stating whether the note editor toolbar should be shown">ツールバーを表示</string>
@@ -315,12 +244,11 @@
     <string name="insert_heading">見出し</string>
     <string name="format_font_size">フォントサイズ変更</string>
     <string name="insert_mathjax">MathJax式を挿入</string>
-    <string name="insert_cloze">穴埋め箇所</string>
     <string name="note_editor_toolbar_icon">ボタンに表示する文字</string>
-    <string name="before_text">選択部分の前のHTML</string>
-    <string name="after_text">選択部分の後のHTML</string>
+    <string name="before_text">選択文字列の前のHTML</string>
+    <string name="after_text">選択文字列の後のHTML</string>
     <string name="add_toolbar_item">ツールバーアイテムを作成</string>
-    <string name="edit_toolbar_item">ツールバーアイテムを編集</string>
+    <string name="edit_toolbar_item">アイテムを編集</string>
     <string name="toolbar_item_explain_edit_or_remove">選択した文字列の前後に挿入するHTMLをそれぞれ入力してください\n\n作成したツールバーアイテムを編集または削除したい場合は、そのアイテムのボタンを長押ししてください</string>
     <string name="remove_toolbar_item">このツールバーアイテムを削除しますか？</string>
     <string name="note_editor_paste_too_large">画像が大きすぎるため貼り付けできません。手動で画像を挿入してください</string>
@@ -328,13 +256,13 @@
     <string name="create_shortcut_error_vivo" comment="iManager is an app on Vivo phones">AnkiDroidのショートカットを追加するには、iManagerでの許可が必要な場合があります。</string>
     <string name="create_shortcut_failed" comment="home screen == launcher">ホーム画面へのショートカットの追加が許可されませんでした</string>
     <string name="create_shortcut_error">ショートカット追加のエラー: %s</string>
-    <string name="note_editor_capitalize" comment="This is for a switch with a checkbox - on: enabled">文章を大文字にする</string>
+    <string name="note_editor_capitalize" comment="This is for a switch with a checkbox - on: enabled">英語入力の際に文頭を大文字</string>
     <string name="menu_scroll_toolbar" comment="Checkbox stating whether note editor toolbar is scrollable or stacked. Checked: Scroll">ツールバーをスクロール表示</string>
     <!-- Symbols used as Button text in IncrementNumberRangePreference -->
     <string name="plus_sign" comment="Label for increment button in IncrementerNumberRangePreference">+</string>
     <string name="minus_sign" comment="Label for decrement button in IncrementerNumberRangePreference">-</string>
     <!-- Used for credential empty warning message -->
-    <string name="email_id_empty">メールアドレスが必要です</string>
+    <string name="invalid_email">有効なメールアドレスを入力してください</string>
     <string name="password_empty">パスワードが必要です</string>
     <string name="back_pressed_once">もう一度押すと終了します</string>
     <string name="back_pressed_once_reviewer">もう一度押すとデッキリスト画面に戻ります</string>
@@ -351,10 +279,11 @@
     <string name="deck_download_progress_message">ダウンロード中、他のアプリを使用できます</string>
     <string name="check_network">ネットワーク接続を確認してください</string>
     <string name="search_using_deck_name">デッキ名で検索</string>
+    <string name="external_storage_unavailable">ダウンロードが中止されました。この外部ストレージは利用できません。</string>
     <string name="home">ホーム</string>
     <!-- Reviewer actions 
     Each of these strings ends with a period, following the notation of Anki Desktop -->
-    <string name="card_buried">カードを明日に延期しました。</string>
+    <string name="card_buried">カードを今日は非表示にしました。</string>
     <plurals name="note_suspended">
         <item quantity="other">%d枚のカードを休止しました。</item>
     </plurals>
@@ -386,9 +315,8 @@
     <string name="intro_short_ankidroid_explanation">Ankiは、記憶を定着させ強化するのに適したスケジュールでカードを表示する間隔反復学習システムです。AnkiDroidでAnkiの効率的な学習をお楽しみください</string>
     <string name="intro_get_started" comment="Action to start AnkiDroid for the first time without syncing from AnkiWeb">開始する</string>
     <string name="intro_sync_from_ankiweb">AnkiWebから同期</string>
-    <string name="already_logged_in">既にログイン済みです</string>
+    <string name="already_logged_in">すでにログイン済みです</string>
     <!-- Deck Creation -->
-    <string name="validation_deck_already_exists">同じ名前のデッキが既に存在します</string>
     <string name="deck_created">デッキを作成しました</string>
     <string name="deck_renamed">デッキ名を変更しました</string>
     <!-- Deck Deletion -->
@@ -397,7 +325,7 @@
     <string name="show_cards" comment="Label for toggle cards button in BrowserOptionsDialog">カード</string>
     <string name="show_notes" comment="Label for toggle notes button in BrowserOptionsDialog">ノート</string>
     <string name="toggle_cards_notes">カード /ノート の切り替え</string>
-    <string name="toggle_browser_mode_help">ブラウザで、カードとノート、どちらのリストを表示するかを切り替えます</string>
+    <string name="toggle_browser_mode_help">カードブラウザのリスト画面で、カードとノート、どちらのリストを表示するかを切り替えます</string>
     <string name="truncate_content_help">リスト画面において、カードまたはノートの内容の表示を１件につき３行までに制限します</string>
     <string name="browser_options_dialog_heading">ブラウザ オプション</string>
     <string name="functionality_disabled_during_storage_migration" comment="Displayed when trying to access functionality which cannot be run while storage is being moved to a new location">        ストレージ移行中はこの機能は利用できません
@@ -405,5 +333,21 @@
     <string name="storage_migration_sync_notification" comment="Appears on a notification after the user has opted into a storage migration and provided consent to sync         and AnkiDroid was minimised when the sync completed">タップしてストレージ移行を開始</string>
     <string name="media_sync_required_title">メディアの同期が必要です</string>
     <string name="media_sync_unavailable_message">メディアの同期が設定で無効になっています。続行する前に、まだ同期していないメディアを同期することによってバックアップをとってください</string>
-    <string name="remember_sync_metered_checkbox_msg">今後確認しない (この警告は「同期」の設定で再度有効にできます)</string>
+    <string name="audio_saved">録音を保存しました</string>
+    <string name="deleting_selected_notes">選択したノートを削除しています</string>
+    <string name="tts_voices_default_text" comment="The default text to speak when selecting     Text to speech voices">        読み上げる音声をタップ 
+    </string>
+    <string name="tts_voices_selected_voice_should_be_installed" comment="If a voice has been tapped, is installable but not installed, we want to inform the user that they should install it for the best experience There will also be an option to use it without downloading">使用前に音声をインストールする必要があります
+    </string>
+    <string name="tts_voices_use_selected_voice_without_install" comment="A user has been informed that a voice should be installed before use. This is text on a snackbar button which allows them to use the voice without installing it">とにかく使用
+    </string>
+    <string name="tts_voices_playback_error_new" comment="an error occurred when playing a text to speech voice. The parameter is a technical error code such as \'ERROR_NOT_INSTALLED_YET\' or \'ERROR_NETWORK_TIMEOUT\'">テキスト読み上げエラー (%s)</string>
+    <!-- Chips should probably be in a separate file, due to the additional length req -->
+    <string name="tts_voices_chip_filter_to_internet" comment="     Filters a list of text to speech voices, to enable/disable voices which require the internet to     function.     This is on a chip control, so keep the text short, ideally one word">        ｲﾝﾀｰﾈｯﾄ
+    </string>
+    <string name="tts_voices_chip_filter_to_installable_audio" comment="     Displays a list of Text to Speech voices which should be downloaded/installed before use     This is on a chip control, so keep the text short, ideally one word">        ｲﾝｽﾄｰﾙ
+    </string>
+    <string name="tts_voices_failed_opening_tts_system_settings" comment="error message if opening the system text to speech settings fails">        テキスト読み上げの設定を開けませんでした
+    </string>
+    <string name="shared_decks_login_required">さらにデッキをダウンロードするにはログインしてください</string>
 </resources>

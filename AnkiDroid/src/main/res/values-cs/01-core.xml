@@ -43,7 +43,7 @@
 ~ You should have received a copy of the GNU General Public License along with
 ~ this program.  If not, see <http://www.gnu.org/licenses/>.
 -->
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Navigation drawer items-->
     <string name="decks">Balíčky</string>
     <string name="card_browser" comment="The usage of card browser inside the app (note the casing)">Prohlížeč karet</string>
@@ -55,45 +55,13 @@
     <string name="studyoptions_due_today">Dnes ke zkoušení:</string>
     <string name="studyoptions_new_total">Celkem nových karet:</string>
     <string name="studyoptions_total_cards">Celkem karet:</string>
-    <string name="studyoptions_eta">Odhadovaný čas (min):</string>
     <string name="studyoptions_start">Studovat</string>
     <!-- DeckPicker.kt -->
     <string name="expand">Rozbalit</string>
     <string name="collapse">Sbalit</string>
-    <string name="study_more">Studovat více</string>
-    <plurals name="deckpicker_title">
-        <item quantity="one">%1$d karta ke zkoušení (%2$s)</item>
-        <item quantity="few">%1$d karty ke zkoušení (%2$s)</item>
-        <item quantity="many">%1$d karty ke zkoušení (%2$s)</item>
-        <item quantity="other">%1$d karet ke zkoušení (%2$s)</item>
-    </plurals>
-    <plurals name="reviewer_window_title">
-        <item quantity="one">Zbývá %d minuta</item>
-        <item quantity="few">Zbývají %d minuty</item>
-        <item quantity="many">Zbývá %d minuty</item>
-        <item quantity="other">Zbývá %d minut</item>
-    </plurals>
-    <plurals name="reviewer_window_title_hours_new">
-        <item quantity="one">Zbývá %1$d hodina %2$d</item>
-        <item quantity="few">Zbývají %1$d hodiny %2$d</item>
-        <item quantity="many">Zbývá %1$d hodiny %2$d</item>
-        <item quantity="other">Zbývá %1$d hodin %2$d</item>
-    </plurals>
-    <plurals name="reviewer_window_title_days_new">
-        <item quantity="one">Zbývá %1$d den %2$d</item>
-        <item quantity="few">Zbývají %1$d dny %2$d</item>
-        <item quantity="many">Zbývá %1$d dne %2$d</item>
-        <item quantity="other">Zbývá %1$d dní %2$d</item>
-    </plurals>
     <string name="no_cards_placeholder_title">Kolekce je prázdná</string>
     <string name="no_cards_placeholder_description">Začněte přidávat karty\npoužitím ikony +</string>
     <!-- The deck picker via AnkiStatsTaskHandler.java -->
-    <plurals name="studied_cards_today">
-        <item quantity="one">Dnes studována %1$d karta za %2$s</item>
-        <item quantity="few">Dnes studovány %1$d karty za %2$s</item>
-        <item quantity="many">Dnes studováno %1$d karty za %2$s</item>
-        <item quantity="other">Dnes studováno %1$d karet za %2$s</item>
-    </plurals>
     <!-- flashcard_portrait.xml -->
     <string name="type_answer_hint">Napište odpověď</string>
     <string name="show_answer">Zobrazit odpověď</string>
@@ -102,11 +70,9 @@
     <string name="ease_button_hard">Těžké</string>
     <string name="ease_button_good">Dobré</string>
     <string name="ease_button_easy">Snadné</string>
-    <string name="studyoptions_congrats_undo">Zpět %s</string>
     <string name="menu_import">Import</string>
     <string name="undo">Vrátit zpět</string>
-    <string name="undo_action_review">poslední opakování</string>
-    <string name="undo_action_change_deck_multi">změnit balíčky</string>
+    <string name="redo">Znovu</string>
     <string name="undo_action_whiteboard_last_stroke" comment="One of the display patterns of \'Undo\' item on the action menu in Reviewer. It is shown as the title of the item when the whiteboard (handwriting) feature is enabled and visible and has any strokes (handwritten lines)">Zrušit čáru</string>
     <string name="move_all_to_deck">Přesunout vše do balíčku</string>
     <string name="unbury">Zrušit přeskočení</string>
@@ -148,23 +114,6 @@
     grant AnkiDroid the \'Storage\' permission. This needs to be a fairly generic message as implementations
     of the permissions/app info screen will differ between devices. -->
     <string name="startup_no_storage_permission">Abyste mohli pokračovat, prosím udělte AnkiDroid oprávnění k „úložišti“</string>
-    <string name="startup_all_files_access_permission">Abyste mohli pokračovat, prosím udělte AnkiDroidu oprávnění „přístup ke všem souborům“</string>
-    <!--
-        The time_quantities are units of time. They are used without
-        plurals or dots.
-        s, min, h, d, are standard (ISO 31-1) units and should usually
-        not be translated, at least not for languages using the Latin
-        alphabet.
-    -->
-    <string name="time_quantity_seconds">%d s</string>
-    <string name="time_quantity_minutes">%d min</string>
-    <string name="time_quantity_hours_minutes">%1$d h %2$d min</string>
-    <string name="time_quantity_hours">%d h</string>
-    <string name="time_quantity_days">%d dní</string>
-    <string name="time_quantity_days_hours">%1$d d %2$d h</string>
-    <string name="time_quantity_months">%.1f měsíců</string>
-    <string name="time_quantity_years">%.1f roků</string>
-    <!-- or "%.1f a" -->
     <string name="rebuild_filtered_deck">Obnovuje se filtrovaný balíček&#8230;</string>
     <string name="rebuild_cram_label">Znovu sestavit</string>
     <string name="empty_cram_label">Vyprázdnit</string>
@@ -176,24 +125,14 @@
     <string name="search_deck" comment="Deck search for selecting it">Hledat balíček</string>
     <string name="search_for_download_deck" comment="Deck search value for downloading deck">Hledat balíček</string>
     <string name="invalid_deck_name">Neplatný název balíčku</string>
-    <string name="studyoptions_empty">Tento balíček je prázdný. Stiskněte tlačítko +, abyste přidali nový obsah.</string>
-    <string name="studyoptions_limit_reached">Denní limit studia dosažen</string>
-    <string name="studyoptions_empty_schedule">Žádné další karty ke studiu</string>
-    <string name="studyoptions_congrats_finished">Blahopřejeme! Prozatím máte hotovo</string>
-    <string name="studyoptions_congrats_more_rev">Bylo dosaženo limitu dnešního opakování, ale stále existují karty pro přezkoušení. Pro optimální zapamatování zvažte zvýšení denního limitu v možnostech.</string>
-    <string name="studyoptions_congrats_more_new">Dnešní limit byl dosažen. K dispozici je více nových karet, v možnostech můžete zvýšit limit, ale to zvýší vaše krátkodobé vytížení.</string>
-    <string name="studyoptions_congrats_custom">Jestliže chcete studovat mimo normální plán, klepněte na tlačítko „Vlastní studium“.</string>
     <string name="studyoptions_no_cards_due">Žádné karty ještě nejsou ke zkoušení</string>
     <string name="sd_card_not_mounted">Zařízení úložiště není připojeno</string>
-    <string name="empty_cloze_warning">Upravte tuto poznámku a přidejte nějaké doplňovačky. (%1$s)</string>
     <string name="button_sync" comment="Text of the sync button">Synchronizovat</string>
     <string name="button_upgrade" comment="Text of the sync button">Přesunout do vyhrazeného úložiště</string>
-    <string name="cancel_sync_confirm">Přejete si přerušit synchronizaci?</string>
-    <string name="continue_sync">Pokračovat v synchronizaci</string>
-    <string name="sync_cancelled">Synchronizace přrušena</string>
-    <string name="sync_cancel_message">Přerušuje se&#8230;\nMůže to chvíli trvat.</string>
-    <string name="export">Export</string>
-    <string name="export_collection">Export kolekce</string>
+    <string name="cancel_sync_confirm" tools:ignore="UnusedResources">Přejete si přerušit synchronizaci?</string>
+    <string name="continue_sync" tools:ignore="UnusedResources">Pokračovat v synchronizaci</string>
+    <string name="sync_cancelled" tools:ignore="UnusedResources">Synchronizace přrušena</string>
+    <string name="sync_cancel_message" tools:ignore="UnusedResources">Přerušuje se&#8230;\nMůže to chvíli trvat.</string>
     <string name="export_deck">Export balíčku</string>
     <string name="nothing">Nic</string>
     <!-- Card template editor -->
@@ -224,7 +163,6 @@
     <string name="template_for_current_card_deleted">Typ karty současné karty byl odstraněn.</string>
     <!-- Card Browser Appearance -->
     <string name="card_template_browser_appearance_title">Vzhled prohlížeče</string>
-    <string name="current_and_default_deck">%1$s (%2$s)</string>
     <!-- card Info -->
     <string name="card_info_title">Informace o kartě</string>
     <!-- Permissions -->
@@ -233,14 +171,6 @@
     <!-- Context Menu -->
     <string name="card_browser_context_menu" comment="The value which appears in the system context menu. Note the casing difference">Prohlížeč karet</string>
     <string name="context_menu_anki_card_label">Anki karta</string>
-    <string name="has_a_problem" comment="First field is either front template or back template. Second field is the error message.">%1$s má problém:<br/>%2$s</string>
-    <string name="more_information">Více informací</string>
-    <string name="no_field">Nalezeno „{{%1$s}}“, ale neexistuje žádné pole nazvané „%1$s“.</string>
-    <string name="closed_tag_not_open">Nalezeno „{{/%1$s}}“, ale chybí „{{#%1$s}}“ nebo “{{^%1$s}}“.</string>
-    <string name="missing_closing_bracket">Chybí „}}“ v „%s“.</string>
-    <string name="open_tag_not_closed">Chybí „{{%s}}“.</string>
-    <string name="wrong_tag_closed">Nalezeno „{{/%1$s}}“, ale očekává se „{{/%2$s}}“</string>
-    <string name="filter_error">Chyba filtru %s</string>
     <!-- Sync conflict -->
     <string name="sync_conflict_message_new">Kolekce nelze zkombinovat.\nKterou kolekci chcete ponechat?</string>
     <string name="sync_conflict_keep_local_new" comment="Select AnkiDroid files to keep while syncing">AnkiDroid</string>
@@ -255,7 +185,6 @@
         <item quantity="many">%1$d karty (0 ke zkoušení)</item>
         <item quantity="other">%1$d karet (0 ke zkoušení)</item>
     </plurals>
-    <string name="copy_note_type_name" comment="The new name of a copied note type">%s kopie</string>
     <!-- Generic errors -->
     <string name="error__etc__cannot_write_to_or_create_file">Nelze zapisovat do souboru %s nebo jej vytvořit</string>
     <string name="error__etc__multiple_errors_most_recent" comment="Generic message for an error that has multiple causes, e.g.,         “Multiple errors, most recent: CPU hit by a cosmic ray particle”.">"Více chyb, poslední: %s"</string>
@@ -274,7 +203,7 @@
         Ujistěte se prosím, že jsou vaše data v bezpečí, a to pravidelným zálohováním nebo exportováním záloh.
     </string>
     <string name="migration__failed__title" comment="A title for a dialog, or a short message shown in a notification,         when storage migration fails">Přesun dat se nezdařil</string>
-    <string name="migration__failed__changes_rolled_back__message" comment="A more detailed message shown when storage migration fails, with the changes rolled back"><![CDATA[        Přesun databázových souborů selhal s chybou: %1$s
+    <string name="migration__failed__changes_rolled_back__message" comment="A more detailed message shown when storage migration fails, with the changes rolled back"><![CDATA[        Přesun databázových souborů selhal s chybou: %1$s.
         <br><br>
         Změny byly vráceny.
         <br><br>
@@ -309,4 +238,9 @@
     <string name="restore_data_from_backup">Obnovit ze zálohy .colpkg (pro pokročilé)</string>
     <string name="create_new_collection">Vytvořit novou kolekci</string>
     <string name="new_unsafe_collection">Nová kolekce bude odstraněna z vašeho telefonu, pokud odinstalujete AnkiDroid</string>
+    <!-- Permissions screen -->
+    <string name="permissions_screen_headline">Aby AnkiDroid fungoval, potřebuje některá oprávnění</string>
+    <string name="storage_access_title">Přístup k úložišti</string>
+    <string name="storage_access_summary">Uloží vaši kolekci na bezpečné místo, které nebude odstraněno, pokud bude aplikace odinstalována</string>
+    <string name="all_files_access_title" comment="Name of the “All files access” permission from Android 10 and after">Přístup ke všem souborům</string>
 </resources>

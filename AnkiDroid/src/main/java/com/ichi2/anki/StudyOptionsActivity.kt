@@ -18,7 +18,6 @@ package com.ichi2.anki
 import android.os.Bundle
 import android.view.MenuItem
 import androidx.fragment.app.commit
-import com.ichi2.anim.ActivityTransitionAnimation
 import com.ichi2.anki.StudyOptionsFragment.StudyOptionsListener
 import com.ichi2.anki.dialogs.customstudy.CustomStudyDialog.CustomStudyListener
 import com.ichi2.anki.dialogs.customstudy.CustomStudyDialogFactory
@@ -31,7 +30,7 @@ class StudyOptionsActivity : NavigationDrawerActivity(), StudyOptionsListener, C
         if (showedActivityFailedScreen(savedInstanceState)) {
             return
         }
-        val customStudyDialogFactory = CustomStudyDialogFactory({ this.col }, this)
+        val customStudyDialogFactory = CustomStudyDialogFactory({ this.getColUnsafe }, this)
         customStudyDialogFactory.attachToActivity<ExtendedFragmentFactory>(this)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.studyoptions)
@@ -70,9 +69,10 @@ class StudyOptionsActivity : NavigationDrawerActivity(), StudyOptionsListener, C
     private fun closeStudyOptions(result: Int = RESULT_OK) {
         // mCompat.invalidateOptionsMenu(this);
         setResult(result)
-        finishWithAnimation(ActivityTransitionAnimation.Direction.END)
+        finish()
     }
 
+    @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
         if (isDrawerOpen) {
             super.onBackPressed()
@@ -84,9 +84,8 @@ class StudyOptionsActivity : NavigationDrawerActivity(), StudyOptionsListener, C
 
     public override fun onStop() {
         super.onStop()
-        if (colIsOpen()) {
-            WidgetStatus.update(this)
-            saveCollectionInBackground()
+        if (colIsOpenUnsafe()) {
+            WidgetStatus.updateInBackground(this)
         }
     }
 
@@ -109,6 +108,6 @@ class StudyOptionsActivity : NavigationDrawerActivity(), StudyOptionsListener, C
 
     override fun onExtendStudyLimits() {
         // Sched needs to be reset so provide true argument
-        currentFragment!!.refreshInterface(true)
+        currentFragment!!.refreshInterface()
     }
 }

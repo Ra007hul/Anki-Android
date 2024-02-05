@@ -22,8 +22,9 @@ import android.content.Context
 import com.ichi2.anki.CardUtils
 import com.ichi2.anki.R
 import com.ichi2.anki.ReadText
+import com.ichi2.anki.reviewer.CardSide
 import com.ichi2.libanki.Card
-import com.ichi2.libanki.Sound.SoundSide
+import com.ichi2.libanki.Collection
 import com.ichi2.libanki.TTSTag
 import com.ichi2.libanki.Utils
 import com.ichi2.libanki.template.TemplateFilters
@@ -42,8 +43,8 @@ class TTS {
      * @param card The card to check the type of before determining the ordinal.
      * @return The card ordinal. If it's a Cloze card, returns 0.
      */
-    private fun getOrdUsingCardType(card: Card): Int {
-        return if (card.model().isCloze) {
+    private fun getOrdUsingCardType(card: Card, col: Collection): Int {
+        return if (card.model(col).isCloze) {
             0
         } else {
             card.ord
@@ -56,8 +57,8 @@ class TTS {
      * @param card     The card to play TTS for
      * @param cardSide The side of the current card to play TTS for
      */
-    fun readCardText(ttsTags: List<TTSTag>, card: Card, cardSide: SoundSide) {
-        ReadText.readCardSide(ttsTags, cardSide, CardUtils.getDeckIdForCard(card), getOrdUsingCardType(card))
+    fun readCardText(col: Collection, ttsTags: List<TTSTag>, card: Card, cardSide: CardSide) {
+        ReadText.readCardSide(ttsTags, cardSide, CardUtils.getDeckIdForCard(card), getOrdUsingCardType(card, col))
     }
 
     /**
@@ -66,13 +67,13 @@ class TTS {
      * @param card The card to read text from
      * @param qa   The card question or card answer
      */
-    fun selectTts(context: Context, card: Card, qa: SoundSide) {
-        val textToRead = if (qa == SoundSide.QUESTION) card.q(true) else card.pureAnswer
+    fun selectTts(col: Collection, context: Context, card: Card, qa: CardSide) {
+        val textToRead = if (qa == CardSide.QUESTION) card.question(col, true) else card.pureAnswer(col)
         // get the text from the card
         ReadText.selectTts(
             getTextForTts(context, textToRead),
             CardUtils.getDeckIdForCard(card),
-            getOrdUsingCardType(card),
+            getOrdUsingCardType(card, col),
             qa
         )
     }
@@ -94,7 +95,7 @@ class TTS {
      * Request that TextToSpeech is stopped and shutdown after it it no longer being used
      * by the context that initialized it.
      * No-op if the current instance of TextToSpeech was initialized by another Context
-     * @param context The context used during {@link #initializeTts(Context, ReadTextListener)}
+     * @param context The context used during [ReadText.initializeTts]
      */
     fun releaseTts(context: Context) {
         if (!enabled) {

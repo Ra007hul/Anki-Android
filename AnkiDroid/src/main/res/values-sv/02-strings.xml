@@ -52,6 +52,7 @@
     <string name="CardEditorModel">Typ:</string>
     <string name="CardEditorTags">Etiketter: %1$s</string>
     <string name="CardEditorCards">Kort: %1$s</string>
+    <string name="edit_occlusions">Edit Occlusions</string>
     <string name="tag_name">Taggnamn</string>
     <string name="add_new_filter_tags">Lägg till/Filtrera etiketter</string>
     <string name="add_tag">Lägg till tagg</string>
@@ -71,7 +72,6 @@
     <string name="replay_audio">Spela om ljud</string>
     <string name="leech_suspend_notification">Markerat som utsugarkort och åsidosatt</string>
     <string name="leech_notification">Markerat som utsugarkort</string>
-    <string name="corrupt_font">Felaktig teckensnittsfil %s</string>
     <string name="webview_crash_unknown">Okänt fel</string>
     <string name="webview_crash_unknwon_detailed">Detta orsakades av ett internt fel i WebView</string>
     <string name="webview_crash_oom">Slut på minne</string>
@@ -101,8 +101,6 @@
         <item>Skapad</item>
         <item>Anteckning ändrad</item>
     </string-array>
-    <!-- Filter Sheet -->
-    <string name="apply_filter">Verkställ</string>
     <string name="filter_by_flags">Flaggor</string>
     <!-- Custom study options -->
     <string name="custom_study_increase_new_limit">Ändra dagens gräns för nya kort</string>
@@ -125,7 +123,6 @@
     <string name="save">Spara</string>
     <string name="close">Stäng</string>
     <string name="select">Välj</string>
-    <string name="reordering_cards">Ändrar ordning på korten...</string>
     <string name="field_remapping">%1$s (från \"%2$s\")</string>
     <string name="confirm_map_cards_to_nothing">Alla kort som inte mappar till något kommer att tas bort. Om en not inte har några kvarvarande kort, kommer den att tas bort. Är du säker på att du vill fortsätta?</string>
     <!-- Timebox -->
@@ -146,17 +143,11 @@
     <string name="card_editor_reschedule_card" comment="Action to reschedule a card">Omplanera</string>
     <string name="card_editor_preview_card" comment="Button offering to preview some card(s)">Förhandsgranska</string>
     <string name="preview_progress_bar_text" comment="What card we are on out of how many in card previewer progress bar">%1$d av %2$d</string>
-    <string name="error_insufficient_memory">Åtgärden är inte möjlig på grund av otillräckligt med minne på enheten.</string>
     <string name="rename" comment="Confirm that the renaming action should be processed.">Byt namn</string>
-    <string name="default_conf_delete_error">Standardkonfigurationsgruppen kan ej tas bort</string>
-    <plurals name="factadder_cards_added">
-        <item quantity="one">%d kort tillagt</item>
-        <item quantity="other">%d kort tillagda</item>
-    </plurals>
+    <string name="checks_action">Check</string>
     <string name="check_db">Kontrollera databas</string>
     <string name="check_media">Kontrollera media</string>
     <string name="empty_cards">Tomma kort</string>
-    <string name="check_db_message">Kontrollerar databasen. \nVänligen vänta...</string>
     <string name="empty_card_warning">Detta kort är tomt. Använd alternativet \"Tomma kort\" i menyn på kortleksväljaren.</string>
     <string name="unknown_type_field_warning">Skriv svar: okänt fält %s</string>
     <string name="delete_deck">Tar bort kortlek...\nVänligen vänta.</string>
@@ -164,41 +155,15 @@
     <string name="import_title">Importera</string>
     <string name="import_message_add" comment="Adding a new deck to the collection (import)">Lägg till</string>
     <string name="import_message_replace_confirm">Detta kommer att ta bort din befintliga samling och ersätta den med datat i filen %s. Är du säker?</string>
-    <plurals name="import_files_message_add_confirm">
-        <item quantity="one">Add “%s” to collection? This may take a long time</item>
-        <item quantity="other">Vill du importera följande filer:\n%s\nDetta kan ta lång tid</item>
-    </plurals>
+    <string name="import_dialog_message_add">Add “%s” to collection? This may take a long time</string>
     <string name="import_log_no_apkg">Detta är ingen giltig Anki-paketfil</string>
     <string name="import_title_error" comment="Title of error dialog">Fel</string>
-    <string name="import_log_failed_unzip">Misslyckades med att packa upp apkg: %s</string>
-    <string name="import_log_failed_copy_to">Det gick inte att kopiera apkg till %s</string>
-    <string name="import_log_failed_validate">apkg misslyckades validering</string>
-    <string name="import_log_insufficient_space_error">Det finns inte tillräckligt med utrymme för att importera paketet.\nBehövs - %1$s \nTillgänglig - %2$s.\n\nHar du problem? Försök att frigöra utrymme på telefonen om möjligt. Alternativt så använder synkronisering mindre utrymme än import. Du kan försöka importera paketet med en enhet med mer utrymme (till exempel Anki Desktop) och sedan synkronisera det med den här enheten.</string>
-    <string name="import_log_file_cache_cleared">Fel vid import av fil, sannolikt en cacherensning under behandling.\nFörsök igen</string>
-    <string name="import_succeeded_but_check_database">Dataimport lyckades, men rensningen efter import misslyckades. Kontrollera databasen senare. Rotorsak: %s</string>
-    <string name="import_error_corrupt_zip">apkg-filen är skadad. Vänligen ta bort och ladda ner den igen.\n\nRotorsak: %s</string>
     <string name="import_error_handle_exception">Det gick inte att importera filen\n\n%s</string>
     <string name="import_error_not_apkg_extension">Filnamnet \"%s\" har varken .apkg eller .colpkg suffix</string>
     <string name="import_error_load_imported_database">Anki Database (.anki2) ersättningar stöds inte än. Se manualen för ersättningsinstruktioner.</string>
     <string name="import_error_content_provider">Den valda filen kunde inte importeras automatiskt av AnkiDroid. Vänligen se användarmanualen för information om manuell import av Anki-filer: \n %s</string>
     <string name="import_error_copy_to_cache">Failed to cache file (possibly out of storage space)</string>
-    <string name="import_error_multiple_colpkg">Flera colpkg-filer har valdes.</string>
-    <string name="import_error_colpkg_apkg">Både apkg &amp; colpkg filer valdes samtidigt.</string>
-    <string name="import_stats_error">Några fel inträffade vid import av följande filer:\n%s</string>
-    <string name="import_replacing">Ersätter samling&#8230;</string>
     <string name="import_interrupted">Importering avbruten: AnkiDroid stängdes ned</string>
-    <string name="export_include_schedule">Inkludera schemaläggning</string>
-    <string name="export_include_media">Inkludera media</string>
-    <string name="confirm_apkg_export">Exportera samling som Anki-paket?</string>
-    <string name="confirm_apkg_export_deck">Exportera \"%s\" som APKG-fil?</string>
-    <plurals name="confirm_apkg_export_selected_cards">
-        <item quantity="one">Export selected card as apkg file?</item>
-        <item quantity="other">Export %d selected cards as apkg file?</item>
-    </plurals>
-    <plurals name="confirm_apkg_export_selected_notes">
-        <item quantity="one">Export selected note as apkg file?</item>
-        <item quantity="other">Export %d selected notes as apkg file?</item>
-    </plurals>
     <string name="export_preparation_in_progress">Preparing export&#8230;</string>
     <string name="export_ready_title">Export ready</string>
     <string name="export_send_no_handlers">Inga program tillgängliga för att hantera apkg. Sparar...</string>
@@ -213,8 +178,8 @@
         [1] %1$s<br/>
         [2] %2$s
         ]]></string>
-    <string name="export_choice_share">Share</string>
-    <string name="export_choice_save_to">Save to</string>
+    <string name="export_choice_share">Dela</string>
+    <string name="export_choice_save_to">Spara till</string>
     <string name="study_options" comment="Name for a preference category in Filtered deck (aka Cram deck, aka Custom study) options">Alternativ</string>
     <string name="menu__deck_options">Kortleksalternativ</string>
     <string name="menu__study_options" comment="Menu item that opens options for a Filtered deck (aka Cram deck, aka Custom study)">Studeringsalternativ</string>
@@ -224,47 +189,9 @@
     <string name="dyn_deck_desc">Det här är en specialkortlek för studier utanför det normala schemat. Kort återförs automatiskt till sina ursprungliga kortlekar efter att du repeterat dem. Om du tar bort denna kortlek återförs alla återstående kort till sina ursprungliga kortlekar.</string>
     <string name="steps_error">Steg måste definieras som siffror högre än 0</string>
     <string name="steps_min_error">Du måste ha minst ett steg</string>
-    <string name="sched_end">(slut)</string>
-    <string name="sched_unbury_action">För att se dem nu klicka på \"Sluta dölja\" i menyn</string>
-    <string name="sched_has_buried">En del relaterade eller dolda kort undanhålls till en senare session.</string>
     <string name="tag_editor_add_feedback">Tryck på “%2$s” för att bekräfta att lägga till “%1$s”</string>
     <string name="tag_editor_add_feedback_existing">Befintlig etikett “%1$s” vald</string>
     <!-- Time spans -->
-    <plurals name="time_span_seconds">
-        <item quantity="one">%s sekund</item>
-        <item quantity="other">%s sekunder</item>
-    </plurals>
-    <plurals name="time_span_minutes">
-        <item quantity="one">%s minut</item>
-        <item quantity="other">%s minuter</item>
-    </plurals>
-    <plurals name="time_span_hours">
-        <item quantity="one">%s timme</item>
-        <item quantity="other">%s timmar</item>
-    </plurals>
-    <plurals name="time_span_days">
-        <item quantity="one">%s dag</item>
-        <item quantity="other">%s dagar</item>
-    </plurals>
-    <plurals name="time_span_months">
-        <item quantity="one">%s månad</item>
-        <item quantity="other">%s månader</item>
-    </plurals>
-    <plurals name="time_span_years">
-        <item quantity="one">%s år</item>
-        <item quantity="other">%s år</item>
-    </plurals>
-    <!-- A decimal number of seconds.
-    Please give this a best-effort translation and explain the requirements for
-    formatting decimals in your language in the CrowdIn comments -->
-    <string name="time_span_decimal_seconds">%s sekunder</string>
-    <!-- The reason for making a simple “< x” translatable are RTL
-         languages which apparently use the other symbol to mean less
-         than. -->
-    <string name="less_than_time">&lt; %s</string>
-    <string name="decks_rename_exists">Den kortleken existerar redan</string>
-    <string name="decks_rename_filtered_nosubdecks">En filtrerad kortlek kan inte ha underkortlekar</string>
-    <string name="filtered_deck_name">Filtrerad Kortlek</string>
     <string name="reminder_title">Glöm inte att studera idag!</string>
     <plurals name="reminder_text">
         <item quantity="one">%2$d kort att granska i %1$s</item>
@@ -273,14 +200,11 @@
     <!-- Currently only used if exporting APKG fails -->
     <string name="apk_share_error">Fel vid delning av apkg-fil</string>
     <!-- Import and export v2 feedback -->
-    <string name="export_v2_dummy_note">Denna fil kräver en nyare version av Anki.</string>
     <string name="activity_start_failed">Systemet saknar en installerad app som kan utföra denna handling.</string>
     <string name="multimedia_editor_image_compression_failed"><![CDATA[Kamerbilder kan ta upp mycket lagringsutrymme. Du kan vilja komprimera & ändra storleken på bilderna i media-mappen.]]></string>
     <string name="no_browser_notification">Ingen webbläsare funnen, var god vänlig och besök webbsidan med dator eller mobil: </string>
     <string name="web_page_error">Fel vid inläsning av sidan: %s</string>
-    <string name="no_outgoing_link_in_cardbrowser">Extern sidlänk i kort stöds inte.</string>
     <!-- The name of the deck which corrupt cards will be moved to -->
-    <string name="check_integrity_recovered_deck_name">Återvunna kort</string>
     <!-- Deckpicker Background -->
     <string name="background_image_title">Bakgrund</string>
     <string name="choose_an_image">Välj en bild</string>
@@ -290,9 +214,6 @@
     <string name="basic_answer_sample_text_user" comment="has a typo, so that user sees a highlighted difference in basic answer model     ">Exompel</string>
     <string name="basic_answer_sample_text">ett exempel</string>
     <string name="reviewer_tts_cloze_spoken_replacement">Tom</string>
-    <!-- in options menu & Navigation Drawer -->
-    <string name="ankidroid_turn_on_fullscreen_nav_drawer">Aktivera helskärm för att använda Visa navigeringslåda med JavaScript.</string>
-    <string name="ankidroid_turn_on_fullscreen_options_menu">Aktivera helskärm för att använda menyn Visa alternativ med JavaScript.</string>
     <!-- Whiteboard save image message in Reviewer -->
     <string name="white_board_image_save_failed">Det gick inte att spara whiteboardbilden. %s</string>
     <string name="white_board_image_saved">Whiteboard-bild sparad till %s</string>
@@ -307,13 +228,11 @@
     <string name="reviewer_invalid_api_version_visit_documentation">Visa</string>
     <string name="anki_js_error_code">(Felkod: %d)</string>
     <!-- About AnkiDroid screen -->
-    <string name="about_ankidroid_successfully_copied_debug_info">Copied to clipboard</string>
+    <string name="about_ankidroid_successfully_copied_debug_info">Kopierat till urklipp</string>
     <string name="about_ankidroid_error_copy_debug_info">Fel vid kopiering av felsökningsinformation till urklipp</string>
     <!-- Card Viewer -->
     <string name="card_viewer_could_not_find_image">Kortet innehållsfel: Det gick inte att läsa in ‘%s’</string>
-    <string name="card_viewer_media_relative_protocol">Kort innehållsfel: Medierapportering krävs</string>
     <!-- Deck Picker -->
-    <string name="deck_picker_failed_deck_load">Det gick inte att läsa in kortleken ‘%s’</string>
     <string name="search_decks">Sök kortlekar</string>
     <string name="show_migration_progress" comment="Title for a button in deck picker\'s toolbar that shows ongoing migration progress.         Usually shown as a tooltip. The button opens a dialog with a more detailed progress information.">Show migration progress</string>
     <string name="ankidroid_init_failed_webview_title">Kritiskt fel</string>
@@ -328,7 +247,6 @@
     <string name="insert_heading">Infoga rubrik</string>
     <string name="format_font_size">Ändra teckenstorlek</string>
     <string name="insert_mathjax">Infoga MathJax ekvation</string>
-    <string name="insert_cloze">Infoga textlucka</string>
     <string name="note_editor_toolbar_icon">Knapptext</string>
     <string name="before_text">HTML före markering</string>
     <string name="after_text">HTML efter markering</string>
@@ -347,7 +265,7 @@
     <string name="plus_sign" comment="Label for increment button in IncrementerNumberRangePreference">+</string>
     <string name="minus_sign" comment="Label for decrement button in IncrementerNumberRangePreference">-</string>
     <!-- Used for credential empty warning message -->
-    <string name="email_id_empty">E-postadress krävs</string>
+    <string name="invalid_email">Enter a valid email</string>
     <string name="password_empty">Lösenord krävs</string>
     <string name="back_pressed_once">Tryck tillbaka igen för att avsluta</string>
     <string name="back_pressed_once_reviewer">Tryck tillbaka igen för att återvända</string>
@@ -364,6 +282,7 @@
     <string name="deck_download_progress_message">Du kan använda andra appar medan nedladdningen kör</string>
     <string name="check_network">Kontrollera din nätverksanslutning</string>
     <string name="search_using_deck_name">Sök efter kortlekens namn</string>
+    <string name="external_storage_unavailable">Download aborted, the external storage is not available</string>
     <string name="home">Hem</string>
     <!-- Reviewer actions 
     Each of these strings ends with a period, following the notation of Anki Desktop -->
@@ -403,7 +322,6 @@
     <string name="intro_sync_from_ankiweb">Sync from AnkiWeb</string>
     <string name="already_logged_in">Already logged in</string>
     <!-- Deck Creation -->
-    <string name="validation_deck_already_exists">Deck exists</string>
     <string name="deck_created">Deck created</string>
     <string name="deck_renamed">Deck renamed</string>
     <!-- Deck Deletion -->
@@ -420,5 +338,21 @@
     <string name="storage_migration_sync_notification" comment="Appears on a notification after the user has opted into a storage migration and provided consent to sync         and AnkiDroid was minimised when the sync completed">Tap to start storage migration</string>
     <string name="media_sync_required_title">Media Sync Required</string>
     <string name="media_sync_unavailable_message">Media sync is disabled in the settings. Please sync and backup any media which hasn\'t been synced before continuing</string>
-    <string name="remember_sync_metered_checkbox_msg">Don\'t ask again (this warning can be re-enabled from Sync Settings)</string>
+    <string name="audio_saved">Recording saved</string>
+    <string name="deleting_selected_notes">Deleting selected notes</string>
+    <string name="tts_voices_default_text" comment="The default text to speak when selecting     Text to speech voices">        Tap a voice to listen
+    </string>
+    <string name="tts_voices_selected_voice_should_be_installed" comment="If a voice has been tapped, is installable but not installed, we want to inform the user that they should install it for the best experience There will also be an option to use it without downloading">Voice should be installed before use
+    </string>
+    <string name="tts_voices_use_selected_voice_without_install" comment="A user has been informed that a voice should be installed before use. This is text on a snackbar button which allows them to use the voice without installing it">Use anyway
+    </string>
+    <string name="tts_voices_playback_error_new" comment="an error occurred when playing a text to speech voice. The parameter is a technical error code such as \'ERROR_NOT_INSTALLED_YET\' or \'ERROR_NETWORK_TIMEOUT\'">Text to speech error (%s)</string>
+    <!-- Chips should probably be in a separate file, due to the additional length req -->
+    <string name="tts_voices_chip_filter_to_internet" comment="     Filters a list of text to speech voices, to enable/disable voices which require the internet to     function.     This is on a chip control, so keep the text short, ideally one word">        Internet
+    </string>
+    <string name="tts_voices_chip_filter_to_installable_audio" comment="     Displays a list of Text to Speech voices which should be downloaded/installed before use     This is on a chip control, so keep the text short, ideally one word">        Install
+    </string>
+    <string name="tts_voices_failed_opening_tts_system_settings" comment="error message if opening the system text to speech settings fails">        Failed to open text to speech settings
+    </string>
+    <string name="shared_decks_login_required">Please log in to download more decks</string>
 </resources>

@@ -37,7 +37,6 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
-    <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.GET_PACKAGE_SIZE" android:maxSdkVersion="25" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
@@ -71,6 +70,9 @@
             <action android:name="android.intent.action.PROCESS_TEXT" />
             <data android:mimeType="text/plain" />
         </intent>
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
     </queries>
 
     <!--
@@ -100,18 +102,12 @@
         the full package path is needed for manageSpaceActivity -->
         <activity
             android:name="com.ichi2.anki.ui.windows.managespace.ManageSpaceActivity"
-            android:exported="true"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar"/>
+            android:exported="true"/>
         <activity android:name=".DrawingActivity"
             android:label="@string/drawing"
             android:exported="false"
             android:configChanges="keyboardHidden|orientation|screenSize"
             />
-        <activity
-            android:name="com.ichi2.anki.pages.PagesActivity"
-            android:configChanges="keyboardHidden|orientation|screenSize"
-            android:exported="true"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar"/>
         <activity
             android:name="com.ichi2.anki.IntentHandler"
             android:configChanges="keyboardHidden|orientation|screenSize"
@@ -178,7 +174,56 @@
                     android:pathPattern=".*\\.colpkg"
                     android:scheme="file"
                     />
-
+                <!-- tsv files -->
+                <data
+                    android:host="*"
+                    android:mimeType="*/*"
+                    android:pathPattern=".*\\.tsv"
+                    android:scheme="http"
+                    />
+                <data
+                    android:host="*"
+                    android:mimeType="*/*"
+                    android:pathPattern=".*\\.tsv"
+                    android:scheme="https"
+                    />
+                <data
+                    android:host="*"
+                    android:mimeType="*/*"
+                    android:pathPattern=".*\\.tsv"
+                    android:scheme="content"
+                    />
+                <data
+                    android:host="*"
+                    android:mimeType="*/*"
+                    android:pathPattern=".*\\.tsv"
+                    android:scheme="file"
+                    />
+                <!-- csv files -->
+                <data
+                    android:host="*"
+                    android:mimeType="*/*"
+                    android:pathPattern=".*\\.csv"
+                    android:scheme="http"
+                    />
+                <data
+                    android:host="*"
+                    android:mimeType="*/*"
+                    android:pathPattern=".*\\.csv"
+                    android:scheme="https"
+                    />
+                <data
+                    android:host="*"
+                    android:mimeType="*/*"
+                    android:pathPattern=".*\\.csv"
+                    android:scheme="content"
+                    />
+                <data
+                    android:host="*"
+                    android:mimeType="*/*"
+                    android:pathPattern=".*\\.csv"
+                    android:scheme="file"
+                    />
             </intent-filter>
             <!-- MIME type matcher for .apkg files coming from providers like gmail which hide the file extension -->
             <intent-filter>
@@ -191,6 +236,8 @@
                 <data android:mimeType="application/x-colpkg"/>
                 <data android:mimeType="application/octet-stream"/>
                 <data android:mimeType="application/zip"/>
+                <data android:mimeType="text/tab-separated-values"/>
+                <data android:mimeType="text/comma-separated-values"/>
             </intent-filter>
 
             <!-- Tasker DO_SYNC intent -->
@@ -201,7 +248,7 @@
         </activity>
         <activity
             android:name="com.ichi2.anki.DeckPicker"
-            android:theme="@style/Theme_Dark_Compat.Launcher"
+            android:theme="@style/Theme_Dark.Launcher"
             android:exported="false"
             android:configChanges="keyboardHidden|orientation|screenSize"
             />
@@ -231,7 +278,7 @@
         <activity
             android:name="com.ichi2.anki.CardBrowser"
             android:label="@string/card_browser"
-            android:theme="@style/Theme_Dark_Compat.Launcher"
+            android:theme="@style/Theme_Dark.Launcher"
             android:exported="true"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:parentActivityName=".DeckPicker"
@@ -245,16 +292,14 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ModelBrowser"
+            android:name=".notetype.ManageNotetypes"
             android:label="@string/model_browser_label"
             android:exported="false"
             android:configChanges="keyboardHidden|orientation|screenSize"
             />
         <activity
-            android:name=".notetype.ManageNotetypes"
-            android:label="@string/model_browser_label"
+            android:name=".ui.windows.permissions.PermissionsActivity"
             android:exported="false"
-            android:configChanges="keyboardHidden|orientation|screenSize"
             />
         <activity
             android:name=".ModelFieldEditor"
@@ -264,7 +309,7 @@
         <activity
             android:name="com.ichi2.anki.Reviewer"
             android:exported="true"
-            android:theme="@style/Theme_Dark_Compat.Launcher"
+            android:theme="@style/Theme_Dark.Launcher"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:windowSoftInputMode="adjustResize"
             android:parentActivityName=".DeckPicker">
@@ -274,12 +319,6 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="com.ichi2.anki.VideoPlayer"
-            android:exported="false"
-            android:configChanges="keyboardHidden|orientation|screenSize"
-            android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
-            />
-        <activity
             android:name="com.ichi2.anki.MyAccount"
             android:label="@string/menu_my_account"
             android:exported="false"
@@ -287,22 +326,13 @@
             />
         <activity
             android:name="com.ichi2.anki.preferences.Preferences"
-            android:label="@string/settings"
             android:exported="false"
-            android:configChanges="keyboardHidden|orientation|screenSize"
-            android:theme="@style/Theme_Light"
+            android:configChanges="screenSize"
             >
             <intent-filter>
                 <category android:name="android.intent.category.MONKEY" />
             </intent-filter>
         </activity>
-        <activity
-            android:name="com.ichi2.anki.DeckOptionsActivity"
-            android:label="@string/deckpreferences_title"
-            android:exported="false"
-            android:configChanges="keyboardHidden|orientation|screenSize"
-            android:theme="@style/Theme_Light"
-            />
         <activity
             android:name=".FilteredDeckOptions"
             android:label="@string/deckpreferences_title"
@@ -331,7 +361,7 @@
         <activity
             android:name="com.ichi2.anki.NoteEditor"
             android:label="@string/fact_adder_intent_title"
-            android:theme="@style/Theme_Dark_Compat.Launcher"
+            android:theme="@style/Theme_Dark.Launcher"
             android:exported="true"
             android:configChanges="keyboardHidden|orientation|screenSize"
             >
@@ -352,22 +382,19 @@
             android:theme="@style/Base.Theme.AppCompat" />
         <activity
             android:name="com.ichi2.anki.analytics.AnkiDroidCrashReportDialog"
-            android:theme="@style/Theme.CrashReportDialog"
+            android:theme="@android:style/Theme.DeviceDefault.Dialog"
             android:process=":acra"
             android:launchMode="singleInstance"
             android:excludeFromRecents="true"
             android:finishOnTaskLaunch="true"
             />
         <activity
-            android:name="com.ichi2.anki.Statistics"
-            android:exported="false"
-            android:configChanges="keyboardHidden|orientation|screenSize"
-            android:parentActivityName=".DeckPicker"
-            >
-        </activity>
-        <activity
             android:name="com.ichi2.anki.Previewer"
             android:label="@string/preview_title"
+            android:exported="false"
+            />
+        <activity
+            android:name="com.ichi2.anki.SingleFragmentActivity"
             android:exported="false"
             />
         <activity
@@ -383,13 +410,6 @@
             >
         </activity>
         <activity
-            android:name="com.ichi2.anki.multimediacard.activity.LoadPronunciationActivity"
-            android:label="@string/multimedia_editor_text_field_editing_say"
-            android:exported="false"
-            android:configChanges="keyboardHidden|orientation|screenSize"
-            >
-        </activity>
-        <activity
             android:name="com.ichi2.anki.CardTemplateEditor"
             android:label="@string/title_activity_template_editor"
             android:exported="false"
@@ -400,12 +420,6 @@
         <activity
             android:name=".CardTemplateBrowserAppearanceEditor"
             android:label="@string/card_template_browser_appearance_title"
-            android:exported="false"
-            android:configChanges="keyboardHidden|orientation|screenSize"
-            />
-        <activity
-            android:name=".CardInfo"
-            android:label="@string/card_info_title"
             android:exported="false"
             android:configChanges="keyboardHidden|orientation|screenSize"
             />

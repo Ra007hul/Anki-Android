@@ -16,13 +16,13 @@
 package com.ichi2.libanki
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.ichi2.anki.RobolectricTest
+import com.ichi2.testutils.JvmTest
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class FlagTest : RobolectricTest() {
+class FlagTest : JvmTest() {
     /*****************
      ** Flags        *
      *****************/
@@ -36,8 +36,7 @@ class FlagTest : RobolectricTest() {
 
         // make sure higher bits are preserved
         val origBits = 0b101 shl 3
-        c.setFlag(origBits)
-        c.flush()
+        c.update { setFlag(origBits) }
         // no flags to start with
         assertEquals(0, c.userFlag())
         assertEquals(1, col.findCards("flag:0").size)

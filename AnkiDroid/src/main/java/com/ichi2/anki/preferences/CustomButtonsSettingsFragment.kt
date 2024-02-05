@@ -21,7 +21,6 @@ import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.edit
 import androidx.preference.Preference
-import androidx.preference.PreferenceCategory
 import com.ichi2.anki.R
 import com.ichi2.utils.*
 
@@ -40,31 +39,14 @@ class CustomButtonsSettingsFragment : SettingsFragment() {
                 positiveButton(R.string.reset) {
                     // Reset the settings to default
                     requireContext().sharedPrefs().edit {
-                        remove("customButtonUndo")
-                        remove("customButtonScheduleCard")
-                        remove("customButtonEditCard")
-                        remove("customButtonTags")
-                        remove("customButtonAddCard")
-                        remove("customButtonReplay")
-                        remove("customButtonCardInfo")
-                        remove("customButtonSelectTts")
-                        remove("customButtonDeckOptions")
-                        remove("customButtonMarkCard")
-                        remove("customButtonToggleMicToolBar")
-                        remove("customButtonBury")
-                        remove("customButtonSuspend")
-                        remove("customButtonFlag")
-                        remove("customButtonDelete")
-                        remove("customButtonEnableWhiteboard")
-                        remove("customButtonSaveWhiteboard")
-                        remove("customButtonWhiteboardPenColor")
-                        remove("customButtonClearWhiteboard")
-                        remove("customButtonShowHideWhiteboard")
+                        allKeys().forEach {
+                            remove(it)
+                        }
                     }
                     // #9263: refresh the screen to display the changes
                     refreshScreen()
                 }
-                negativeButton(R.string.dialog_cancel, null)
+                negativeButton(R.string.dialog_cancel)
             }
             true
         }
@@ -72,18 +54,7 @@ class CustomButtonsSettingsFragment : SettingsFragment() {
 
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun allKeys(): HashSet<String> {
-        val allKeys = HashSet<String>()
-        for (i in 0 until preferenceScreen.preferenceCount) {
-            val pref = preferenceScreen.getPreference(i)
-            if (pref is PreferenceCategory) {
-                for (j in 0 until pref.preferenceCount) {
-                    allKeys.add(pref.getPreference(j).key)
-                }
-            } else {
-                allKeys.add(pref.key)
-            }
-        }
-        return allKeys
+        return allPreferences().mapTo(hashSetOf()) { it.key }
     }
 
     companion object {

@@ -68,19 +68,18 @@ class DevOptionsFragment : SettingsFragment() {
                 showSnackbar("Done! Enable Analytics in 'General' settings to use.")
             }
             UsageAnalytics.setDevMode()
-            true
+            false
         }
         // Lock database
         requirePreference<Preference>(R.string.pref_lock_database_key).setOnPreferenceClickListener {
-            val c = CollectionHelper.instance.getCol(requireContext())!!
             Timber.w("Toggling database lock")
-            c.db.database.beginTransaction()
-            true
+            launchCatchingTask { CollectionManager.withCol { Thread.sleep(1000 * 86400) } }
+            false
         }
         // Reset onboarding
         requirePreference<Preference>(R.string.pref_reset_onboarding_key).setOnPreferenceClickListener {
             OnboardingUtils.reset(requireContext())
-            true
+            false
         }
 
         val sizePreference = requirePreference<IncrementerNumberRangePreferenceCompat>(getString(R.string.pref_fill_collection_size_file_key))
@@ -100,7 +99,7 @@ class DevOptionsFragment : SettingsFragment() {
                 }
                 setNegativeButton(R.string.dialog_cancel) { _, _ -> }
             }
-            true
+            false
         }
     }
 

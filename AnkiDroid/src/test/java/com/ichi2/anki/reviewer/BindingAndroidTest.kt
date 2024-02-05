@@ -55,16 +55,15 @@ class BindingAndroidTest : RobolectricTest() {
     }
 
     @Test
-    @Config(qualifiers = "en")
-    fun gesture_toDisplayString() {
-        assertEquals("${BindingTest.gesturePrefix} Touch top", Binding.gesture(Gesture.TAP_TOP).toDisplayString())
+    fun `motion event serde`() {
+        assertBindingEquals(axis(Axis.X, 1.0f), axisBindingFromString("0 1.0"))
+        assertBindingEquals(axis(Axis.Y, -1.0f), axisBindingFromString("1 -1.0"))
     }
 
     @Test
-    @Config(sdk = [21, 22], qualifiers = "en")
-    fun gesture_toDisplayString_legacy() {
-        // Use an emoji as a prefix as the newer unicode character doesn't display
-        assertEquals("\uD83D\uDC46 Touch top", Binding.gesture(Gesture.TAP_TOP).toDisplayString())
+    @Config(qualifiers = "en")
+    fun gesture_toDisplayString() {
+        assertEquals("${BindingTest.gesturePrefix} Touch top", Binding.gesture(Gesture.TAP_TOP).toDisplayString())
     }
 
     private fun Binding.toDisplayString(): String {
@@ -77,3 +76,8 @@ class BindingAndroidTest : RobolectricTest() {
         assertEquals(first, second)
     }
 }
+
+private fun axis(axis: Axis, fl: Float) = Binding.AxisButtonBinding(axis, fl)
+
+private fun axisBindingFromString(suffix: String) =
+    Binding.fromString(BindingTest.joystickPrefix + suffix)

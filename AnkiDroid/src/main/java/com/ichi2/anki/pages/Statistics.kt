@@ -17,17 +17,56 @@ package com.ichi2.anki.pages
 
 import android.content.Context
 import android.content.Intent
+import android.os.Bundle
+import android.print.PrintAttributes
+import android.print.PrintManager
+import android.view.View
+import androidx.core.content.ContextCompat.getSystemService
+import com.google.android.material.appbar.MaterialToolbar
+import com.ichi2.anki.CollectionManager
 import com.ichi2.anki.R
+import com.ichi2.anki.SingleFragmentActivity
+import com.ichi2.anki.utils.getTimestamp
+import com.ichi2.libanki.utils.TimeManager
 
 class Statistics : PageFragment() {
-    override val title = R.string.statistics
+    override val title: String
+        get() = resources.getString(R.string.statistics)
+
     override val pageName = "graphs"
-    override var webViewClient = PageWebViewClient()
-    override var webChromeClient = PageChromeClient()
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        view.findViewById<MaterialToolbar>(R.id.toolbar)?.apply {
+            inflateMenu(R.menu.statistics)
+            menu.findItem(R.id.action_export_stats).title = CollectionManager.TR.statisticsSavePdf()
+            setOnMenuItemClickListener { item ->
+                if (item.itemId == R.id.action_export_stats) {
+                    exportWebViewContentAsPDF()
+                }
+                true
+            }
+        }
+    }
+
+    /**Prepares and initiates a printing task for the content(stats) displayed in the WebView.
+     * It uses the Android PrintManager service to create a print job, based on the content of the WebView.
+     * The resulting output is a PDF document. **/
+    private fun exportWebViewContentAsPDF() {
+        val printManager = getSystemService(requireContext(), PrintManager::class.java)
+        val currentDateTime = getTimestamp(TimeManager.time)
+        val jobName = "${getString(R.string.app_name)}-stats-$currentDateTime"
+        val printAdapter = webView.createPrintDocumentAdapter(jobName)
+        printManager?.print(
+            jobName,
+            printAdapter,
+            PrintAttributes.Builder().build()
+        )
+    }
 
     companion object {
         fun getIntent(context: Context): Intent {
-            return PagesActivity.getIntent(context, Statistics::class)
+            return SingleFragmentActivity.getIntent(context, Statistics::class)
         }
     }
 }

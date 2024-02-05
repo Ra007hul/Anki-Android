@@ -17,12 +17,9 @@
 package com.ichi2.anki.api
 
 import android.text.Html
-import java.lang.Exception
-import java.lang.IllegalStateException
 import java.math.BigInteger
 import java.security.MessageDigest
 import java.util.regex.Pattern
-
 /**
  * Utilities class for the API
  */
@@ -46,7 +43,7 @@ internal object Utils {
     }
 
     fun joinTags(tags: Set<String?>?): String {
-        if (tags == null || tags.isEmpty()) {
+        if (tags.isNullOrEmpty()) {
             return ""
         }
         for (t in tags) {

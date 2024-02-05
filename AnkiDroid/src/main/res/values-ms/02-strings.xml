@@ -52,6 +52,7 @@
     <string name="CardEditorModel">Jenis:</string>
     <string name="CardEditorTags">Tag: %1$s</string>
     <string name="CardEditorCards">Kad: %1$s</string>
+    <string name="edit_occlusions">Edit Occlusions</string>
     <string name="tag_name">Nama tag</string>
     <string name="add_new_filter_tags">Tambah/tapis tag</string>
     <string name="add_tag">Tambah tag</string>
@@ -71,7 +72,6 @@
     <string name="replay_audio">Main semula audio</string>
     <string name="leech_suspend_notification">Kad ditanda lintah dan dibekukan</string>
     <string name="leech_notification">Kad ditanda lintah</string>
-    <string name="corrupt_font">Fail fon rosak %s</string>
     <string name="webview_crash_unknown">Ralat tidak diketahui</string>
     <string name="webview_crash_unknwon_detailed">Ini disebabkan oleh ralat dalaman dalam WebView</string>
     <string name="webview_crash_oom">Kehabisan Memori</string>
@@ -94,15 +94,13 @@
         <item>Tag</item>
         <item>Cuaian</item>
         <item>Semakan</item>
-        <item>Seling</item>
+        <item>Selang</item>
         <item>Longgaran</item>
         <item>Tunggak</item>
         <item>Kad diubah</item>
         <item>Dicipta</item>
         <item>Nota diubah</item>
     </string-array>
-    <!-- Filter Sheet -->
-    <string name="apply_filter">Terap</string>
     <string name="filter_by_flags">Tanda</string>
     <!-- Custom study options -->
     <string name="custom_study_increase_new_limit">Ubah had kad baru hari ini</string>
@@ -125,7 +123,6 @@
     <string name="save">Simpan</string>
     <string name="close">Tutup</string>
     <string name="select">Pilih</string>
-    <string name="reordering_cards">Menyusun semula kad&#8230;</string>
     <string name="field_remapping">%1$s (daripada “%2$s”)</string>
     <string name="confirm_map_cards_to_nothing">Mana-mana kad yang dipetakan ke \"tiada\" akan dipadam. Jika suatu nota tiada baki kad, ia akan dipadam. Adakah anda mahu teruskan?</string>
     <!-- Timebox -->
@@ -144,57 +141,29 @@
     <string name="card_editor_reschedule_card" comment="Action to reschedule a card">Jadual semula</string>
     <string name="card_editor_preview_card" comment="Button offering to preview some card(s)">Pratonton</string>
     <string name="preview_progress_bar_text" comment="What card we are on out of how many in card previewer progress bar">%1$d daripada %2$d</string>
-    <string name="error_insufficient_memory">Operasi tidak mungkin akibat kekurangan memori peranti anda</string>
     <string name="rename" comment="Confirm that the renaming action should be processed.">Nama semula</string>
-    <string name="default_conf_delete_error">Kumpulan tetapan lalai tidak boleh dibuang</string>
-    <plurals name="factadder_cards_added">
-        <item quantity="other">%d kad ditambah</item>
-    </plurals>
+    <string name="checks_action">Check</string>
     <string name="check_db">Periksa pangkalan data</string>
     <string name="check_media">Periksa media</string>
-    <string name="empty_cards">Kosongkan kad</string>
-    <string name="check_db_message">Memeriksa pangkalan data&#8230;</string>
-    <string name="empty_card_warning">Kad kosong. Gunakan pilihan “Kosongkan kad” dalam menu pada skrin senarai dek.</string>
+    <string name="empty_cards">Kad kosong</string>
+    <string name="empty_card_warning">Kad kosong. Gunakan pilihan “Kad kosong” dalam menu pada skrin senarai dek.</string>
     <string name="unknown_type_field_warning">Taip jawapan: medan %s tidak diketahui</string>
     <string name="delete_deck">Memadam dek&#8230;</string>
     <string name="info_rate">Nilaikan AnkiDroid</string>
     <string name="import_title">Mengimport</string>
     <string name="import_message_add" comment="Adding a new deck to the collection (import)">Tambah</string>
     <string name="import_message_replace_confirm">Ini akan membuang koleksi sedia ada anda dan menggantikannya dengan data fail %s</string>
-    <plurals name="import_files_message_add_confirm">
-        <item quantity="other">Adakah anda mahu import fail ini:\n%s\nMungkin ambil masa lama</item>
-    </plurals>
+    <string name="import_dialog_message_add">Add “%s” to collection? This may take a long time</string>
     <string name="import_log_no_apkg">Bukan fail pakej Anki yang sah</string>
     <string name="import_title_error" comment="Title of error dialog">Ralat</string>
-    <string name="import_log_failed_unzip">Gagal membuka zip apkg: %s</string>
-    <string name="import_log_failed_copy_to">Gagal menyalin apkg ke %s</string>
-    <string name="import_log_failed_validate">Pengesahan apkg gagal</string>
-    <string name="import_log_insufficient_space_error">Tiada ruang untuk mengimport pakej.\nPerlukan - %1$s \nTersedia - %2$s.\n\nAlami kesulitan? Cuba kosongkan ruang telefon anda jika mampu. Sebagai alternatif, penyegerakan memerlukan kurang ruangan berbanding import. Anda boleh cuba mengimport pakej menggunakan peranti ruangan lebih besar (seperti Anki Desktop) dan kemudian menyegerakkannya ke peranti ini.</string>
-    <string name="import_log_file_cache_cleared">Ralat mengimport fail, mungkin penghapusan cache ketika memproses.\nSila cuba lagi</string>
-    <string name="import_succeeded_but_check_database">Import data berjaya namun pembersihan selepas import gagal. Lakukan pemeriksaan pangkalan data nanti. Punca: %s</string>
-    <string name="import_error_corrupt_zip">Fail apkg rosak. Sila buang dan muat turun semula.\n\nPunca: %s</string>
     <string name="import_error_handle_exception">Gagal mengimport fail\n\n%s</string>
     <string name="import_error_not_apkg_extension">Nama fail “%s” tiada sambungan .apkg atau .colpkg</string>
     <string name="import_error_load_imported_database">Penggantian pangkalan data Anki (.anki2) belum disokong lagi. Sila lihat panduan bagi langkah penggantian.</string>
     <string name="import_error_content_provider">AnkiDroid tidak boleh mengimport fail pilihan secara automatik. Sila lihat manual pengguna bagi cara import fail anki secara manual: \n%s</string>
     <string name="import_error_copy_to_cache">Gagal memcachekan fail (kemungkinan kehabisan ruang storan)</string>
-    <string name="import_error_multiple_colpkg">Pelbagai fail colpkg telah dipilih.</string>
-    <string name="import_error_colpkg_apkg">Kedua-dua fail apkg &amp; colpkg telah dipilih serentak.</string>
-    <string name="import_stats_error">Beberapa ralat berlaku ketika mengimport fail berikut:\n%s</string>
-    <string name="import_replacing">Mengganti koleksi&#8230;</string>
     <string name="import_interrupted">Import tergendala: AnkiDroid telah ditutup</string>
-    <string name="export_include_schedule">Termasuk penjadualan</string>
-    <string name="export_include_media">Termasuk media</string>
-    <string name="confirm_apkg_export">Eksport koleksi sebagai pakej Anki?</string>
-    <string name="confirm_apkg_export_deck">Eksport “%s” sebagai fail apkg?</string>
-    <plurals name="confirm_apkg_export_selected_cards">
-        <item quantity="other">Eksport %d kad terpilih sebagai fail apkg?</item>
-    </plurals>
-    <plurals name="confirm_apkg_export_selected_notes">
-        <item quantity="other">Eksport %d nota terpilih sebagai fail apkg?</item>
-    </plurals>
-    <string name="export_preparation_in_progress">Preparing export&#8230;</string>
-    <string name="export_ready_title">Export ready</string>
+    <string name="export_preparation_in_progress">Menyediakan eksport&#8230;</string>
+    <string name="export_ready_title">Eksport sedia</string>
     <string name="export_send_no_handlers">Tiada aplikasi tersedia mengendalikan apkg. Menyimpan...</string>
     <string name="export_save_apkg_successful">Berjaya simpan pakej Anki</string>
     <string name="export_save_apkg_unsuccessful">Gagal simpan pakej Anki</string>
@@ -207,8 +176,8 @@
         [1] %1$s<br/>
         [2] %2$s
         ]]></string>
-    <string name="export_choice_share">Share</string>
-    <string name="export_choice_save_to">Save to</string>
+    <string name="export_choice_share">Kongsi</string>
+    <string name="export_choice_save_to">Simpan ke</string>
     <string name="study_options" comment="Name for a preference category in Filtered deck (aka Cram deck, aka Custom study) options">Tetapan</string>
     <string name="menu__deck_options">Tetapan dek</string>
     <string name="menu__study_options" comment="Menu item that opens options for a Filtered deck (aka Cram deck, aka Custom study)">Tetapan ulang kaji</string>
@@ -218,41 +187,9 @@
     <string name="dyn_deck_desc">Ini merupakan dek khas untuk mengulang kaji diluar jadual biasa. Kad akan dikembalikan ke dek asal setelah disemak. Memadam dek ini daripada senarai dek akan mengembalikan baki kad ke dek asal.</string>
     <string name="steps_error">Setiap langkah hendaklah lebih besar daripada 0</string>
     <string name="steps_min_error">Sekurang-kurangnya satu langkah diperlukan</string>
-    <string name="sched_end">(tamat)</string>
-    <string name="sched_unbury_action">Untuk lihatnya sekarang sentuh pilihan “Tampil” dalam menu</string>
-    <string name="sched_has_buried">Beberapa kad berkaitan atau kad tersorok telah ditunda sehingga esok</string>
     <string name="tag_editor_add_feedback">Sentuh “%2$s” untuk sahkan tambah “%1$s”</string>
     <string name="tag_editor_add_feedback_existing">Tag “%1$s” sedia ada dipilih</string>
     <!-- Time spans -->
-    <plurals name="time_span_seconds">
-        <item quantity="other">%s saat</item>
-    </plurals>
-    <plurals name="time_span_minutes">
-        <item quantity="other">%s minit</item>
-    </plurals>
-    <plurals name="time_span_hours">
-        <item quantity="other">%s jam</item>
-    </plurals>
-    <plurals name="time_span_days">
-        <item quantity="other">%s hari</item>
-    </plurals>
-    <plurals name="time_span_months">
-        <item quantity="other">%s bulan</item>
-    </plurals>
-    <plurals name="time_span_years">
-        <item quantity="other">%s tahun</item>
-    </plurals>
-    <!-- A decimal number of seconds.
-    Please give this a best-effort translation and explain the requirements for
-    formatting decimals in your language in the CrowdIn comments -->
-    <string name="time_span_decimal_seconds">%s saat</string>
-    <!-- The reason for making a simple “< x” translatable are RTL
-         languages which apparently use the other symbol to mean less
-         than. -->
-    <string name="less_than_time">&lt; %s</string>
-    <string name="decks_rename_exists">Dek itu sudah wujud</string>
-    <string name="decks_rename_filtered_nosubdecks">Dek ditapis tidak boleh ada subdek</string>
-    <string name="filtered_deck_name">Dek Ditapis</string>
     <string name="reminder_title">Janngan lupa ulang kaji hari ini!</string>
     <plurals name="reminder_text">
         <item quantity="other">%2$d kad untuk disemak dalam %1$s</item>
@@ -260,14 +197,11 @@
     <!-- Currently only used if exporting APKG fails -->
     <string name="apk_share_error">Ralat kongsikan fail apkg</string>
     <!-- Import and export v2 feedback -->
-    <string name="export_v2_dummy_note">Fail ini perlu versi Anki baru</string>
     <string name="activity_start_failed">Sistem tidak mempunyai aplikasi dipasang yang boleh melakukan tindakan ini.</string>
     <string name="multimedia_editor_image_compression_failed"><![CDATA[Gambar kamera mungkin terlalu besar. Anda mungkin mahu memampatkan dan ubah saiz gambar dalam direktori media]]></string>
     <string name="no_browser_notification">Tiada pelayar ditemui，sila lawat laman web melalui PC atau telefon: </string>
     <string name="web_page_error">Ralat memuatkan halaman: %s</string>
-    <string name="no_outgoing_link_in_cardbrowser">Pautan halaman luar dalam kad tidak disokong</string>
     <!-- The name of the deck which corrupt cards will be moved to -->
-    <string name="check_integrity_recovered_deck_name">Kad dipulih</string>
     <!-- Deckpicker Background -->
     <string name="background_image_title">Latar belakang</string>
     <string name="choose_an_image">Pilih gambar</string>
@@ -277,9 +211,6 @@
     <string name="basic_answer_sample_text_user" comment="has a typo, so that user sees a highlighted difference in basic answer model     ">conteh</string>
     <string name="basic_answer_sample_text">sebagai contoh</string>
     <string name="reviewer_tts_cloze_spoken_replacement">Kosong</string>
-    <!-- in options menu & Navigation Drawer -->
-    <string name="ankidroid_turn_on_fullscreen_nav_drawer">Sila hidupkan skrin penuh untuk menggunakan Lihat Laci Navigasi melalui JavaScript.</string>
-    <string name="ankidroid_turn_on_fullscreen_options_menu">Sila hidupkan skrin penuh untuk menggunakan Lihat Menu Pilihan melalui JavaScript.</string>
     <!-- Whiteboard save image message in Reviewer -->
     <string name="white_board_image_save_failed">Gagal menyimpan gambar papan putih. %s</string>
     <string name="white_board_image_saved">Gambar papan putih simpan di %s</string>
@@ -298,9 +229,7 @@
     <string name="about_ankidroid_error_copy_debug_info">Ralat menyalin maklumat nyahpepijat ke papan keratan</string>
     <!-- Card Viewer -->
     <string name="card_viewer_could_not_find_image">Ralat Kandungan Kad: Gagal memuatkan ‘%s’</string>
-    <string name="card_viewer_media_relative_protocol">Ralat Kandungan Kad: Kemas kini media diperlukan</string>
     <!-- Deck Picker -->
-    <string name="deck_picker_failed_deck_load">Gagal memuatkan dek ‘%s’</string>
     <string name="search_decks">Cari dek</string>
     <string name="show_migration_progress" comment="Title for a button in deck picker\'s toolbar that shows ongoing migration progress.         Usually shown as a tooltip. The button opens a dialog with a more detailed progress information.">Tunjuk kemajuan penghijrahan</string>
     <string name="ankidroid_init_failed_webview_title">Ralat Maut</string>
@@ -315,7 +244,6 @@
     <string name="insert_heading">Masukkan Tajuk</string>
     <string name="format_font_size">Tukar Saiz Tulisan</string>
     <string name="insert_mathjax">Masukkan Persamaan MathJax</string>
-    <string name="insert_cloze">Masukkan Penghapusan Kloz</string>
     <string name="note_editor_toolbar_icon">Teks butang</string>
     <string name="before_text">HTML Sebelum Pilihan</string>
     <string name="after_text">HTML Selepas Pilihan</string>
@@ -334,7 +262,7 @@
     <string name="plus_sign" comment="Label for increment button in IncrementerNumberRangePreference">+</string>
     <string name="minus_sign" comment="Label for decrement button in IncrementerNumberRangePreference">-</string>
     <!-- Used for credential empty warning message -->
-    <string name="email_id_empty">Alamat e-mel diperlukan</string>
+    <string name="invalid_email">Enter a valid email</string>
     <string name="password_empty">Kata laluan diperlukan</string>
     <string name="back_pressed_once">Tekan kembali lagi untuk keluar</string>
     <string name="back_pressed_once_reviewer">Tekan kembali lagi untuk pulang</string>
@@ -351,6 +279,7 @@
     <string name="deck_download_progress_message">Anda boleh guna aplikasi lain sementara memuat turun</string>
     <string name="check_network">Sila semak sambungan rangkaian anda</string>
     <string name="search_using_deck_name">Cari menggunakan nama dek</string>
+    <string name="external_storage_unavailable">Muat turun batal, tiada storan luaran tersedia</string>
     <string name="home">Laman Utama</string>
     <!-- Reviewer actions 
     Each of these strings ends with a period, following the notation of Anki Desktop -->
@@ -388,7 +317,6 @@
     <string name="intro_sync_from_ankiweb">Segerakkan dari AnkiWeb</string>
     <string name="already_logged_in">Telah log masuk</string>
     <!-- Deck Creation -->
-    <string name="validation_deck_already_exists">Dek wujud</string>
     <string name="deck_created">Dek dicipta</string>
     <string name="deck_renamed">Dek dinamakan semula</string>
     <!-- Deck Deletion -->
@@ -405,5 +333,21 @@
     <string name="storage_migration_sync_notification" comment="Appears on a notification after the user has opted into a storage migration and provided consent to sync         and AnkiDroid was minimised when the sync completed">Tekan untuk mulakan penghijrahan storan</string>
     <string name="media_sync_required_title">Penyegerakan Media Diperlukan</string>
     <string name="media_sync_unavailable_message">Penyegerakan media dilumpuhkan mengikut tetapan. Sila segerakkan dan sandarkan apa-apa media yang belum disegeraki dahulu</string>
-    <string name="remember_sync_metered_checkbox_msg">Jangan tanya lagi (amaran ini boleh didayakan kembali dari Tetapan Segerak)</string>
+    <string name="audio_saved">Recording saved</string>
+    <string name="deleting_selected_notes">Deleting selected notes</string>
+    <string name="tts_voices_default_text" comment="The default text to speak when selecting     Text to speech voices">        Tap a voice to listen
+    </string>
+    <string name="tts_voices_selected_voice_should_be_installed" comment="If a voice has been tapped, is installable but not installed, we want to inform the user that they should install it for the best experience There will also be an option to use it without downloading">Voice should be installed before use
+    </string>
+    <string name="tts_voices_use_selected_voice_without_install" comment="A user has been informed that a voice should be installed before use. This is text on a snackbar button which allows them to use the voice without installing it">Use anyway
+    </string>
+    <string name="tts_voices_playback_error_new" comment="an error occurred when playing a text to speech voice. The parameter is a technical error code such as \'ERROR_NOT_INSTALLED_YET\' or \'ERROR_NETWORK_TIMEOUT\'">Text to speech error (%s)</string>
+    <!-- Chips should probably be in a separate file, due to the additional length req -->
+    <string name="tts_voices_chip_filter_to_internet" comment="     Filters a list of text to speech voices, to enable/disable voices which require the internet to     function.     This is on a chip control, so keep the text short, ideally one word">        Internet
+    </string>
+    <string name="tts_voices_chip_filter_to_installable_audio" comment="     Displays a list of Text to Speech voices which should be downloaded/installed before use     This is on a chip control, so keep the text short, ideally one word">        Install
+    </string>
+    <string name="tts_voices_failed_opening_tts_system_settings" comment="error message if opening the system text to speech settings fails">        Failed to open text to speech settings
+    </string>
+    <string name="shared_decks_login_required">Please log in to download more decks</string>
 </resources>

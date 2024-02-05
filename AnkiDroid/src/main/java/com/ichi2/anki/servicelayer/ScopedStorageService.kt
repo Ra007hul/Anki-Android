@@ -32,15 +32,12 @@ import com.ichi2.anki.servicelayer.scopedstorage.migrateuserdata.MigrateUserData
 import com.ichi2.anki.servicelayer.scopedstorage.migrateuserdata.UserDataMigrationPreferences
 import com.ichi2.anki.ui.windows.managespace.isInsideDirectoriesRemovedWithTheApp
 import com.ichi2.compat.CompatHelper
-import com.ichi2.libanki.Utils
+import com.ichi2.utils.FileUtil
 import com.ichi2.utils.FileUtil.getParentsAndSelfRecursive
 import com.ichi2.utils.FileUtil.isDescendantOf
 import com.ichi2.utils.Permissions
 import timber.log.Timber
 import java.io.File
-
-fun Directory.getCollectionAnki2Path(): String =
-    File(this.directory, CollectionHelper.COLLECTION_FILENAME).canonicalPath
 
 /** Validated source and destination folders.
  *
@@ -60,7 +57,7 @@ data class ValidatedMigrationSourceAndDestination(val unscopedSourceDirectory: D
 /** Overrides for testing. If root is provided, a subfolder is automatically created in it.
  * If subfolder is provided, the exact folder provided is used. */
 sealed class DestFolderOverride {
-    object None : DestFolderOverride()
+    data object None : DestFolderOverride()
     class Root(val folder: File) : DestFolderOverride()
     class Subfolder(val folder: File) : DestFolderOverride()
 }
@@ -175,7 +172,7 @@ object ScopedStorageService {
         // Ensure we have space.
         // This must be after .mkdirs(): determineBytesAvailable works on non-empty directories,
         MigrateEssentialFiles.UserActionRequiredException.OutOfSpaceException.throwIfInsufficient(
-            available = Utils.determineBytesAvailable(destDirectory.absolutePath),
+            available = FileUtil.determineBytesAvailable(destDirectory.absolutePath),
             required = MigrateEssentialFiles.PRIORITY_FILES.sumOf { it.spaceRequired(sourceDirectory.path) } + SAFETY_MARGIN_BYTES
         )
     }

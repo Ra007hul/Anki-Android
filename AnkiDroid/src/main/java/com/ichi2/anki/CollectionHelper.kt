@@ -17,6 +17,7 @@
 package com.ichi2.anki
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.database.sqlite.SQLiteFullException
 import android.os.Environment
 import android.text.format.Formatter
@@ -25,11 +26,11 @@ import androidx.annotation.VisibleForTesting
 import androidx.core.content.edit
 import com.ichi2.anki.AnkiDroidFolder.AppPrivateFolder
 import com.ichi2.anki.exception.StorageAccessException
+import com.ichi2.anki.exception.UnknownDatabaseVersionException
 import com.ichi2.anki.preferences.Preferences
 import com.ichi2.anki.preferences.sharedPrefs
 import com.ichi2.libanki.Collection
-import com.ichi2.libanki.Storage
-import com.ichi2.libanki.exception.UnknownDatabaseVersionException
+import com.ichi2.libanki.DB
 import com.ichi2.preferences.getOrSetString
 import com.ichi2.utils.FileUtil
 import com.ichi2.utils.KotlinCleanup
@@ -37,6 +38,7 @@ import net.ankiweb.rsdroid.BackendException.BackendDbException.BackendDbFileTooN
 import net.ankiweb.rsdroid.BackendException.BackendDbException.BackendDbLockedException
 import timber.log.Timber
 import java.io.File
+import java.io.FileNotFoundException
 import java.io.IOException
 import java.lang.Exception
 import kotlin.Throws
@@ -47,39 +49,17 @@ import kotlin.Throws
 @KotlinCleanup("convert to object")
 open class CollectionHelper {
     /**
-     * Prevents [com.ichi2.async.CollectionLoader] from spuriously re-opening the [Collection].
-     *
-     *
-     * Accessed only from synchronized methods.
-     */
-    @get:Synchronized
-    var isCollectionLocked = false
-        private set
-
-    @Synchronized
-    fun lockCollection() {
-        Timber.i("Locked Collection - Collection Loading should fail")
-        isCollectionLocked = true
-    }
-
-    @Synchronized
-    fun unlockCollection() {
-        Timber.i("Unlocked Collection")
-        isCollectionLocked = false
-    }
-
-    /**
      * Get the single instance of the [Collection], creating it if necessary  (lazy initialization).
      * @param context is no longer used, as the global AnkidroidApp instance is used instead
      * @return instance of the Collection
      */
     @Synchronized
-    open fun getCol(context: Context?): Collection? {
+    open fun getColUnsafe(context: Context?): Collection? {
         return CollectionManager.getColUnsafe()
     }
 
     /**
-     * Calls [getCol] inside a try / catch statement.
+     * Calls [getColUnsafe] inside a try / catch statement.
      * Send exception report if [reportException] is set and return null if there was an exception.
      * @param context
      * @param reportException Whether to send a crash report if an [Exception] was thrown when opening the collection (excluding
@@ -87,10 +67,10 @@ open class CollectionHelper {
      * @return the [Collection] if it could be obtained, `null` otherwise.
      */
     @Synchronized
-    fun getColSafe(context: Context?, reportException: Boolean = true): Collection? {
+    fun tryGetColUnsafe(context: Context?, reportException: Boolean = true): Collection? {
         lastOpenFailure = null
         return try {
-            getCol(context)
+            getColUnsafe(context)
         } catch (e: BackendDbLockedException) {
             lastOpenFailure = CollectionOpenFailure.LOCKED
             Timber.w(e)
@@ -118,15 +98,15 @@ open class CollectionHelper {
      * @param save whether or not save before closing
      */
     @Synchronized
-    fun closeCollection(save: Boolean, reason: String?) {
+    fun closeCollection(reason: String?) {
         Timber.i("closeCollection: %s", reason)
-        CollectionManager.closeCollectionBlocking(save)
+        CollectionManager.closeCollectionBlocking()
     }
 
     /**
      * @return Whether or not [Collection] and its child database are open.
      */
-    fun colIsOpen(): Boolean {
+    fun colIsOpenUnsafe(): Boolean {
         return CollectionManager.isOpenUnsafe()
     }
 
@@ -138,43 +118,43 @@ open class CollectionHelper {
      */
     @KotlinCleanup("extract this to another file")
     class CollectionIntegrityStorageCheck {
-        private val mErrorMessage: String?
+        private val errorMessage: String?
 
         // OR:
-        private val mRequiredSpace: Long?
-        private val mFreeSpace: Long?
+        private val requiredSpace: Long?
+        private val freeSpace: Long?
 
         private constructor(requiredSpace: Long, freeSpace: Long) {
-            mFreeSpace = freeSpace
-            mRequiredSpace = requiredSpace
-            mErrorMessage = null
+            this.freeSpace = freeSpace
+            this.requiredSpace = requiredSpace
+            errorMessage = null
         }
 
         private constructor(errorMessage: String) {
-            mRequiredSpace = null
-            mFreeSpace = null
-            mErrorMessage = errorMessage
+            requiredSpace = null
+            freeSpace = null
+            this.errorMessage = errorMessage
         }
 
         fun shouldWarnOnIntegrityCheck(): Boolean {
-            return mErrorMessage != null || fileSystemDoesNotHaveSpaceForBackup()
+            return errorMessage != null || fileSystemDoesNotHaveSpaceForBackup()
         }
 
         private fun fileSystemDoesNotHaveSpaceForBackup(): Boolean {
             // only to be called when mErrorMessage == null
-            if (mFreeSpace == null || mRequiredSpace == null) {
+            if (freeSpace == null || requiredSpace == null) {
                 Timber.e("fileSystemDoesNotHaveSpaceForBackup called in invalid state.")
                 return true
             }
-            Timber.d("Required Free Space: %d. Current: %d", mRequiredSpace, mFreeSpace)
-            return mRequiredSpace > mFreeSpace
+            Timber.d("Required Free Space: %d. Current: %d", requiredSpace, freeSpace)
+            return requiredSpace > freeSpace
         }
 
         fun getWarningDetails(context: Context): String {
-            if (mErrorMessage != null) {
-                return mErrorMessage
+            if (errorMessage != null) {
+                return errorMessage
             }
-            if (mFreeSpace == null || mRequiredSpace == null) {
+            if (freeSpace == null || requiredSpace == null) {
                 Timber.e("CollectionIntegrityCheckStatus in an invalid state")
                 val defaultRequiredFreeSpace = defaultRequiredFreeSpace(context)
                 return context.resources.getString(
@@ -182,14 +162,14 @@ open class CollectionHelper {
                     defaultRequiredFreeSpace
                 )
             }
-            val required = Formatter.formatShortFileSize(context, mRequiredSpace)
+            val required = Formatter.formatShortFileSize(context, requiredSpace)
             val insufficientSpace = context.resources.getString(
                 R.string.integrity_check_insufficient_space,
                 required
             )
 
             // Also concat in the extra content showing the current free space.
-            val currentFree = Formatter.formatShortFileSize(context, mFreeSpace)
+            val currentFree = Formatter.formatShortFileSize(context, freeSpace)
             val insufficientSpaceCurrentFree = context.resources.getString(
                 R.string.integrity_check_insufficient_space_extra_content,
                 currentFree
@@ -420,7 +400,7 @@ open class CollectionHelper {
         // TODO Tracked in https://github.com/ankidroid/Anki-Android/issues/5304
         @CheckResult
         fun getDefaultAnkiDroidDirectory(context: Context): String {
-            val legacyStorage = StartupStoragePermissionManager.selectAnkiDroidFolder(context) != AppPrivateFolder
+            val legacyStorage = selectAnkiDroidFolder(context) != AppPrivateFolder
             return if (!legacyStorage) {
                 File(getAppSpecificExternalAnkiDroidDirectory(context), "AnkiDroid").absolutePath
             } else {
@@ -498,12 +478,27 @@ open class CollectionHelper {
          * @return the absolute path to the AnkiDroid directory.
          */
         fun getCurrentAnkiDroidDirectory(context: Context): String {
-            val preferences = context.sharedPrefs()
+            return getCurrentAnkiDroidDirectoryOptionalContext(context.sharedPrefs()) { context }
+        }
+
+        fun getMediaDirectory(context: Context): File {
+            return File(getCurrentAnkiDroidDirectory(context), "collection.media")
+        }
+
+        /**
+         * An accessor which makes [Context] optional in the case that [PREF_COLLECTION_PATH] is set
+         *
+         * @return the absolute path to the AnkiDroid directory.
+         */
+        // This uses a lambda as we typically depends on the `lateinit` AnkiDroidApp.instance
+        // If we remove all Android references, we get a significant unit test speedup
+        @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+        internal fun getCurrentAnkiDroidDirectoryOptionalContext(preferences: SharedPreferences, context: () -> Context): String {
             return if (AnkiDroidApp.INSTRUMENTATION_TESTING) {
                 // create an "androidTest" directory inside the current collection directory which contains the test data
                 // "/AnkiDroid/androidTest" would be a new collection path
                 val currentCollectionDirectory = preferences.getOrSetString(PREF_COLLECTION_PATH) {
-                    getDefaultAnkiDroidDirectory(context)
+                    getDefaultAnkiDroidDirectory(context())
                 }
                 File(
                     currentCollectionDirectory,
@@ -514,7 +509,7 @@ open class CollectionHelper {
             } else {
                 preferences.getOrSetString(PREF_COLLECTION_PATH) {
                     getDefaultAnkiDroidDirectory(
-                        context
+                        context()
                     )
                 }
             }
@@ -532,20 +527,23 @@ open class CollectionHelper {
             preferences.edit { putString(PREF_COLLECTION_PATH, directory) }
         }
 
-        /** Fetches additional collection data not required for
-         * application startup
-         *
-         * Allows mandatory startup procedures to return early, speeding up startup. Less important tasks are offloaded here
-         * No-op if data is already fetched
-         */
-        fun loadCollectionComplete(col: Collection) {
-            col.models
-        }
-
         @Throws(UnknownDatabaseVersionException::class)
         fun getDatabaseVersion(context: Context): Int {
             // backend can't open a schema version outside range, so fall back to a pure DB implementation
-            return Storage.getDatabaseVersion(context, getCollectionPath(context))
+            val colPath = getCollectionPath(context)
+            if (!File(colPath).exists()) {
+                throw UnknownDatabaseVersionException(FileNotFoundException(colPath))
+            }
+            var db: DB? = null
+            return try {
+                db = DB.withAndroidFramework(context, colPath)
+                db.queryScalar("SELECT ver FROM col")
+            } catch (e: Exception) {
+                Timber.w(e, "Couldn't open the database to obtain collection version!")
+                throw UnknownDatabaseVersionException(e)
+            } finally {
+                db?.close()
+            }
         }
     }
 }

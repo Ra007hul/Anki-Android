@@ -37,14 +37,6 @@ import java.util.concurrent.CountDownLatch
 
 typealias NumberOfBytes = Long
 
-fun NumberOfBytes.toKB(): Int {
-    return ((this / 1024).toInt())
-}
-
-fun NumberOfBytes.toMB(): Int {
-    return this.toKB() / 1024
-}
-
 /**
  * Function that is executed when one file is migrated, with the number of bytes moved.
  * Called with 0 when the file is already present in destination (i.e. successful move with no byte copied)
@@ -159,7 +151,7 @@ open class MigrateUserData protected constructor(val source: Directory, val dest
      * If the number of retries was exceeded when resolving a file conflict via moving it to the
      * /conflict/ folder.
      */
-    class FileConflictResolutionFailedException(val sourceFile: DiskFile, val attemptedDestination: File) : MigrationException("Failed to move $sourceFile to $attemptedDestination")
+    class FileConflictResolutionFailedException(val sourceFile: DiskFile, attemptedDestination: File) : MigrationException("Failed to move $sourceFile to $attemptedDestination")
 
     /**
      * Context for an [Operation], allowing a change of execution behavior and
@@ -608,11 +600,7 @@ open class MigrateUserData protected constructor(val source: Directory, val dest
         }
 
         // don't move the "conflict" directory
-        if (file.name == MoveConflictedFile.CONFLICT_DIRECTORY) {
-            return false
-        }
-
-        return true
+        return file.name != MoveConflictedFile.CONFLICT_DIRECTORY
     }
 
     /**

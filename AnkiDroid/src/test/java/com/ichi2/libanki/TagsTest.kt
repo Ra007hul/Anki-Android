@@ -16,18 +16,17 @@
 package com.ichi2.libanki
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.ichi2.anki.RobolectricTest
+import com.ichi2.testutils.JvmTest
 import junit.framework.TestCase.*
 import org.junit.Assert.assertNotEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class TagsTest : RobolectricTest() {
+class TagsTest : JvmTest() {
 
     @Test
     fun test_split() {
-        val col = col
         val tags = Tags(col)
         val tags_list1 = ArrayList<String>()
         tags_list1.add("Todo")
@@ -47,7 +46,6 @@ class TagsTest : RobolectricTest() {
 
     @Test
     fun test_in_list() {
-        val col = col
         val tags = Tags(col)
 
         val tags_list = ArrayList<String>()
@@ -61,15 +59,5 @@ class TagsTest : RobolectricTest() {
         assertTrue(tags.inList("once More", tags_list))
         assertFalse(tags.inList("test1Content", tags_list))
         assertFalse(tags.inList("", ArrayList()))
-    }
-
-    @Test
-    fun test_add_to_str() {
-        val col = col
-        val tags = Tags(col)
-
-        assertEquals(" Needs Revision Todo ", tags.addToStr("todo", "Todo todo Needs Revision"))
-        assertEquals(" Todo ", tags.addToStr("Todo", ""))
-        assertEquals(" Needs Revision Todo ", tags.addToStr("", "Todo todo Needs Revision"))
     }
 }

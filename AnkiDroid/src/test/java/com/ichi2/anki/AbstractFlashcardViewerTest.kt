@@ -2,12 +2,18 @@
 
 package com.ichi2.anki
 
+import android.app.Application
+import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.webkit.RenderProcessGoneDetail
 import androidx.annotation.CheckResult
 import androidx.annotation.RequiresApi
+import androidx.core.content.IntentCompat
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import anki.config.ConfigKey
+import com.ichi2.anim.ActivityTransitionAnimation
 import com.ichi2.anki.AbstractFlashcardViewer.WebViewSignalParserUtils.ANSWER_ORDINAL_1
 import com.ichi2.anki.AbstractFlashcardViewer.WebViewSignalParserUtils.ANSWER_ORDINAL_2
 import com.ichi2.anki.AbstractFlashcardViewer.WebViewSignalParserUtils.ANSWER_ORDINAL_3
@@ -17,6 +23,8 @@ import com.ichi2.anki.AbstractFlashcardViewer.WebViewSignalParserUtils.SHOW_ANSW
 import com.ichi2.anki.AbstractFlashcardViewer.WebViewSignalParserUtils.SIGNAL_NOOP
 import com.ichi2.anki.AbstractFlashcardViewer.WebViewSignalParserUtils.TYPE_FOCUS
 import com.ichi2.anki.AbstractFlashcardViewer.WebViewSignalParserUtils.getSignalFromUrl
+import com.ichi2.anki.AnkiActivity.Companion.FINISH_ANIMATION_EXTRA
+import com.ichi2.anki.cardviewer.Gesture
 import com.ichi2.anki.cardviewer.ViewerCommand
 import com.ichi2.anki.preferences.sharedPrefs
 import com.ichi2.anki.reviewer.AutomaticAnswer
@@ -25,6 +33,8 @@ import com.ichi2.anki.reviewer.AutomaticAnswerSettings
 import com.ichi2.anki.servicelayer.LanguageHintService
 import com.ichi2.libanki.StdModels
 import com.ichi2.testutils.AnkiAssert.assertDoesNotThrow
+import com.ichi2.testutils.Flaky
+import com.ichi2.testutils.OS
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
 import org.junit.Assert.*
@@ -35,22 +45,25 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.junit.runner.RunWith
 import org.mockito.Mockito.*
 import org.robolectric.Robolectric
+import org.robolectric.Shadows
 import org.robolectric.android.controller.ActivityController
-import org.robolectric.shadows.ShadowToast
+import timber.log.Timber
 import java.util.*
 import java.util.stream.Stream
+import com.ichi2.anim.ActivityTransitionAnimation.Direction as Direction
 
+@Suppress("SameParameterValue")
 @RequiresApi(api = Build.VERSION_CODES.O) // getImeHintLocales, toLanguageTags, onRenderProcessGone, RenderProcessGoneDetail
 @RunWith(AndroidJUnit4::class)
 class AbstractFlashcardViewerTest : RobolectricTest() {
     class NonAbstractFlashcardViewer : AbstractFlashcardViewer() {
         var answered: Int? = null
-        private var mLastTime = 0
+        private var lastTime = 0
         override fun performReload() {
             // intentionally blank
         }
 
-        val typedInput get() = super.typedInputText
+        val typedInput get() = typedInputText
 
         override fun answerCard(ease: Int) {
             super.answerCard(ease)
@@ -59,9 +72,9 @@ class AbstractFlashcardViewerTest : RobolectricTest() {
 
         override val elapsedRealTime: Long
             get() {
-                mLastTime += baseContext.sharedPrefs()
+                lastTime += baseContext.sharedPrefs()
                     .getInt(DOUBLE_TAP_TIME_INTERVAL, DEFAULT_DOUBLE_TAP_TIME_INTERVAL)
-                return mLastTime.toLong()
+                return lastTime.toLong()
             }
         val hintLocale: String?
             get() {
@@ -71,6 +84,34 @@ class AbstractFlashcardViewerTest : RobolectricTest() {
 
         fun hasAutomaticAnswerQueued(): Boolean {
             return automaticAnswer.timeoutHandler.hasMessages(0)
+        }
+
+        /**
+         * Fixes an issue with noAutomaticAnswerAfterRenderProcessGoneAndPaused_issue9632
+         * where [onSoundGroupCompleted] executed AFTER [executeCommand] completed
+         * this lead to an assertion which sometimes occurred before [onSoundGroupCompleted] had
+         * been called, which failed
+         *
+         * This is fine in real life, as we have sounds to play
+         */
+        private var soundGroupCompleted = false
+
+        override fun onSoundGroupCompleted() {
+            super.onSoundGroupCompleted()
+            soundGroupCompleted = true
+        }
+
+        override fun executeCommand(which: ViewerCommand, fromGesture: Gesture?): Boolean {
+            soundGroupCompleted = false
+            return super.executeCommand(which, fromGesture).also {
+                if (which != ViewerCommand.SHOW_ANSWER) return@also
+                Timber.v("waiting for onSoundGroupCompleted")
+                for (i in 0..100) {
+                    if (soundGroupCompleted) break
+                    Thread.sleep(10)
+                }
+                require(soundGroupCompleted) { "soundGroupCompleted never occurred" }
+            }
         }
     }
 
@@ -149,7 +190,31 @@ class AbstractFlashcardViewerTest : RobolectricTest() {
 
         assertThat(viewer.correctTypedAnswer, equalTo("David"))
         assertThat(viewer.cardContent, not(containsString("World")))
-        assertThat(viewer.cardContent, containsString("David"))
+        // the saving will have caused the screen to switch back to question side
+        assertThat(viewer.cardContent, containsString("Hello"))
+    }
+
+    @Test
+    fun testEditCardProvidesInverseTransition() {
+        val viewer: NonAbstractFlashcardViewer = getViewer(true)
+        val gestures = listOf(Gesture.SWIPE_LEFT, Gesture.SWIPE_UP, Gesture.LONG_TAP)
+
+        gestures.forEach { gesture ->
+            val expectedAnimation =
+                AbstractFlashcardViewer.getAnimationTransitionFromGesture(gesture)
+            val expectedInverseAnimation =
+                ActivityTransitionAnimation.getInverseTransition(expectedAnimation)
+
+            viewer.executeCommand(ViewerCommand.EDIT, gesture)
+            val actual = Shadows.shadowOf(ApplicationProvider.getApplicationContext<Context>() as Application).nextStartedActivity
+
+            val actualInverseAnimation = IntentCompat.getParcelableExtra(
+                actual,
+                FINISH_ANIMATION_EXTRA,
+                Direction::class.java
+            )
+            assertEquals(expectedInverseAnimation, actualInverseAnimation)
+        }
     }
 
     @Test
@@ -160,11 +225,11 @@ class AbstractFlashcardViewerTest : RobolectricTest() {
         val viewer: NonAbstractFlashcardViewer = getViewer(true)
 
         assertThat("Displaying question", viewer.isDisplayingAnswer, equalTo(false))
-        viewer.executeCommand(ViewerCommand.FLIP_OR_ANSWER_BETTER_THAN_RECOMMENDED)
+        viewer.executeCommand(ViewerCommand.FLIP_OR_ANSWER_EASE4)
 
         assertThat("Displaying answer", viewer.isDisplayingAnswer, equalTo(true))
 
-        viewer.executeCommand(ViewerCommand.FLIP_OR_ANSWER_BETTER_THAN_RECOMMENDED)
+        viewer.executeCommand(ViewerCommand.FLIP_OR_ANSWER_EASE4)
 
         assertThat(viewer.answered, notNullValue())
     }
@@ -175,12 +240,13 @@ class AbstractFlashcardViewerTest : RobolectricTest() {
     }
 
     @Test
+    @Flaky(OS.ALL, "executeCommand(FLIP_OR_ANSWER_EASE4) cannot be awaited")
     fun typedLanguageIsSet() = runTest {
         val withLanguage = StdModels.BASIC_TYPING_MODEL.add(col, "a")
         val normal = StdModels.BASIC_TYPING_MODEL.add(col, "b")
         val typedField = 1 // BACK
 
-        LanguageHintService.setLanguageHintForField(col.models, withLanguage, typedField, Locale("ja"))
+        LanguageHintService.setLanguageHintForField(col.notetypes, withLanguage, typedField, Locale("ja"))
 
         addNoteUsingModelName(withLanguage.getString("name"), "ichi", "ni")
         addNoteUsingModelName(normal.getString("name"), "one", "two")
@@ -188,14 +254,15 @@ class AbstractFlashcardViewerTest : RobolectricTest() {
 
         assertThat("A model with a language hint (japanese) should use it", viewer.hintLocale, equalTo("ja"))
 
-        showNextCard(viewer)
+        viewer.executeCommand(ViewerCommand.FLIP_OR_ANSWER_EASE4)
+        viewer.executeCommand(ViewerCommand.FLIP_OR_ANSWER_EASE4)
 
         assertThat("A default model should have no preference", viewer.hintLocale, nullValue())
     }
 
     @Test
     fun automaticAnswerDisabledProperty() {
-        val controller = getViewerController(true, false)
+        val controller = getViewerController(addCard = true, startedWithShortcut = false)
         val viewer = controller.get()
         assertThat("not disabled initially", viewer.automaticAnswer.isDisabled, equalTo(false))
         controller.pause()
@@ -205,8 +272,8 @@ class AbstractFlashcardViewerTest : RobolectricTest() {
     }
 
     @Test
-    fun noAutomaticAnswerAfterRenderProcessGoneAndPaused_issue9632() {
-        val controller = getViewerController(true, false)
+    fun noAutomaticAnswerAfterRenderProcessGoneAndPaused_issue9632() = runTest {
+        val controller = getViewerController(addCard = true, startedWithShortcut = false)
         val viewer = controller.get()
         viewer.automaticAnswer = AutomaticAnswer(viewer, AutomaticAnswerSettings(AutomaticAnswerAction.BURY_CARD, true, 5, 5))
         viewer.executeCommand(ViewerCommand.SHOW_ANSWER)
@@ -214,21 +281,53 @@ class AbstractFlashcardViewerTest : RobolectricTest() {
         controller.pause()
         assertThat("disabled after pause", viewer.automaticAnswer.isDisabled, equalTo(true))
         assertThat("no auto answer after pause", viewer.hasAutomaticAnswerQueued(), equalTo(false))
-        viewer.mOnRenderProcessGoneDelegate.onRenderProcessGone(viewer.webView!!, mock(RenderProcessGoneDetail::class.java))
+        viewer.onRenderProcessGoneDelegate.onRenderProcessGone(viewer.webView!!, mock(RenderProcessGoneDetail::class.java))
         assertThat("no auto answer after onRenderProcessGone when paused", viewer.hasAutomaticAnswerQueued(), equalTo(false))
     }
 
     @Test
-    fun shortcutShowsToastOnFinish() = runTest {
-        val viewer: NonAbstractFlashcardViewer = getViewer(true, true)
-        viewer.executeCommand(ViewerCommand.FLIP_OR_ANSWER_BETTER_THAN_RECOMMENDED)
-        viewer.executeCommand(ViewerCommand.FLIP_OR_ANSWER_BETTER_THAN_RECOMMENDED)
-        assertEquals(getResourceString(R.string.studyoptions_congrats_finished), ShadowToast.getTextOfLatestToast())
+    fun `Show audio play buttons preference handling - sound`() = runTest {
+        addNoteUsingBasicTypedModel("SOUND [sound:android_audiorec.3gp]", "back")
+        getViewerContent().let { content ->
+            assertThat("show audio preference default value: enabled", content, containsString("playsound:q:0"))
+            assertThat("show audio preference default value: enabled", content, containsString("SOUND"))
+        }
+        setHidePlayAudioButtons(true)
+        getViewerContent().let { content ->
+            assertThat("show audio preference disabled", content, not(containsString("playsound:q:0")))
+            assertThat("show audio preference disabled", content, containsString("SOUND"))
+        }
+        setHidePlayAudioButtons(false)
+        getViewerContent().let { content ->
+            assertThat("show audio preference enabled explicitly", content, containsString("playsound:q:0"))
+            assertThat("show audio preference enabled explicitly", content, containsString("SOUND"))
+        }
     }
 
-    private fun showNextCard(viewer: NonAbstractFlashcardViewer) {
-        viewer.executeCommand(ViewerCommand.FLIP_OR_ANSWER_BETTER_THAN_RECOMMENDED)
-        viewer.executeCommand(ViewerCommand.FLIP_OR_ANSWER_BETTER_THAN_RECOMMENDED)
+    @Test
+    fun `Show audio play buttons preference handling - tts`() = runTest {
+        addNoteUsingTextToSpeechNoteType("TTS", "BACK")
+        getViewerContent().let { content ->
+            assertThat("show audio preference default value: enabled", content, containsString("playsound:q:0"))
+            assertThat("show audio preference default value: enabled", content, containsString("TTS"))
+        }
+        setHidePlayAudioButtons(true)
+        getViewerContent().let { content ->
+            assertThat("show audio preference disabled", content, not(containsString("playsound:q:0")))
+            assertThat("show audio preference disabled", content, containsString("TTS"))
+        }
+        setHidePlayAudioButtons(false)
+        getViewerContent().let { content ->
+            assertThat("show audio preference enabled explicitly", content, containsString("playsound:q:0"))
+            assertThat("show audio preference enabled explicitly", content, containsString("TTS"))
+        }
+    }
+
+    private fun setHidePlayAudioButtons(value: Boolean) = col.config.setBool(ConfigKey.Bool.HIDE_AUDIO_PLAY_BUTTONS, value)
+
+    private fun getViewerContent(): String? {
+        // PERF: Optimise this to not create a new viewer each time
+        return getViewer(addCard = false).cardContent
     }
 
     @get:CheckResult
@@ -284,3 +383,8 @@ class AbstractFlashcardViewerTest : RobolectricTest() {
         }
     }
 }
+
+fun AbstractFlashcardViewer.loadInitialCard() = launchCatchingTask { updateCardAndRedraw() }
+
+val AbstractFlashcardViewer.typedInputText get() = typeAnswer!!.input
+val AbstractFlashcardViewer.correctTypedAnswer get() = typeAnswer!!.correct

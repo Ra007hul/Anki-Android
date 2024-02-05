@@ -43,7 +43,6 @@ import com.ichi2.anki.R
 import com.ichi2.anki.UIUtils.convertDpToPixel
 import com.ichi2.anki.preferences.sharedPrefs
 import com.ichi2.compat.CompatHelper
-import com.ichi2.libanki.Utils
 import com.ichi2.utils.ViewGroupUtils
 import com.ichi2.utils.ViewGroupUtils.getAllChildrenRecursive
 import com.ichi2.utils.show
@@ -59,7 +58,7 @@ import kotlin.math.ceil
  *    * Text is formatted as HTML
  *    * if a tag with an empty body is inserted, we want the cursor in the middle: `<b>|</b>`
  * * Handles the "default" buttons: [setupDefaultButtons], [displayFontSizeDialog], [displayInsertHeadingDialog]
- * * Handles custom buttons with arbitrary prefixes and suffixes: [mCustomButtons]
+ * * Handles custom buttons with arbitrary prefixes and suffixes: [customButtons]
  *    * Handles generating the 'icon' for these custom buttons: [createDrawableForString]
  *    * Handles CTRL+ the tag of the button: [onKeyUp]. Allows for Ctrl+1..9 shortcuts
  * * Handles adding a dynamic number of buttons and aligning them into rows: [insertItem]
@@ -67,14 +66,14 @@ import kotlin.math.ceil
  */
 class Toolbar : FrameLayout {
     var formatListener: TextFormatListener? = null
-    private val mToolbar: LinearLayout
-    private val mToolbarLayout: LinearLayout
+    private val toolbar: LinearLayout
+    private val toolbarLayout: LinearLayout
 
     /** A list of buttons, typically user-defined which modify text + selection */
-    private val mCustomButtons: MutableList<View> = ArrayList()
-    private val mRows: MutableList<LinearLayout> = ArrayList()
+    private val customButtons: MutableList<View> = ArrayList()
+    private val rows: MutableList<LinearLayout> = ArrayList()
 
-    private var mStringPaint: Paint? = null
+    private var stringPaint: Paint? = null
 
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
@@ -83,13 +82,13 @@ class Toolbar : FrameLayout {
 
     init {
         LayoutInflater.from(context).inflate(R.layout.note_editor_toolbar, this, true)
-        mStringPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        stringPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             textSize = convertDpToPixel(24F, context)
             color = Color.BLACK
             textAlign = Paint.Align.CENTER
         }
-        mToolbar = findViewById(R.id.editor_toolbar_internal)
-        mToolbarLayout = findViewById(R.id.toolbar_layout)
+        toolbar = findViewById(R.id.editor_toolbar_internal)
+        toolbarLayout = findViewById(R.id.toolbar_layout)
         setupDefaultButtons()
     }
 
@@ -100,7 +99,7 @@ class Toolbar : FrameLayout {
             findViewById<View>(id).setOnClickListener { onFormat(TextWrapper(prefix, suffix)) }
 
         setupButtonWrappingText(R.id.note_editor_toolbar_button_bold, "<b>", "</b>")
-        setupButtonWrappingText(R.id.note_editor_toolbar_button_italic, "<em>", "</em>")
+        setupButtonWrappingText(R.id.note_editor_toolbar_button_italic, "<i>", "</i>")
         setupButtonWrappingText(R.id.note_editor_toolbar_button_underline, "<u>", "</u>")
         setupButtonWrappingText(R.id.note_editor_toolbar_button_insert_mathjax, "\\(", "\\)")
         setupButtonWrappingText(R.id.note_editor_toolbar_button_horizontal_rule, "<hr>", "")
@@ -134,7 +133,7 @@ class Toolbar : FrameLayout {
         }
         val expected = c.toString()
         for (v in getAllChildrenRecursive(this)) {
-            if (Utils.equals(expected, v.tag)) {
+            if (Objects.equals(expected, v.tag)) {
                 Timber.i("Handling Ctrl + %s", c)
                 v.performClick()
                 return true
@@ -143,19 +142,19 @@ class Toolbar : FrameLayout {
         return super.onKeyUp(keyCode, event)
     }
 
-    fun insertItem(@IdRes id: Int, @DrawableRes drawable: Int, runnable: Runnable): AppCompatImageButton {
+    fun insertItem(@IdRes id: Int, @DrawableRes drawable: Int, block: () -> Unit): AppCompatImageButton {
         // we use the light theme here to ensure the tint is black on both
         // A null theme can be passed after colorControlNormal is defined (API 25)
-        val themeContext: Context = ContextThemeWrapper(context, R.style.Theme_Light_Compat)
+        val themeContext: Context = ContextThemeWrapper(context, R.style.Theme_Light)
         val d = VectorDrawableCompat.create(context.resources, drawable, themeContext.theme)
-        return insertItem(id, d, runnable)
+        return insertItem(id, d, block)
     }
 
     fun insertItem(id: Int, drawable: Drawable?, formatter: TextFormatter): View {
-        return insertItem(id, drawable, Runnable { onFormat(formatter) })
+        return insertItem(id, drawable) { onFormat(formatter) }
     }
 
-    fun insertItem(@IdRes id: Int, drawable: Drawable?, runnable: Runnable): AppCompatImageButton {
+    fun insertItem(@IdRes id: Int, drawable: Drawable?, block: () -> Unit): AppCompatImageButton {
         val context = context
         val button = AppCompatImageButton(context)
         button.id = id
@@ -183,16 +182,16 @@ class Toolbar : FrameLayout {
         val shouldScroll = AnkiDroidApp.instance.sharedPrefs()
             .getBoolean(NoteEditor.PREF_NOTE_EDITOR_SCROLL_TOOLBAR, true)
         if (shouldScroll) {
-            mToolbar.addView(button, mToolbar.childCount)
+            toolbar.addView(button, toolbar.childCount)
         } else {
             addViewToToolbar(button)
         }
-        mCustomButtons.add(button)
-        button.setOnClickListener { runnable.run() }
+        customButtons.add(button)
+        button.setOnClickListener { block.invoke() }
 
         // Hack - items are truncated from the scrollview
         val v = findViewById<View>(R.id.toolbar_layout)
-        val expectedWidth = getVisibleItemCount(mToolbar) * convertDpToPixel(48F, context)
+        val expectedWidth = getVisibleItemCount(toolbar) * convertDpToPixel(48F, context)
         val width = screenWidth
         val p = LayoutParams(v.layoutParams)
         p.gravity =
@@ -213,10 +212,10 @@ class Toolbar : FrameLayout {
 
     /** Clears all items added by [insertItem] */
     fun clearCustomItems() {
-        for (v in mCustomButtons) {
+        for (v in customButtons) {
             (v.parent as ViewGroup).removeView(v)
         }
-        mCustomButtons.clear()
+        customButtons.clear()
     }
 
     /**
@@ -259,11 +258,11 @@ class Toolbar : FrameLayout {
 
     /** Given a string [text], generates a [Drawable] which can be used as a button icon */
     fun createDrawableForString(text: String): Drawable {
-        val baseline = -mStringPaint!!.ascent()
-        val size = (baseline + mStringPaint!!.descent() + 0.5f).toInt()
+        val baseline = -stringPaint!!.ascent()
+        val size = (baseline + stringPaint!!.descent() + 0.5f).toInt()
         val image = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(image)
-        canvas.drawText(text, size / 2f, baseline, mStringPaint!!)
+        canvas.drawText(text, size / 2f, baseline, stringPaint!!)
         return BitmapDrawable(resources, image)
     }
 
@@ -272,15 +271,15 @@ class Toolbar : FrameLayout {
         ViewGroupUtils.getAllChildren(layout).count { it.visibility == VISIBLE }
 
     private fun addViewToToolbar(button: AppCompatImageButton) {
-        val expectedWidth = getVisibleItemCount(mToolbar) * convertDpToPixel(48F, context)
+        val expectedWidth = getVisibleItemCount(toolbar) * convertDpToPixel(48F, context)
         val width = screenWidth
         if (expectedWidth <= width) {
-            mToolbar.addView(button, mToolbar.childCount)
+            toolbar.addView(button, toolbar.childCount)
             return
         }
         var spaceLeft = false
-        if (mRows.isNotEmpty()) {
-            val row = mRows.last()
+        if (rows.isNotEmpty()) {
+            val row = rows.last()
             val expectedRowWidth = getVisibleItemCount(row) * convertDpToPixel(48F, context)
             if (expectedRowWidth <= width) {
                 row.addView(button, row.childCount)
@@ -293,8 +292,8 @@ class Toolbar : FrameLayout {
             row.layoutParams = params
             row.orientation = LinearLayout.HORIZONTAL
             row.addView(button)
-            mRows.add(row)
-            mToolbarLayout.addView(mRows.last())
+            rows.add(row)
+            toolbarLayout.addView(rows.last())
         }
     }
 
@@ -310,9 +309,9 @@ class Toolbar : FrameLayout {
     }
 
     fun setIconColor(@ColorInt color: Int) {
-        ViewGroupUtils.getAllChildren(mToolbar)
+        ViewGroupUtils.getAllChildren(toolbar)
             .forEach { (it as AppCompatImageButton).setColorFilter(color) }
-        mStringPaint!!.color = color
+        stringPaint!!.color = color
     }
 
     /** @see performFormat */

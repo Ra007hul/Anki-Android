@@ -15,14 +15,12 @@
  */
 package com.ichi2.anki.preferences
 
-import androidx.preference.ListPreference
 import androidx.preference.SwitchPreferenceCompat
 import com.ichi2.anki.CollectionManager.withCol
 import com.ichi2.anki.R
 import com.ichi2.anki.launchCatchingTask
 import com.ichi2.anki.preferences.Preferences.Companion.getDayOffset
 import com.ichi2.anki.preferences.Preferences.Companion.setDayOffset
-import com.ichi2.anki.reviewer.AutomaticAnswerAction
 import com.ichi2.preferences.NumberRangePreferenceCompat
 import com.ichi2.preferences.SliderPreference
 
@@ -33,24 +31,14 @@ class ReviewingSettingsFragment : SettingsFragment() {
         get() = "prefs.reviewing"
 
     override fun initSubscreen() {
-        // New cards position
-        // Represents the collections pref "newSpread": i.e.
-        // whether the new cards are added at the end of the queue or randomly in it.
-        requirePreference<ListPreference>(R.string.new_spread_preference).apply {
-            launchCatchingTask { setValueIndex(withCol { get_config_int("newSpread") }) }
-            setOnPreferenceChangeListener { newValue ->
-                launchCatchingTask { withCol { set_config("newSpread", (newValue as String).toInt()) } }
-            }
-        }
-
         // Learn ahead limit
         // Represents the collections pref "collapseTime": i.e.
         // if there are no card to review now, but there are learning cards remaining for today, we show those learning cards if they are due before LEARN_CUTOFF minutes
         // Note that "collapseTime" is in second while LEARN_CUTOFF is in minute.
         requirePreference<NumberRangePreferenceCompat>(R.string.learn_cutoff_preference).apply {
-            launchCatchingTask { setValue(withCol { get_config_int("collapseTime") / 60 }) }
+            launchCatchingTask { setValue(withCol { sched.learnAheadSeconds() / 60 }) }
             setOnPreferenceChangeListener { newValue ->
-                launchCatchingTask { withCol { set_config("collapseTime", (newValue as Int * 60)) } }
+                launchCatchingTask { withCol { config.set("collapseTime", (newValue as Int * 60)) } }
             }
         }
         // Timebox time limit
@@ -58,9 +46,9 @@ class ReviewingSettingsFragment : SettingsFragment() {
         // the duration of a review timebox in minute. Each TIME_LIMIT minutes, a message appear suggesting to halt and giving the number of card reviewed
         // Note that "timeLim" is in seconds while TIME_LIMIT is in minutes.
         requirePreference<NumberRangePreferenceCompat>(R.string.time_limit_preference).apply {
-            launchCatchingTask { setValue(withCol { get_config_int("timeLim") / 60 }) }
+            launchCatchingTask { setValue(withCol { sched.timeboxSecs() / 60 }) }
             setOnPreferenceChangeListener { newValue ->
-                launchCatchingTask { withCol { set_config("timeLim", (newValue as Int * 60)) } }
+                launchCatchingTask { withCol { config.set("timeLim", (newValue as Int * 60)) } }
             }
         }
         // Start of next day
@@ -73,31 +61,17 @@ class ReviewingSettingsFragment : SettingsFragment() {
             }
         }
 
-        /**
-         * Timeout answer
-         * An integer representing the action when "Automatic Answer" flips a card from answer to question
-         * 0 represents "bury", 1-4 represents the named buttons
-         * @see com.ichi2.anki.reviewer.AutomaticAnswerAction
-         * We use the same key in the collection config
-         * @see com.ichi2.anki.reviewer.AutomaticAnswerAction.CONFIG_KEY
-         * */
-        requirePreference<ListPreference>(R.string.automatic_answer_action_preference).apply {
-            launchCatchingTask { setValueIndex(withCol { get_config(AutomaticAnswerAction.CONFIG_KEY, 0.toInt())!! }) }
-            setOnPreferenceChangeListener { newValue ->
-                launchCatchingTask { withCol { set_config(AutomaticAnswerAction.CONFIG_KEY, (newValue as String).toInt()) } }
-            }
-        }
         // New timezone handling
         requirePreference<SwitchPreferenceCompat>(R.string.new_timezone_handling_preference).apply {
             launchCatchingTask {
-                isChecked = withCol { sched._new_timezone_enabled() }
+                isChecked = withCol { sched.newTimezoneEnabled() }
                 isEnabled = withCol { schedVer() > 1 }
             }
             setOnPreferenceChangeListener { newValue ->
                 if (newValue == true) {
-                    launchCatchingTask { withCol { sched.set_creation_offset() } }
+                    launchCatchingTask { withCol { sched.setCreationOffset() } }
                 } else {
-                    launchCatchingTask { withCol { sched.clear_creation_offset() } }
+                    launchCatchingTask { withCol { sched.clearCreationOffset() } }
                 }
             }
         }

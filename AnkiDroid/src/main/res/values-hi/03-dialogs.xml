@@ -46,16 +46,8 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="check_db_title">डेटाबेस की जाँच करें?</string>
     <string name="check_db_warning">इसमें बहुत समय लग सकता है</string>
-    <string name="check_db_acknowledge">डेटाबेस की जाँच की गई</string>
-    <string name="check_db_acknowledge_shrunk">डेटाबेस जाँची और अनुकूलित की गई।\n%d MB से घटाया गया।</string>
     <string name="contextmenu_deckpicker_delete_deck">डेक मिटाएँ</string>
-    <string name="delete_deck_default_deck">डिफ़ॉल्ट डेक को मिटाया नहीं जा सकता।</string>
     <string name="delete_deck_title">डेक मिटाएँ?</string>
-    <plurals name="delete_deck_message">
-        <item quantity="one">%1$s के सारे पत्ते मिटाएँ? इसमें %2$d पत्ता है।</item>
-        <item quantity="other">%1$s के सारे पत्ते मिटाएँ? इसमें %2$d पत्ते है।</item>
-    </plurals>
-    <string name="delete_cram_deck_message">%s के सारे पत्ते उनके मूल डेक में भेज दें?</string>
     <string name="no_tts_available_message">कोई लेख-से-बोली भाषा उपलब्ध नहीं</string>
     <string name="initializing_tts">लेख-से-बोली सेवा शुरू की जा रही है...</string>
     <string name="tts_no_tts">बात न करें</string>
@@ -90,7 +82,6 @@
     </plurals>
     <string name="reschedule_card_dialog_new_card_warning">एक नया कार्ड पुनर्निर्धारित किया जा रहा है। पुनर्निर्धारण भी नए कार्ड को समीक्षा कार्ड में बदल देता है। नई कतार में नए कार्ड की स्थिति बदलने के लिए new रिपोजिशन कार्ड ’विकल्प का उपयोग करें</string>
     <string name="reschedule_card_dialog_warning_ease_reset">पुनर्निर्धारण भी बताता है कि भविष्य में अनुसूचक कार्ड का व्यवहार कैसे करता है (आसानी से %d पर सेट किया जाएगा)</string>
-    <string name="firefox_workaround_launched_reviewer_opening_deck">अपने फ़ाइल प्रबंधक में डेक का चयन करें या इसे आयात करने के लिए: डाउनलोड पृष्ठ के बारे में देखें</string>
     <string name="answering_error_title">डेटाबेस त्रुटि</string>
     <string name="answering_error_message">संग्रह में लेखन विफल रहा। डेटाबेस दूषित हो सकता है या डिस्क पर पर्याप्त खाली स्थान नहीं हो सकता है। \n\n यदि यह अधिक बार होता है, तो डेटाबेस की जाँच करने, संग्रह की मरम्मत करने या इसे बैकअप से पुनर्स्थापित करने का प्रयास करें। इसके लिए \"विकल्प\" स्पर्श करें। \n या यह एक एंकॉइड बग भी हो सकता है; कृपया त्रुटि रिपोर्ट करें ताकि हम इसकी जांच कर सकें।</string>
     <string name="answering_error_report">त्रुटि की सूचना दें</string>
@@ -107,15 +98,6 @@
     <string name="custom_study_random">डेक से यादृच्छिक रूप से एक्स कार्ड का चयन करें:</string>
     <string name="custom_study_preview">पिछले x दिनों में जोड़े गए नए कार्ड का पूर्वावलोकन करें:</string>
     <string name="custom_study_rebuild_deck_corrupt">कस्टम अध्ययन डेक का पुनर्निर्माण नहीं किया जा सका</string>
-    <string name="importing_collection">संग्रह आयात कर रहा है.. ।</string>
-    <string name="import_media_count">मीडिया फ़ाइलें आयात कर रहा है %1$d%%.. ।</string>
-    <string name="import_progress">• आयात नोट्स: %1$d%% \ n • कार्ड आयात: %2$d%% \ n • पोस्ट-प्रोसेसिंग: %3$d%%</string>
-    <string name="import_update_details">%2$d मौजूदा नोट्स का अद्यतन %1$d ।</string>
-    <string name="import_update_ignored">नोट प्रकार बदल गया है, क्योंकि कुछ अद्यतनों पर ध्यान नहीं दिया गया</string>
-    <plurals name="import_complete_message">
-        <item quantity="one">कार्ड आयात किए गए: %2$d</item>
-        <item quantity="other">फ़ाइलें आयात की गईं: %1$d\nआयात किए गए कुल कार्ड: %2$d</item>
-    </plurals>
     <string name="storage_full_title">स्टोरेज भर गया</string>
     <string name="storage_almost_full_title">स्टोरेज लगभग पूर्ण</string>
     <string name="no_space_to_downgrade_title" tools:ignore="UnusedResources">कोई जगह नहीं</string>
@@ -135,18 +117,14 @@
     <!-- Currently unsued, should be useful in the future -->
     <string name="dialog_positive_disable" tools:ignore="UnusedResources">डिसेबल</string>
     <string name="dialog_positive_overwrite">उपरिलेखित करें</string>
-    <string name="dialog_positive_remove">हटाएं</string>
     <string name="dialog_positive_repair">सुधारें</string>
     <string name="dialog_positive_replace">की जगह</string>
-    <string name="dialog_positive_restore">पुनर्स्थापित करें</string>
-    <string name="dialog_positive_set">सेट करें</string>
     <string name="dialog_collection_path_not_dir">निर्दिष्ट पथ कोई मांय निर्देशिका नहीं है</string>
     <!-- Media checking -->
     <string name="check_media_title">मीडिया की जांच करें?</string>
     <string name="check_media_warning">यह बड़े मीडिया संग्रह के साथ एक लंबा समय लग सकता है</string>
     <string name="check_media_message">मीडिया जांच कर रहा है.. ।</string>
     <string name="check_media_acknowledge">मीडिया जांचा गया</string>
-    <string name="check_media_failed">कैप्चा जांच विफल रही</string>
     <string name="check_media_invalid">अमांय एंकोडिंग वाली फ़ाइलें: %d</string>
     <string name="check_media_unused">मीडिया फ़ोल्डर में फ़ाइलें लेकिन किसी भी कार्ड द्वारा उपयोग नहीं: %d</string>
     <string name="check_media_nohave">कार्ड पर उपयोग की गई फ़ाइलें मीडिया फ़ोल्डर में नहीं: %d</string>
@@ -180,18 +158,10 @@
     <string name="integrity_check_continue_anyway">किसी तरह से जारी रखें</string>
     <string name="integrity_check_insufficient_space">चेक डेटाबेस बड़ी मात्रा में अस्थायी storage का उपयोग करता है। \n \n यह दृढ़ता से अनुशंसा की जाती है कि आपके डिवाइस पर कम से कम %s खाली स्थान हो।</string>
     <string name="integrity_check_insufficient_space_extra_content">\n\n आपके पास वर्तमान में %s खाली स्थान है।</string>
-    <plurals name="integrity_check_fixed_no_home_deck_new">
-        <item quantity="one">%d card with incorrect home deck was recovered. Please see the manual for more information.</item>
-        <item quantity="other">%d cards with incorrect home decks were recovered. Please see the manual for more information.</item>
-    </plurals>
-    <string name="video_creation_error">वीडियो नहीं चला सका</string>
     <!-- Card Browser -->
-    <string name="card_browser_deck_change_error">डेक नहीं बदल सका</string>
     <!-- AbstractFlashCardViewer -->
     <string name="card_viewer_url_decode_error">कार्ड से डेटा डिकोड करने में त्रुटि</string>
-    <string name="undo_succeeded">\"%s\" पूर्ववत करें</string>
     <!-- Deck Options -->
-    <string name="deck_options_corrupt">डेक विकल्पों को संसाधित करने में विफल: %s</string>
     <!-- Database Errors-->
     <string name="database_locked_title">डेटाबेस लॉक है</string>
     <string name="database_locked_summary">AnkiDroid डेटाबेस किसी अन्य एप्लिकेशन द्वारा उपयोग में है। कृपया अन्य एप्लिकेशन को बंद करें और फिर AnkiDroid को फिर से खोलें।</string>
@@ -215,7 +185,7 @@
     <string name="boot_service_failed_to_schedule_notifications">रिमाइंडर शेड्यूल करने में विफल</string>
     <string name="boot_service_too_many_notifications">बहुत सारे अनुस्मारक निर्धारित हैं। कुछ दिखाई नहीं देगा</string>
     <!-- Locale Selection Dialog -->
-    <string name="locale_selection_dialog_title">कीबोर्ड संकेत चयन</string>
+    <string name="locale_selection_dialog_title_new">Set Language</string>
     <string name="locale_selection_dialog_summary">कुछ बहुभाषी कीबोर्ड, जैसे कि GBoard टेक्स्ट को बदलते समय भाषा का समर्थन करते हैं, जब टेक्स्ट का \n\n कृपया संपादन करें, तो यदि आपका कीबोर्ड भाषा नहीं बदलता है, तो अपने कीबोर्ड निर्माता से \"setImeHintLocales\" सुविधा का अनुरोध करें।</string>
     <!-- Help Dialog -->
     <string name="help_title_using_ankidroid">AnkiDroid का उपयोग करने में</string>

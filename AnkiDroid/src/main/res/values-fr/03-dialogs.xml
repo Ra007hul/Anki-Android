@@ -46,16 +46,8 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="check_db_title">Vérifier la base de données ?</string>
     <string name="check_db_warning">Cela peut prendre du temps</string>
-    <string name="check_db_acknowledge">Base de données vérifiée</string>
-    <string name="check_db_acknowledge_shrunk">Base de données vérifiée et optimisée.\nRéduite de %d Mo.</string>
     <string name="contextmenu_deckpicker_delete_deck">Supprimer le jeu de cartes</string>
-    <string name="delete_deck_default_deck">Le paquet par défaut ne peut pas être supprimé.</string>
     <string name="delete_deck_title">Supprimer le paquet ?</string>
-    <plurals name="delete_deck_message">
-        <item quantity="one">Supprimez toutes les cartes dans %1$s ? Il contient %2$d carte.</item>
-        <item quantity="other">Supprimez toutes les cartes dans %1$s ? Il contient %2$d cartes.</item>
-    </plurals>
-    <string name="delete_cram_deck_message">Êtes-vous certain de vouloir renvoyer toutes les cartes en %s dans leur paquet d\'origine ?</string>
     <string name="no_tts_available_message">Aucun langage de synthèse vocale disponible</string>
     <string name="initializing_tts">Initialisation de la synthèse vocale&#8230;</string>
     <string name="tts_no_tts">Ne pas parler</string>
@@ -90,7 +82,6 @@
     </plurals>
     <string name="reschedule_card_dialog_new_card_warning">Une nouvelle carte est en cours de replanification. La replanification transforme également les nouvelles cartes en cartes de révision. Utilisez l\'option « repositionner la carte » pour changer la position d\'une nouvelle carte dans la nouvelle file d\'attente</string>
     <string name="reschedule_card_dialog_warning_ease_reset">La replanification réinitialise également la façon dont le planificateur traite la carte dans le futur (la facilité sera réglée à %d%%)</string>
-    <string name="firefox_workaround_launched_reviewer_opening_deck">Sélectionnez le paquet dans votre gestionnaire de fichiers ou visitez la page about:downloads pour l’importer</string>
     <string name="answering_error_title">Erreur de la base de données</string>
     <string name="answering_error_message">L\'écriture de la collection a échoué. La base de données pourrait être corrompue ou il se peut qu\'il n\'y ait pas assez d\'espace libre sur le disque.\n\nSi ceci se produit plus souvent, essayez de vérifier la base de données, de réparer la collection ou de la restaurer à partir d\'une sauvegarde. Touchez « options » pour cela.\n\Ou il pourrait s\'agir d\'une erreur AnkiDroid ; veuillez signaler l\'erreur pour que nous puissions vérifier ceci.</string>
     <string name="answering_error_report">Signaler les erreurs</string>
@@ -107,15 +98,6 @@
     <string name="custom_study_random">Sélectionner x cartes au hasard dans ce paquet :</string>
     <string name="custom_study_preview">Afficher les nouvelles cartes ajoutées dans les x derniers jours :</string>
     <string name="custom_study_rebuild_deck_corrupt">Le paquet d’étude personnalisée n’a pas pu être généré</string>
-    <string name="importing_collection">Importation de la collection. \nVeuillez patienter&#8230;</string>
-    <string name="import_media_count">Importation des fichiers médias %1$d%%\nVeuillez patienter&#8230;</string>
-    <string name="import_progress">• Importation de notes : %1$d%%\n• importation de cartes : %2$d%%\n• post-traitement : %3$d%%</string>
-    <string name="import_update_details">Mise à jour de %1$d de %2$d notes existantes.</string>
-    <string name="import_update_ignored">Certaines mises à jour ont été ignorées parce que le type de note a changé</string>
-    <plurals name="import_complete_message">
-        <item quantity="one">Cartes importées : %2$d</item>
-        <item quantity="other">Fichiers importés : %1$d\nNombre total de cartes importées : %2$d</item>
-    </plurals>
     <string name="storage_full_title">Stockage plein</string>
     <string name="storage_almost_full_title">Il n\'y a presque plus d\'espace libre</string>
     <string name="no_space_to_downgrade_title" tools:ignore="UnusedResources">Aucun espace</string>
@@ -129,24 +111,20 @@
     <string name="dialog_no">Non</string>
     <string name="dialog_yes">Oui</string>
     <string name="dialog_continue">Continuer</string>
-    <string name="dialog_processing">Traitement…</string>
+    <string name="dialog_processing">Traitement&#8230;</string>
     <string name="dialog_positive_create" comment="Create a new collection, probably erasing the previous one, may be necessary in case of error.">Créer</string>
     <string name="dialog_positive_delete">Supprimer</string>
     <!-- Currently unsued, should be useful in the future -->
     <string name="dialog_positive_disable" tools:ignore="UnusedResources">Désactiver</string>
     <string name="dialog_positive_overwrite">Écraser</string>
-    <string name="dialog_positive_remove">Supprimer</string>
     <string name="dialog_positive_repair">Réparer</string>
     <string name="dialog_positive_replace">Remplacer</string>
-    <string name="dialog_positive_restore">Rétablir</string>
-    <string name="dialog_positive_set">Définir</string>
     <string name="dialog_collection_path_not_dir">Le chemin indiqué ne mène pas à un répertoire valide</string>
     <!-- Media checking -->
     <string name="check_media_title">Vérifier les médias ?</string>
     <string name="check_media_warning">Cela peut prendre longtemps avec les grandes collections de médias</string>
     <string name="check_media_message">Vérification des médias&#8230;</string>
     <string name="check_media_acknowledge">Média vérifié</string>
-    <string name="check_media_failed">Echec de la vérification des médias</string>
     <string name="check_media_invalid">Fichiers avec un codage non valide : %d</string>
     <string name="check_media_unused">Fichiers dans le dossier de médias, mais utilisés par aucune carte : %d</string>
     <string name="check_media_nohave">Fichiers utilisés par une carte, mais pas présents dans le dossier de médias : %d</string>
@@ -180,18 +158,10 @@
     <string name="integrity_check_continue_anyway">Continuer quand même</string>
     <string name="integrity_check_insufficient_space">La vérification de la base de données exige beaucoup d’espace de stockage temporaire. \n\n Il est fortement recommandé d’avoir au moins %s d’espace libre sur votre appareil avant de continuer.</string>
     <string name="integrity_check_insufficient_space_extra_content">\n\nVous avez actuellement %s libres.</string>
-    <plurals name="integrity_check_fixed_no_home_deck_new">
-        <item quantity="one">%d card with incorrect home deck was recovered. Please see the manual for more information.</item>
-        <item quantity="other">%d cards with incorrect home decks were recovered. Please see the manual for more information.</item>
-    </plurals>
-    <string name="video_creation_error">Impossible de lire la vidéo.</string>
     <!-- Card Browser -->
-    <string name="card_browser_deck_change_error">Impossible de changer de paquet</string>
     <!-- AbstractFlashCardViewer -->
     <string name="card_viewer_url_decode_error">Erreur lors de la lecture des données de la carte.</string>
-    <string name="undo_succeeded"> « %s » annulé</string>
     <!-- Deck Options -->
-    <string name="deck_options_corrupt">Impossible de traiter les options du paquet : %s</string>
     <!-- Database Errors-->
     <string name="database_locked_title">Base de données verrouillée</string>
     <string name="database_locked_summary">La base de données AnkiDroid est utilisée par une autre application. Veuillez fermer l\'autre application puis rouvrir AnkiDroid.</string>
@@ -215,7 +185,7 @@
     <string name="boot_service_failed_to_schedule_notifications">Échec de la planification des rappels</string>
     <string name="boot_service_too_many_notifications">Trop de rappels planifiés. Certains n’apparaîtront pas</string>
     <!-- Locale Selection Dialog -->
-    <string name="locale_selection_dialog_title">Sélection des indices clavier</string>
+    <string name="locale_selection_dialog_title_new">Définir la langue</string>
     <string name="locale_selection_dialog_summary">Certains claviers multilingues, comme GBoard, prennent en charge le changement de langue lors de l\'édition du texte\n\nVeuillez demander la fonctionnalité « setImeHintLocales » du fabricant de votre clavier si votre clavier ne change pas de langue.</string>
     <!-- Help Dialog -->
     <string name="help_title_using_ankidroid">Utilisation d\'AnkiDroid</string>

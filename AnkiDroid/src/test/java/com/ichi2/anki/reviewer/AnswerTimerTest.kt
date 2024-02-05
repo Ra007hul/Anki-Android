@@ -22,36 +22,40 @@ import android.widget.Chronometer
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.ichi2.libanki.Card
+import com.ichi2.libanki.Collection
 import com.ichi2.testutils.EmptyApplication
+import com.ichi2.testutils.JvmTest
+import com.ichi2.testutils.rules.MockitoCollectionRule
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito
 import org.mockito.kotlin.*
 import org.robolectric.annotation.Config
+import timber.log.Timber
 
 // This is difficult to test as Chronometer.mStarted isn't visible
 @RunWith(AndroidJUnit4::class)
 @Config(application = EmptyApplication::class)
-class AnswerTimerTest {
-    lateinit var chronometer: Chronometer
+class AnswerTimerTest : JvmTest() {
+    private val chronometer = spy(Chronometer(ApplicationProvider.getApplicationContext()))
 
-    @Before
-    fun init() {
-        chronometer = spy(Chronometer(ApplicationProvider.getApplicationContext()))
-    }
+    @get:Rule
+    val mockColRule = MockitoCollectionRule()
+    override val col: Collection
+        get() = mockColRule.col
 
     @Test
     fun disabledTimer() {
         val timer = getTimer()
 
         val card: Card = mock {
-            on { showTimer() } doReturn false
+            on { showTimer(any()) } doReturn false
         }
 
-        timer.setupForCard(card)
+        timer.setupForCard(col, card)
 
         assertThat("timer should not be enabled", timer.showTimer, equalTo(false))
 
@@ -67,14 +71,14 @@ class AnswerTimerTest {
         val timer = getTimer()
 
         val card: Card = mock {
-            on { showTimer() } doReturn true
-            on { timeLimit() } doReturn 12
+            on { showTimer(any()) } doReturn true
+            on { timeLimit(any()) } doReturn 12
         }
 
         Mockito.mockStatic(SystemClock::class.java).use { mocked ->
             mocked.`when`<Long> { SystemClock.elapsedRealtime() }.doReturn(13)
 
-            timer.setupForCard(card)
+            timer.setupForCard(col, card)
         }
 
         assertThat("timer should be enabled", timer.showTimer, equalTo(true))
@@ -93,29 +97,29 @@ class AnswerTimerTest {
         val timer = getTimer()
 
         val timerCard: Card = mock {
-            on { showTimer() } doReturn true
+            on { showTimer(any()) } doReturn true
         }
 
         val nonTimerCard: Card = mock {
-            on { showTimer() } doReturn false
+            on { showTimer(any()) } doReturn false
         }
 
-        timer.setupForCard(timerCard)
+        timer.setupForCard(col, timerCard)
         assertThat("timer should be enabled", timer.showTimer, equalTo(true))
         assertThat("chronometer should be visible", chronometer.visibility, equalTo(View.VISIBLE))
 
-        timer.setupForCard(nonTimerCard)
+        timer.setupForCard(col, nonTimerCard)
 
         assertThat("timer should not be enabled", timer.showTimer, equalTo(false))
         assertThat("chronometer should not be visible", chronometer.visibility, equalTo(View.INVISIBLE))
 
-        timer.setupForCard(timerCard)
+        timer.setupForCard(col, timerCard)
         assertThat("timer should be enabled", timer.showTimer, equalTo(true))
         assertThat("chronometer should be visible", chronometer.visibility, equalTo(View.VISIBLE))
     }
 
     @Test
-    fun testNoCrashOnEarlyPauseResume() {
+    fun testNoCrashOnEarlyPauseResume() = runTest {
         val timer = getTimer()
         // before we call setupForCard
         timer.pause()
@@ -123,15 +127,16 @@ class AnswerTimerTest {
     }
 
     @Test
-    fun pauseResumeIfEnabled() {
+    fun pauseResumeIfEnabled() = runTest {
+        Timber.v("aaa")
         val timer = getTimer()
 
         val timerCard: Card = mock {
-            on { showTimer() } doReturn true
-            on { timeLimit() } doReturn 1000
+            on { showTimer(col) } doReturn true
+            on { timeLimit(col) } doReturn 1000
         }
 
-        timer.setupForCard(timerCard)
+        timer.setupForCard(col, timerCard)
 
         reset(chronometer)
         timer.pause()
@@ -141,16 +146,16 @@ class AnswerTimerTest {
     }
 
     @Test
-    fun pauseResumeDoesNotCallStartIfTimeElapsed() {
+    fun pauseResumeDoesNotCallStartIfTimeElapsed() = runTest {
         val timer = getTimer()
 
         val timerCard: Card = mock {
-            on { showTimer() } doReturn true
-            on { timeLimit() } doReturn 1000
-            on { timeTaken() } doReturn 1001
+            on { showTimer(any()) } doReturn true
+            on { timeLimit(any()) } doReturn 1000
+            on { timeTaken(any()) } doReturn 1001
         }
 
-        timer.setupForCard(timerCard)
+        timer.setupForCard(col, timerCard)
 
         reset(chronometer)
         timer.pause()
@@ -160,17 +165,17 @@ class AnswerTimerTest {
     }
 
     @Test
-    fun cardTimerIsRestartedEvenIfDisabled() {
+    fun cardTimerIsRestartedEvenIfDisabled() = runTest {
         // The class is responsible for the pause/resume handling of the card, not just the UI element
         // This may be a candidate for later refactoring
 
         val timer = getTimer()
 
         val nonTimerCard: Card = mock {
-            on { showTimer() } doReturn false
+            on { showTimer(any()) } doReturn false
         }
 
-        timer.setupForCard(nonTimerCard)
+        timer.setupForCard(col, nonTimerCard)
 
         timer.pause()
         verify(nonTimerCard).stopTimer()

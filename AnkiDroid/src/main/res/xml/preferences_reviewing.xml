@@ -24,66 +24,38 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://arbitrary.app.namespace/com.ichi2.anki"
     xmlns:app1="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:title="@string/pref_cat_reviewing"
-    android:key="@string/pref_reviewing_screen_key">
+    android:key="@string/pref_reviewing_screen_key"
+    tools:context=".preferences.ReviewingSettingsFragment">
     <PreferenceCategory android:title="@string/pref_cat_scheduling" >
-        <ListPreference
-            android:entries="@array/new_spread_labels"
-            android:entryValues="@array/new_spread_values"
-            android:key="@string/new_spread_preference"
-            android:title="@string/new_spread"
-            app1:useSimpleSummaryProvider="true"/>
         <com.ichi2.preferences.SliderPreference
             android:key="@string/day_offset_preference"
             android:valueFrom="0"
             android:valueTo="23"
             android:title="@string/day_offset_with_description"
             app1:persistent="false"
-            app1:summaryFormat="@string/day_offset_summary"/>
+            app1:summaryFormat="@plurals/day_offset_summ"/>
         <com.ichi2.preferences.NumberRangePreferenceCompat
             android:key="@string/learn_cutoff_preference"
             android:title="@string/learn_cutoff"
             app:max="999"
             app:min="0"
-            app1:summaryFormat="@string/pref_summary_minutes"/>
+            app1:summaryFormat="@plurals/pref_summ_minutes"/>
         <com.ichi2.preferences.NumberRangePreferenceCompat
             android:key="@string/time_limit_preference"
             android:title="@string/time_limit"
             app:max="9999"
             app:min="0"
-            app1:summaryFormat="@string/pref_summary_minutes"/>
+            app1:summaryFormat="@plurals/pref_summ_minutes"/>
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/timeout_answer_text" >
         <SwitchPreferenceCompat
             android:defaultValue="false"
             android:disableDependentsState="false"
             android:key="@string/timeout_answer_preference"
-            android:summary="@string/timeout_answer_summ"
+            android:summary="@string/timeout_answer_summ2"
             android:title="@string/timeout_answer_text" />
-        <ListPreference
-            android:entries="@array/automatic_answer_options"
-            android:dependency="@string/timeout_answer_preference"
-            android:entryValues="@array/automatic_answer_values"
-            android:defaultValue="0"
-            android:key="@string/automatic_answer_action_preference"
-            android:title="@string/timeout_answer"
-            app1:useSimpleSummaryProvider="true"/>
-        <com.ichi2.preferences.SliderPreference
-            android:key="@string/timeout_answer_seconds_preference"
-            android:dependency="@string/timeout_answer_preference"
-            android:title="@string/timeout_answer_seconds"
-            android:defaultValue="20"
-            android:valueFrom="0"
-            android:valueTo="30"
-            app1:displayFormat="@string/pref_summary_seconds"/>
-        <com.ichi2.preferences.SliderPreference
-            android:key="@string/timeout_question_seconds_preference"
-            android:dependency="@string/timeout_answer_preference"
-            android:defaultValue="60"
-            android:valueFrom="0"
-            android:valueTo="60"
-            android:title="@string/timeout_question_seconds"
-            app1:displayFormat="@string/pref_summary_seconds"/>
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_cat_advanced">
         <SwitchPreferenceCompat

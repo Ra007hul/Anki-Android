@@ -26,7 +26,6 @@ import com.ichi2.anki.servicelayer.scopedstorage.migrateuserdata.MigrateUserData
 import com.ichi2.anki.servicelayer.scopedstorage.migrateuserdata.MigrationProgressListener
 import com.ichi2.anki.utils.AggregateException
 import com.ichi2.testutils.*
-import net.ankiweb.rsdroid.BackendFactory
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
 import org.hamcrest.io.FileMatchers.anExistingDirectory
@@ -50,6 +49,9 @@ class ScopedStorageMigrationIntegrationTest : RobolectricTest() {
     private val validDestination = File(Path(targetContext.getExternalFilesDir(null)!!.canonicalPath, "AnkiDroid-1").pathString)
 
     override fun useInMemoryDatabase() = false
+
+    // we want collection.log to be tested
+    override val disableCollectionLogFile: Boolean = false
 
     @After
     override fun tearDown() {
@@ -274,7 +276,7 @@ private constructor(source: Directory, destination: Directory, val filesToMigrat
 
     companion object {
         // media DB created on demand, and no -journal file in new backend
-        val INTEGRATION_INTENDED_REMAINING_FILE_COUNT: Int = if (BackendFactory.defaultLegacySchema) 5 else 3
+        val INTEGRATION_INTENDED_REMAINING_FILE_COUNT: Int = 3
 
         /**
          * A MigrateUserDataTest from inputSource to inputDestination (or transient directories if not provided)

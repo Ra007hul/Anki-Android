@@ -24,13 +24,13 @@ import android.os.IBinder
 import android.util.TypedValue
 import android.view.View
 import android.widget.RemoteViews
+import androidx.core.app.PendingIntentCompat
 import androidx.core.content.edit
 import com.ichi2.anki.AnkiDroidApp
 import com.ichi2.anki.IntentHandler
 import com.ichi2.anki.R
 import com.ichi2.anki.analytics.UsageAnalytics
 import com.ichi2.anki.preferences.sharedPrefs
-import com.ichi2.compat.CompatHelper
 import com.ichi2.utils.KotlinCleanup
 import timber.log.Timber
 import kotlin.math.sqrt
@@ -38,7 +38,7 @@ import kotlin.math.sqrt
 class AnkiDroidWidgetSmall : AppWidgetProvider() {
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
         Timber.d("SmallWidget: onUpdate")
-        WidgetStatus.update(context)
+        WidgetStatus.updateInBackground(context)
     }
 
     override fun onEnabled(context: Context) {
@@ -66,7 +66,7 @@ class AnkiDroidWidgetSmall : AppWidgetProvider() {
 
     class UpdateService : Service() {
         /** The cached number of total due cards.  */
-        private var mDueCardsCount = 0
+        private var dueCardsCount = 0
         fun doUpdate(context: Context) {
             AppWidgetManager.getInstance(context)
                 .updateAppWidget(ComponentName(context, AnkiDroidWidgetSmall::class.java), buildUpdate(context, true))
@@ -100,7 +100,7 @@ class AnkiDroidWidgetSmall : AppWidgetProvider() {
                             if (action != null && action == Intent.ACTION_MEDIA_MOUNTED) {
                                 Timber.d("mMountReceiver - Action = Media Mounted")
                                 if (remounted) {
-                                    WidgetStatus.update(AnkiDroidApp.instance)
+                                    WidgetStatus.updateInBackground(AnkiDroidApp.instance)
                                     remounted = false
                                     if (mMountReceiver != null) {
                                         AnkiDroidApp.instance.unregisterReceiver(mMountReceiver)
@@ -118,14 +118,14 @@ class AnkiDroidWidgetSmall : AppWidgetProvider() {
                 }
             } else {
                 // If we do not have a cached version, always update.
-                if (mDueCardsCount == 0 || updateDueDecksNow) {
+                if (dueCardsCount == 0 || updateDueDecksNow) {
                     // Compute the total number of cards due.
                     val counts = WidgetStatus.fetchSmall(context)
-                    mDueCardsCount = counts[0]
+                    dueCardsCount = counts[0]
                     /* The cached estimated reviewing time. */
                     val eta = counts[1]
-                    if (mDueCardsCount <= 0) {
-                        if (mDueCardsCount == 0) {
+                    if (dueCardsCount <= 0) {
+                        if (dueCardsCount == 0) {
                             updateViews.setViewVisibility(R.id.ankidroid_widget_small_finish_layout, View.VISIBLE)
                         } else {
                             updateViews.setViewVisibility(R.id.ankidroid_widget_small_finish_layout, View.INVISIBLE)
@@ -134,10 +134,10 @@ class AnkiDroidWidgetSmall : AppWidgetProvider() {
                     } else {
                         updateViews.setViewVisibility(R.id.ankidroid_widget_small_finish_layout, View.INVISIBLE)
                         updateViews.setViewVisibility(R.id.widget_due, View.VISIBLE)
-                        updateViews.setTextViewText(R.id.widget_due, mDueCardsCount.toString())
-                        updateViews.setContentDescription(R.id.widget_due, context.resources.getQuantityString(R.plurals.widget_cards_due, mDueCardsCount, mDueCardsCount))
+                        updateViews.setTextViewText(R.id.widget_due, dueCardsCount.toString())
+                        updateViews.setContentDescription(R.id.widget_due, context.resources.getQuantityString(R.plurals.widget_cards_due, dueCardsCount, dueCardsCount))
                     }
-                    if (eta <= 0 || mDueCardsCount <= 0) {
+                    if (eta <= 0 || dueCardsCount <= 0) {
                         updateViews.setViewVisibility(R.id.widget_eta, View.INVISIBLE)
                     } else {
                         updateViews.setViewVisibility(R.id.widget_eta, View.VISIBLE)
@@ -152,11 +152,12 @@ class AnkiDroidWidgetSmall : AppWidgetProvider() {
             val ankiDroidIntent = Intent(context, IntentHandler::class.java)
             ankiDroidIntent.action = Intent.ACTION_MAIN
             ankiDroidIntent.addCategory(Intent.CATEGORY_LAUNCHER)
-            val pendingAnkiDroidIntent = CompatHelper.compat.getImmutableActivityIntent(
+            val pendingAnkiDroidIntent = PendingIntentCompat.getActivity(
                 context,
                 0,
                 ankiDroidIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT
+                PendingIntent.FLAG_UPDATE_CURRENT,
+                false
             )
             updateViews.setOnClickPendingIntent(R.id.ankidroid_widget_small_button, pendingAnkiDroidIntent)
             updateWidgetDimensions(context, updateViews, AnkiDroidWidgetSmall::class.java)

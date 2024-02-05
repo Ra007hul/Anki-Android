@@ -35,10 +35,8 @@ import com.ichi2.anki.snackbar.showSnackbar
 import com.ichi2.anki.ui.dialogs.tools.AsyncDialogBuilder.CheckedItems
 import com.ichi2.anki.ui.dialogs.tools.DialogResult
 import com.ichi2.anki.ui.dialogs.tools.awaitDialog
-import com.ichi2.anki.ui.preferences.screens.BackupLimitsPresenter
 import com.ichi2.anki.utils.getUserFriendlyErrorText
 import com.ichi2.async.deleteMedia
-import com.ichi2.libanki.Media
 import com.ichi2.preferences.TextWidgetPreference
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -46,7 +44,7 @@ import java.io.File
 import kotlin.system.exitProcess
 
 sealed interface Size {
-    object Calculating : Size
+    data object Calculating : Size
     class Bytes(val totalSize: Long) : Size
     class FilesAndBytes(val files: Collection<File>, val totalSize: Long) : Size
     class Error(
@@ -79,24 +77,16 @@ class ManageSpaceViewModel(val app: Application) : AndroidViewModel(app), Collec
     private fun launchSearchForUnusedMedia() = viewModelScope.launch {
         flowOfDeleteUnusedMediaSize.ifCollectionDirectoryExistsEmit {
             withCol {
-                val unusedFiles = with(media) { findUnusedMediaFiles() }
+                val unusedFiles = media.findUnusedMediaFiles()
                 val unusedFilesSize = unusedFiles.sumOf(::calculateSize)
                 Size.FilesAndBytes(unusedFiles, unusedFilesSize)
             }
         }
     }
 
-    suspend fun performMediaCheck() {
+    suspend fun deleteMediaFiles(filesNamesToDelete: List<String>) {
         try {
-            withCol { media.performFullCheck() }
-        } finally {
-            launchSearchForUnusedMedia()
-        }
-    }
-
-    suspend fun deleteMedia(filesNamesToDelete: List<String>) {
-        try {
-            withCol { deleteMedia(this, filesNamesToDelete) }
+            withCol { deleteMedia(filesNamesToDelete) }
         } finally {
             launchCalculationOfSizeOfEverything()
             launchCalculationOfCollectionSize()
@@ -118,7 +108,7 @@ class ManageSpaceViewModel(val app: Application) : AndroidViewModel(app), Collec
 
     suspend fun deleteBackups(backupsToDelete: List<File>) {
         try {
-            withCol { BackupManager.deleteBackups(this, backupsToDelete) }
+            withCol { BackupManager.deleteBackups(backupsToDelete) }
         } finally {
             launchCalculationOfBackupsSize()
             launchCalculationOfCollectionSize()
@@ -190,8 +180,6 @@ class ManageSpaceFragment : SettingsFragment() {
     override val preferenceResource = R.xml.manage_space
     override val analyticsScreenNameConstant = "manageSpace"
 
-    private val backupLimitsPresenter = BackupLimitsPresenter(this).also { it.observeLifecycle() }
-
     private val viewModel: ManageSpaceViewModel by viewModels()
 
     override fun initSubscreen() {
@@ -221,19 +209,7 @@ class ManageSpaceFragment : SettingsFragment() {
 
     private suspend fun onDeleteUnusedMediaClick() {
         val size = viewModel.flowOfDeleteUnusedMediaSize.value
-        if (size is Size.Error && size.exception is Media.MediaCheckRequiredException) {
-            val mediaCheckPromptResult = requireContext().awaitDialog {
-                setMessage(R.string.dialog__media_check_required__message)
-                setPositiveButton(R.string.check_media)
-                setNegativeButton(R.string.dialog_cancel)
-            }
-
-            if (mediaCheckPromptResult is DialogResult.Ok) {
-                withProgress(R.string.check_media_message) {
-                    viewModel.performMediaCheck()
-                }
-            }
-        } else if (size is Size.FilesAndBytes) {
+        if (size is Size.FilesAndBytes) {
             val unusedFiles = size.files
             val unusedFileNames = unusedFiles.map { it.name }
 
@@ -249,7 +225,7 @@ class ManageSpaceFragment : SettingsFragment() {
                 val filesNamesToDelete = unusedFileNames.filterIndexed { index, _ -> checkedItems[index] }
 
                 withProgress(R.string.delete_media_message) {
-                    viewModel.deleteMedia(filesNamesToDelete)
+                    viewModel.deleteMediaFiles(filesNamesToDelete)
                 }
             }
         } else {

@@ -15,8 +15,10 @@
  */
 package com.ichi2.anki.multimediacard.fields
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
+import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultRegistry
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.annotation.CheckResult
@@ -34,25 +36,25 @@ import org.mockito.kotlin.whenever
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.shadows.ShadowToast
 import java.io.File
-import kotlin.test.fail
 
 @RunWith(RobolectricTestRunner::class)
 open class BasicImageFieldControllerTest : MultimediaEditFieldActivityTestBase() {
     @Test
     fun constructionWithoutDataGivesNoError() {
+        @SuppressLint("CheckResult")
         val controller: IFieldController = validControllerNoImage
         assertThat("construction of image field without data should not give an error", controller, instanceOf(BasicImageFieldController::class.java))
     }
 
     @Test
     fun constructionWithDataSucceeds() {
-        grantCameraPermission()
         val controller = getControllerForField(imageFieldWithData(), emptyNote, 0)
         assertThat("construction of image field with data should succeed", controller, instanceOf(BasicImageFieldController::class.java))
     }
 
     @Test
     fun nonExistingFileDoesNotDisplayPreview() {
+        @SuppressLint("CheckResult")
         val controller = validControllerNoImage
         assertThat(controller.isShowingPreview, equalTo(false))
         val f = mock(File::class.java)
@@ -67,6 +69,7 @@ open class BasicImageFieldControllerTest : MultimediaEditFieldActivityTestBase()
 
     @Test
     fun erroringFileDoesNotDisplayPreview() {
+        @SuppressLint("CheckResult")
         val controller = validControllerNoImage
         assertThat(controller.isShowingPreview, equalTo(false))
         val f = mock(File::class.java)
@@ -81,6 +84,7 @@ open class BasicImageFieldControllerTest : MultimediaEditFieldActivityTestBase()
 
     @Test
     fun fileSelectedOnSVG() {
+        @SuppressLint("CheckResult")
         val controller = validControllerNoImage
         val f = File("test.svg")
         controller.setImagePreview(f, 100)
@@ -97,6 +101,7 @@ open class BasicImageFieldControllerTest : MultimediaEditFieldActivityTestBase()
         // TODO: This started failing after API 30:
         //  showThemedToast threw an NPE. Diagnose the underlying issue.
 
+        @SuppressLint("CheckResult")
         val controller = validControllerNoImage
         controller.registryToUse = object : ActivityResultRegistry() {
             override fun <I, O> onLaunch(
@@ -105,7 +110,7 @@ open class BasicImageFieldControllerTest : MultimediaEditFieldActivityTestBase()
                 input: I,
                 options: ActivityOptionsCompat?
             ) {
-                fail("Unexpected access to the activity result registry!")
+                dispatchResult(requestCode, ActivityResult(Activity.RESULT_OK, Intent()))
             }
         }
         val activity = setupActivityMock(controller, controller.getActivity())
@@ -117,13 +122,12 @@ open class BasicImageFieldControllerTest : MultimediaEditFieldActivityTestBase()
     }
 
     private fun performImageResult(controller: BasicImageFieldController, intent: Intent) {
-        controller.onActivityResult(BasicImageFieldController.ACTIVITY_SELECT_IMAGE, Activity.RESULT_OK, intent)
+        controller.selectImageLauncher.launch(intent)
     }
 
     @get:CheckResult
     protected val validControllerNoImage: BasicImageFieldController
         get() {
-            grantCameraPermission()
             return getControllerForField(emptyImageField(), emptyNote, 0) as BasicImageFieldController
         }
 

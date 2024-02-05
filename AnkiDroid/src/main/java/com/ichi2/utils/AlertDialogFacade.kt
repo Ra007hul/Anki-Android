@@ -20,12 +20,20 @@ package com.ichi2.utils
 
 import android.content.DialogInterface
 import android.content.DialogInterface.OnClickListener
+import android.text.InputFilter
+import android.view.LayoutInflater
 import android.view.View
+import android.widget.Button
 import android.widget.CheckBox
+import android.widget.EditText
 import android.widget.FrameLayout
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
+import androidx.core.widget.doOnTextChanged
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.textfield.TextInputLayout
 import com.ichi2.anki.R
 import com.ichi2.themes.Themes
 
@@ -124,9 +132,16 @@ fun AlertDialog.Builder.cancelable(cancelable: Boolean): AlertDialog.Builder {
  * Executes the provided block, then creates an [AlertDialog] with the arguments supplied
  * and immediately displays the dialog
  */
-inline fun AlertDialog.Builder.show(block: AlertDialog.Builder.() -> Unit): AlertDialog.Builder = apply {
-    this.block()
-    this.show()
+inline fun AlertDialog.Builder.show(block: AlertDialog.Builder.() -> Unit): AlertDialog {
+    this.apply { block() }
+    return this.show()
+}
+
+/**
+ * Creates an [AlertDialog], then executes [block] with it
+ */
+fun AlertDialog.Builder.create(block: AlertDialog.() -> Unit): AlertDialog = create().apply {
+    block()
 }
 
 /**
@@ -179,3 +194,95 @@ fun AlertDialog.Builder.customView(
 
     return this
 }
+
+fun AlertDialog.Builder.customListAdapter(adapter: RecyclerView.Adapter<*>) {
+    val recyclerView = LayoutInflater.from(context).inflate(R.layout.dialog_generic_recycler_view, null, false) as RecyclerView
+    recyclerView.adapter = adapter
+    recyclerView.layoutManager = LinearLayoutManager(context)
+    this.setView(recyclerView)
+}
+
+/**
+ * @param hint The hint text to be displayed to the user
+ * @param prefill The text to initially appear in the [EditText]
+ * @param allowEmpty If true, [DialogInterface.BUTTON_POSITIVE] is disabled if the [EditText] is empty
+ * @param displayKeyboard Whether to open the keyboard when the dialog appears
+ * @param callback if [waitForPositiveButton], called when [positiveButton] is pressed, otherwise
+ *  called whenever the text is changed
+ * @param maxLength if set, the user may not enter more than the supplied number of digits
+ * @param inputType see [EditText.setInputType]
+ * @param waitForPositiveButton MaterialDialog compat: if `false` [callback] is called on input
+ * if `true` [callback] is called when [positiveButton] is pressed
+ */
+fun AlertDialog.input(
+    hint: String? = null,
+    inputType: Int? = null,
+    prefill: CharSequence? = null,
+    allowEmpty: Boolean = false,
+    maxLength: Int? = null,
+    displayKeyboard: Boolean = false,
+    waitForPositiveButton: Boolean = true,
+    callback: (AlertDialog, CharSequence) -> Unit
+): AlertDialog {
+    // Builder.setView() may not be called before show()
+    if (!this.isShowing) throw IllegalStateException("input() requires .show()")
+
+    getInputTextLayout().hint = hint
+
+    getInputField().apply {
+        if (displayKeyboard) {
+            AndroidUiUtils.setFocusAndOpenKeyboard(this, window!!)
+        }
+
+        inputType?.let { this.inputType = it }
+
+        if (!waitForPositiveButton) {
+            doOnTextChanged { text, _, _, _ ->
+                callback(this@input, text ?: "")
+            }
+        } else {
+            positiveButton.setOnClickListener { callback(this@input, this.text.toString()) }
+        }
+
+        if (!allowEmpty) {
+            // this is called after callback() so allowEmpty takes priority
+            doOnTextChanged { text, _, _, _ ->
+                if (waitForPositiveButton) {
+                    // this is the only validation filter we apply - toggle on or off
+                    this@input.positiveButton.isEnabled = !text.isNullOrEmpty()
+                } else if (text.isNullOrEmpty()) {
+                    // potentially other filters in `waitForPositiveButton`.
+                    // WARN: this could be buggy as it does not toggle the button back on
+                    this@input.positiveButton.isEnabled = false
+                }
+            }
+        }
+
+        maxLength?.let { filters += InputFilter.LengthFilter(it) }
+
+        requestFocus()
+        // this calls callback(this, prefill). positiveButton may be disabled if there's no prefill
+        setText(prefill)
+        moveCursorToEnd()
+    }
+    return this
+}
+
+/**
+ * @return the layout for the input text of the dialog
+ * @throws IllegalArgumentException if the dialog does not contain [R.id.dialog_text_input_layout]]
+ */
+fun AlertDialog.getInputTextLayout() =
+    requireNotNull(findViewById<TextInputLayout>(R.id.dialog_text_input_layout)) {
+        "view must be dialog_generic_text_input"
+    }
+
+/**
+ * @return the [EditText] of the dialog
+ * @throws IllegalArgumentException if the dialog does not contain [R.id.dialog_text_input_layout]]
+ */
+fun AlertDialog.getInputField() = getInputTextLayout().editText!!
+
+/** @see AlertDialog.getButton */
+val AlertDialog.positiveButton: Button
+    get() = getButton(DialogInterface.BUTTON_POSITIVE)

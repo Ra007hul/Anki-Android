@@ -20,7 +20,6 @@ package com.ichi2.anki
 
 import android.annotation.SuppressLint
 import android.graphics.*
-import android.graphics.drawable.VectorDrawable
 import android.net.Uri
 import android.view.MotionEvent
 import android.view.View
@@ -30,13 +29,13 @@ import android.widget.FrameLayout
 import android.widget.LinearLayout
 import androidx.annotation.CheckResult
 import androidx.annotation.VisibleForTesting
-import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import com.ichi2.anki.dialogs.WhiteBoardWidthDialog
 import com.ichi2.anki.preferences.sharedPrefs
+import com.ichi2.anki.utils.getTimestamp
+import com.ichi2.annotations.NeedsTest
 import com.ichi2.compat.CompatHelper
 import com.ichi2.libanki.utils.Time
-import com.ichi2.libanki.utils.TimeUtils
 import com.ichi2.themes.Themes.currentTheme
 import com.ichi2.utils.DisplayUtils.getDisplayDimensions
 import com.ichi2.utils.KotlinCleanup
@@ -50,22 +49,23 @@ import kotlin.math.max
  * Whiteboard allowing the user to draw the card's answer on the touchscreen.
  */
 @SuppressLint("ViewConstructor")
-class Whiteboard(activity: AnkiActivity, handleMultiTouch: Boolean, inverted: Boolean) : View(activity, null) {
-    private val mPaint: Paint
-    private val mUndo = UndoList()
-    private lateinit var mBitmap: Bitmap
-    private lateinit var mCanvas: Canvas
-    private val mPath: Path
-    private val mBitmapPaint: Paint
-    private val mAnkiActivity: AnkiActivity = activity
-    private var mX = 0f
-    private var mY = 0f
-    private var mSecondFingerX0 = 0f
-    private var mSecondFingerY0 = 0f
-    private var mSecondFingerX = 0f
-    private var mSecondFingerY = 0f
-    private var mSecondFingerPointerId = 0
-    private var mSecondFingerWithinTapTolerance = false
+@NeedsTest("15176 ensure whiteboard drawing works")
+class Whiteboard(activity: AnkiActivity, private val handleMultiTouch: Boolean, inverted: Boolean) : View(activity, null) {
+    private val paint: Paint
+    private val undo = UndoList()
+    private lateinit var bitmap: Bitmap
+    private lateinit var canvas: Canvas
+    private val path: Path
+    private val bitmapPaint: Paint
+    private val ankiActivity: AnkiActivity = activity
+    private var x = 0f
+    private var y = 0f
+    private var secondFingerX0 = 0f
+    private var secondFingerY0 = 0f
+    private var secondFingerX = 0f
+    private var secondFingerY = 0f
+    private var secondFingerPointerId = 0
+    private var secondFingerWithinTapTolerance = false
 
     var toggleStylus = false
     var isCurrentlyDrawing = false
@@ -74,18 +74,17 @@ class Whiteboard(activity: AnkiActivity, handleMultiTouch: Boolean, inverted: Bo
     @get:CheckResult
     @get:VisibleForTesting
     var foregroundColor = 0
-    private val mColorPalette: LinearLayout
-    private val mHandleMultiTouch: Boolean = handleMultiTouch
-    private var mOnPaintColorChangeListener: OnPaintColorChangeListener? = null
-    val currentStrokeWidth: Int
-        get() = mAnkiActivity.sharedPrefs().getInt("whiteBoardStrokeWidth", 6)
+    private val colorPalette: LinearLayout
+    private var onPaintColorChangeListener: OnPaintColorChangeListener? = null
+    private val currentStrokeWidth: Int
+        get() = ankiActivity.sharedPrefs().getInt("whiteBoardStrokeWidth", 6)
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         canvas.apply {
             drawColor(0)
-            drawBitmap(mBitmap, 0f, 0f, mBitmapPaint)
-            drawPath(mPath, mPaint)
+            drawBitmap(bitmap, 0f, 0f, bitmapPaint)
+            drawPath(path, paint)
         }
     }
 
@@ -110,7 +109,11 @@ class Whiteboard(activity: AnkiActivity, handleMultiTouch: Boolean, inverted: Bo
     private fun handleDrawEvent(event: MotionEvent): Boolean {
         val x = event.x
         val y = event.y
-        if (event.getToolType(event.actionIndex) != MotionEvent.TOOL_TYPE_STYLUS && toggleStylus == true) {
+        if (event.getToolType(event.actionIndex) == MotionEvent.TOOL_TYPE_ERASER) {
+            stylusErase(event)
+            return true
+        }
+        if (event.getToolType(event.actionIndex) != MotionEvent.TOOL_TYPE_STYLUS && toggleStylus) {
             return false
         }
         return when (event.actionMasked) {
@@ -145,14 +148,8 @@ class Whiteboard(activity: AnkiActivity, handleMultiTouch: Boolean, inverted: Bo
                 false
             }
             211, 213 -> {
-                if (event.buttonState == MotionEvent.BUTTON_STYLUS_PRIMARY && !undoEmpty()) {
-                    val didErase = mUndo.erase(event.x.toInt(), event.y.toInt())
-                    if (didErase) {
-                        mUndo.apply()
-                        if (undoEmpty()) {
-                            mAnkiActivity.invalidateOptionsMenu()
-                        }
-                    }
+                if (event.buttonState == MotionEvent.BUTTON_STYLUS_PRIMARY) {
+                    stylusErase(event)
                 }
                 true
             }
@@ -162,7 +159,7 @@ class Whiteboard(activity: AnkiActivity, handleMultiTouch: Boolean, inverted: Bo
 
     // Parse multitouch input to scroll the card behind the whiteboard or click on elements
     private fun handleMultiTouchEvent(event: MotionEvent): Boolean {
-        return if (mHandleMultiTouch && event.pointerCount == 2) {
+        return if (handleMultiTouch && event.pointerCount == 2) {
             when (event.actionMasked) {
                 MotionEvent.ACTION_POINTER_DOWN -> {
                     reinitializeSecondFinger(event)
@@ -178,36 +175,51 @@ class Whiteboard(activity: AnkiActivity, handleMultiTouch: Boolean, inverted: Bo
     }
 
     /**
+     * Erase with stylus pen.(By using the eraser button on the stylus pen or by using the digital eraser)
+     */
+    private fun stylusErase(event: MotionEvent) {
+        if (!undoEmpty()) {
+            val didErase = undo.erase(event.x.toInt(), event.y.toInt())
+            if (didErase) {
+                undo.apply()
+                if (undoEmpty()) {
+                    ankiActivity.invalidateOptionsMenu()
+                }
+            }
+        }
+    }
+
+    /**
      * Clear the whiteboard.
      */
     fun clear() {
-        mBitmap.eraseColor(0)
-        mUndo.clear()
+        bitmap.eraseColor(0)
+        undo.clear()
         invalidate()
-        mAnkiActivity.invalidateOptionsMenu()
+        ankiActivity.invalidateOptionsMenu()
     }
 
     /**
      * Undo the last stroke
      */
     fun undo() {
-        mUndo.pop()
-        mUndo.apply()
+        undo.pop()
+        undo.apply()
         if (undoEmpty()) {
-            mAnkiActivity.invalidateOptionsMenu()
+            ankiActivity.invalidateOptionsMenu()
         }
     }
 
     /** @return Whether there are strokes to undo
      */
     fun undoEmpty(): Boolean {
-        return mUndo.empty()
+        return undo.empty()
     }
 
     private fun createBitmap(w: Int, h: Int) {
         val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
-        mBitmap = bitmap
-        mCanvas = Canvas(bitmap)
+        this.bitmap = bitmap
+        canvas = Canvas(bitmap)
         clear()
     }
 
@@ -229,41 +241,41 @@ class Whiteboard(activity: AnkiActivity, handleMultiTouch: Boolean, inverted: Bo
             Timber.w("Width or height <= 0: w: $w h: $h Bitmap couldn't be created with the new size")
             return
         }
-        val scaledBitmap: Bitmap = Bitmap.createScaledBitmap(mBitmap, w, h, true)
-        mBitmap = scaledBitmap
-        mCanvas = Canvas(mBitmap)
+        val scaledBitmap: Bitmap = Bitmap.createScaledBitmap(bitmap, w, h, true)
+        bitmap = scaledBitmap
+        canvas = Canvas(bitmap)
     }
 
     private fun drawStart(x: Float, y: Float) {
         isCurrentlyDrawing = true
-        mPath.reset()
-        mPath.moveTo(x, y)
-        mX = x
-        mY = y
+        path.reset()
+        path.moveTo(x, y)
+        this.x = x
+        this.y = y
     }
 
     private fun drawAlong(x: Float, y: Float) {
-        val dx = abs(x - mX)
-        val dy = abs(y - mY)
+        val dx = abs(x - this.x)
+        val dy = abs(y - this.y)
         if (dx >= TOUCH_TOLERANCE || dy >= TOUCH_TOLERANCE) {
-            mPath.quadTo(mX, mY, (x + mX) / 2, (y + mY) / 2)
-            mX = x
-            mY = y
+            path.quadTo(this.x, this.y, (this.x + x) / 2, (this.y + y) / 2)
+            this.x = x
+            this.y = y
         }
     }
 
     private fun drawFinish() {
         isCurrentlyDrawing = false
-        val pm = PathMeasure(mPath, false)
-        mPath.lineTo(mX, mY)
-        val paint = Paint(mPaint)
-        val action = if (pm.length > 0) DrawPath(Path(mPath), paint) else DrawPoint(mX, mY, paint)
-        action.apply(mCanvas)
-        mUndo.add(action)
+        val pm = PathMeasure(path, false)
+        path.lineTo(x, y)
+        val paint = Paint(paint)
+        val action = if (pm.length > 0) DrawPath(Path(path), paint) else DrawPoint(x, y, paint)
+        action.apply(canvas)
+        undo.add(action)
         // kill the path so we don't double draw
-        mPath.reset()
-        if (mUndo.size() == 1) {
-            mAnkiActivity.invalidateOptionsMenu()
+        path.reset()
+        if (undo.size() == 1) {
+            ankiActivity.invalidateOptionsMenu()
         }
     }
 
@@ -275,21 +287,21 @@ class Whiteboard(activity: AnkiActivity, handleMultiTouch: Boolean, inverted: Bo
     // call this with an ACTION_POINTER_DOWN event to start a new round of detecting drag or tap with
     // a second finger
     private fun reinitializeSecondFinger(event: MotionEvent) {
-        mSecondFingerWithinTapTolerance = true
-        mSecondFingerPointerId = event.getPointerId(event.actionIndex)
-        mSecondFingerX0 = event.getX(event.findPointerIndex(mSecondFingerPointerId))
-        mSecondFingerY0 = event.getY(event.findPointerIndex(mSecondFingerPointerId))
+        secondFingerWithinTapTolerance = true
+        secondFingerPointerId = event.getPointerId(event.actionIndex)
+        secondFingerX0 = event.getX(event.findPointerIndex(secondFingerPointerId))
+        secondFingerY0 = event.getY(event.findPointerIndex(secondFingerPointerId))
     }
 
     private fun updateSecondFinger(event: MotionEvent): Boolean {
-        val pointerIndex = event.findPointerIndex(mSecondFingerPointerId)
+        val pointerIndex = event.findPointerIndex(secondFingerPointerId)
         if (pointerIndex > -1) {
-            mSecondFingerX = event.getX(pointerIndex)
-            mSecondFingerY = event.getY(pointerIndex)
-            val dx = abs(mSecondFingerX0 - mSecondFingerX)
-            val dy = abs(mSecondFingerY0 - mSecondFingerY)
+            secondFingerX = event.getX(pointerIndex)
+            secondFingerY = event.getY(pointerIndex)
+            val dx = abs(secondFingerX0 - secondFingerX)
+            val dy = abs(secondFingerY0 - secondFingerY)
             if (dx >= TOUCH_TOLERANCE || dy >= TOUCH_TOLERANCE) {
-                mSecondFingerWithinTapTolerance = false
+                secondFingerWithinTapTolerance = false
             }
             return true
         }
@@ -299,10 +311,10 @@ class Whiteboard(activity: AnkiActivity, handleMultiTouch: Boolean, inverted: Bo
     // call this with an ACTION_POINTER_UP event to check whether it matches a tap of the second finger
     // if so, forward a click action and return true
     private fun trySecondFingerClick(event: MotionEvent): Boolean {
-        if (mSecondFingerPointerId == event.getPointerId(event.actionIndex)) {
+        if (secondFingerPointerId == event.getPointerId(event.actionIndex)) {
             updateSecondFinger(event)
-            if (mSecondFingerWithinTapTolerance && mWhiteboardMultiTouchMethods != null) {
-                mWhiteboardMultiTouchMethods!!.tapOnCurrentCard(mSecondFingerX.toInt(), mSecondFingerY.toInt())
+            if (secondFingerWithinTapTolerance && mWhiteboardMultiTouchMethods != null) {
+                mWhiteboardMultiTouchMethods!!.tapOnCurrentCard(secondFingerX.toInt(), secondFingerY.toInt())
                 return true
             }
         }
@@ -312,12 +324,12 @@ class Whiteboard(activity: AnkiActivity, handleMultiTouch: Boolean, inverted: Bo
     // call this with an ACTION_MOVE event to check whether it is within the threshold for a tap of the second finger
     // in this case perform a scroll action
     private fun trySecondFingerScroll(event: MotionEvent): Boolean {
-        if (updateSecondFinger(event) && !mSecondFingerWithinTapTolerance) {
-            val dy = (mSecondFingerY0 - mSecondFingerY).toInt()
+        if (updateSecondFinger(event) && !secondFingerWithinTapTolerance) {
+            val dy = (secondFingerY0 - secondFingerY).toInt()
             if (dy != 0 && mWhiteboardMultiTouchMethods != null) {
                 mWhiteboardMultiTouchMethods!!.scrollCurrentCardBy(dy)
-                mSecondFingerX0 = mSecondFingerX
-                mSecondFingerY0 = mSecondFingerY
+                secondFingerX0 = secondFingerX
+                secondFingerY0 = secondFingerY
             }
             return true
         }
@@ -333,19 +345,19 @@ class Whiteboard(activity: AnkiActivity, handleMultiTouch: Boolean, inverted: Bo
                 penColor = Color.BLACK
             }
             R.id.pen_color_red -> {
-                val redPenColor = ContextCompat.getColor(context, R.color.material_red_500)
+                val redPenColor = context.getColor(R.color.material_red_500)
                 penColor = redPenColor
             }
             R.id.pen_color_green -> {
-                val greenPenColor = ContextCompat.getColor(context, R.color.material_green_500)
+                val greenPenColor = context.getColor(R.color.material_green_500)
                 penColor = greenPenColor
             }
             R.id.pen_color_blue -> {
-                val bluePenColor = ContextCompat.getColor(context, R.color.material_blue_500)
+                val bluePenColor = context.getColor(R.color.material_blue_500)
                 penColor = bluePenColor
             }
             R.id.pen_color_yellow -> {
-                val yellowPenColor = ContextCompat.getColor(context, R.color.material_yellow_500)
+                val yellowPenColor = context.getColor(R.color.material_yellow_500)
                 penColor = yellowPenColor
             }
             R.id.pen_color_custom -> {
@@ -372,32 +384,32 @@ class Whiteboard(activity: AnkiActivity, handleMultiTouch: Boolean, inverted: Bo
     }
 
     private fun handleWidthChangeDialog() {
-        val whiteBoardWidthDialog = WhiteBoardWidthDialog(mAnkiActivity, currentStrokeWidth)
+        val whiteBoardWidthDialog = WhiteBoardWidthDialog(ankiActivity, currentStrokeWidth)
         whiteBoardWidthDialog.onStrokeWidthChanged { wbStrokeWidth: Int -> saveStrokeWidth(wbStrokeWidth) }
         whiteBoardWidthDialog.showStrokeWidthDialog()
     }
 
     private fun saveStrokeWidth(wbStrokeWidth: Int) {
-        mPaint.strokeWidth = wbStrokeWidth.toFloat()
-        mAnkiActivity.sharedPrefs().edit {
+        paint.strokeWidth = wbStrokeWidth.toFloat()
+        ankiActivity.sharedPrefs().edit {
             putInt("whiteBoardStrokeWidth", wbStrokeWidth)
         }
     }
 
     @get:VisibleForTesting
     var penColor: Int
-        get() = mPaint.color
+        get() = paint.color
         set(color) {
             Timber.d("Setting pen color to %d", color)
-            mPaint.color = color
-            mColorPalette.visibility = GONE
-            if (mOnPaintColorChangeListener != null) {
-                mOnPaintColorChangeListener!!.onPaintColorChange(color)
+            paint.color = color
+            colorPalette.visibility = GONE
+            if (onPaintColorChangeListener != null) {
+                onPaintColorChangeListener!!.onPaintColorChange(color)
             }
         }
 
     fun setOnPaintColorChangeListener(onPaintColorChangeListener: OnPaintColorChangeListener?) {
-        mOnPaintColorChangeListener = onPaintColorChangeListener
+        this.onPaintColorChangeListener = onPaintColorChangeListener
     }
 
     /**
@@ -405,27 +417,27 @@ class Whiteboard(activity: AnkiActivity, handleMultiTouch: Boolean, inverted: Bo
      * pop() removes the last stroke from the list, and apply() redraws it to whiteboard.
      */
     private inner class UndoList {
-        private val mList: MutableList<WhiteboardAction> = ArrayList()
+        private val list: MutableList<WhiteboardAction> = ArrayList()
         fun add(action: WhiteboardAction) {
-            mList.add(action)
+            list.add(action)
         }
 
         fun clear() {
-            mList.clear()
+            list.clear()
         }
 
         fun size(): Int {
-            return mList.size
+            return list.size
         }
 
         fun pop() {
-            mList.removeAt(mList.size - 1)
+            list.removeAt(list.size - 1)
         }
 
         fun apply() {
-            mBitmap.eraseColor(0)
-            for (action in mList) {
-                action.apply(mCanvas)
+            bitmap.eraseColor(0)
+            for (action in list) {
+                action.apply(canvas)
             }
             invalidate()
         }
@@ -443,7 +455,7 @@ class Whiteboard(activity: AnkiActivity, handleMultiTouch: Boolean, inverted: Bo
             var lineRegion = Region()
 
             // we delete elements while iterating, so we need to use an iterator in order to avoid java.util.ConcurrentModificationException
-            val iterator = mList.iterator()
+            val iterator = list.iterator()
             while (iterator.hasNext()) {
                 val action = iterator.next()
                 val path = action.path
@@ -469,7 +481,7 @@ class Whiteboard(activity: AnkiActivity, handleMultiTouch: Boolean, inverted: Bo
         }
 
         fun empty(): Boolean {
-            return mList.isEmpty()
+            return list.isEmpty()
         }
     }
 
@@ -510,7 +522,7 @@ class Whiteboard(activity: AnkiActivity, handleMultiTouch: Boolean, inverted: Bo
             canvas.drawColor(Color.WHITE)
         }
         draw(canvas)
-        val baseFileName = "Whiteboard" + TimeUtils.getTimestamp(time!!)
+        val baseFileName = "Whiteboard" + getTimestamp(time!!)
         return CompatHelper.compat.saveImage(context, bitmap, baseFileName, "jpg", Bitmap.CompressFormat.JPEG, 95)
     }
 
@@ -552,7 +564,7 @@ class Whiteboard(activity: AnkiActivity, handleMultiTouch: Boolean, inverted: Bo
             whitePenColorButton.setOnClickListener { view: View -> onClick(view) }
             foregroundColor = Color.WHITE
         }
-        mPaint = Paint().apply {
+        paint = Paint().apply {
             isAntiAlias = true
             isDither = true
             color = foregroundColor
@@ -562,22 +574,20 @@ class Whiteboard(activity: AnkiActivity, handleMultiTouch: Boolean, inverted: Bo
             strokeWidth = currentStrokeWidth.toFloat()
         }
         createBitmap()
-        mPath = Path()
-        mBitmapPaint = Paint(Paint.DITHER_FLAG)
+        path = Path()
+        bitmapPaint = Paint(Paint.DITHER_FLAG)
 
         // selecting pen color to draw
-        mColorPalette = activity.findViewById(R.id.whiteboard_editor)
+        colorPalette = activity.findViewById(R.id.whiteboard_editor)
         activity.findViewById<View>(R.id.pen_color_red).setOnClickListener { view: View -> onClick(view) }
         activity.findViewById<View>(R.id.pen_color_green).setOnClickListener { view: View -> onClick(view) }
         activity.findViewById<View>(R.id.pen_color_blue).setOnClickListener { view: View -> onClick(view) }
         activity.findViewById<View>(R.id.pen_color_yellow).setOnClickListener { view: View -> onClick(view) }
         activity.findViewById<View>(R.id.pen_color_custom).apply {
             setOnClickListener { view: View -> onClick(view) }
-            (background as? VectorDrawable)?.setTint(foregroundColor)
         }
         activity.findViewById<View>(R.id.stroke_width).apply {
             setOnClickListener { view: View -> onClick(view) }
-            (background as? VectorDrawable)?.setTint(foregroundColor)
         }
     }
 }

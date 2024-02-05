@@ -8,7 +8,7 @@ var resizeDone = false;
   handle image resizing on its own, but for older versions of WebView,
   we do it here.
 
-  If we are resizing with JavasSript, we also account for the CSS zoom
+  If we are resizing with JavaScript, we also account for the CSS zoom
   level applied to the image. If an image is scaled with CSS zoom, the
   dimensions given to us by the browser will not be scaled
   accordingly, giving us only the original dimensions. We have to
@@ -93,72 +93,10 @@ function buttonAnswerEase3() {
 function buttonAnswerEase4() {
     window.location.href = "signal:answer_ease4";
 }
-// Show options menu
-function ankiShowOptionsMenu() {
-    window.location.href = "signal:anki_show_options_menu";
-}
-
-// Show Navigation Drawer
-function ankiShowNavDrawer() {
-    window.location.href = "signal:anki_show_navigation_drawer";
-}
 
 /* Reload card.html */
 function reloadPage() {
     window.location.href = "signal:reload_card_html";
-}
-
-// Mark current card
-function ankiMarkCard() {
-    window.location.href = "signal:mark_current_card";
-}
-
-/* Toggle flag on card from AnkiDroid Webview using JavaScript
-    Possible values: "none", "red", "orange", "green", "blue"
-    See AnkiDroid Manual for Usage
-*/
-function ankiToggleFlag(flag) {
-    var flagVal = Number.isInteger(flag);
-
-    if (flagVal) {
-        switch (flag) {
-            case 0:
-                window.location.href = "signal:flag_none";
-                break;
-            case 1:
-                window.location.href = "signal:flag_red";
-                break;
-            case 2:
-                window.location.href = "signal:flag_orange";
-                break;
-            case 3:
-                window.location.href = "signal:flag_green";
-                break;
-            case 4:
-                window.location.href = "signal:flag_blue";
-                break;
-            case 5:
-                window.location.href = "signal:flag_pink";
-                break;
-            case 6:
-                window.location.href = "signal:flag_turquoise";
-                break;
-            case 7:
-                window.location.href = "signal:flag_purple";
-                break;
-            default:
-                console.log("No Flag Found");
-                break;
-        }
-    } else {
-        window.location.href = "signal:flag_" + flag;
-    }
-}
-
-// Show toast using js
-function ankiShowToast(message) {
-    var msg = encodeURI(message);
-    window.location.href = "signal:anki_show_toast:" + msg;
 }
 
 /* Tell the app the text in the input box when it loses focus */
@@ -234,7 +172,7 @@ var onPageFinished = function () {
                    renders content.  We hide all the content until MathJax renders, because otherwise
                    the content loads, and has to reflow after MathJax renders, and it's unsightly.
                    However, if we hide all the content every time, folks don't like the repainting after
-                   every question or answer.  This is a middleground, where there is no repainting due to
+                   every question or answer.  This is a middle-ground, where there is no repainting due to
                    MathJax on non-MathJax cards, and on MathJax cards, there is a small flicker, but there's
                    no reflowing because the content only shows after MathJax has rendered. */
 
@@ -256,6 +194,9 @@ function addHook(fn1, fn2) {
     if (fn1 === "ankiSearchCard") {
         searchCardHook.push(fn2);
     }
+    if (fn1 === "ankiSttResult") {
+        speechToTextHook.push(fn2);
+    }
 }
 
 let searchCardHook = [];
@@ -267,6 +208,19 @@ function ankiSearchCard(result) {
     result = JSON.parse(result);
     for (var i = 0; i < searchCardHook.length; i++) {
         searchCardHook[i](result);
+    }
+}
+
+// hook for getting speech to text result in callback method
+let speechToTextHook = [];
+function ankiSttResult(result) {
+    if (!speechToTextHook) {
+        return;
+    }
+    result = JSON.parse(result);
+    result.value = JSON.parse(result.value);
+    for (var i = 0; i < speechToTextHook.length; i++) {
+        speechToTextHook[i](result);
     }
 }
 

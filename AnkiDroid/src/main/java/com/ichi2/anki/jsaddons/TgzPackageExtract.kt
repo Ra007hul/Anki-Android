@@ -39,7 +39,7 @@ import android.text.format.Formatter
 import com.ichi2.anki.R
 import com.ichi2.anki.UIUtils
 import com.ichi2.compat.CompatHelper.Companion.compat
-import com.ichi2.libanki.Utils
+import com.ichi2.utils.FileUtil
 import org.apache.commons.compress.archivers.ArchiveException
 import org.apache.commons.compress.archivers.ArchiveStreamFactory
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry
@@ -137,7 +137,7 @@ class TgzPackageExtract(private val context: Context) {
 
         // Make sure we have 2x the tar file size in free space (1x for tar file, 1x for unarchived tar file contents
         requiredMinSpace = tarballFile.length() * 2
-        availableSpace = Utils.determineBytesAvailable(addonsPackageDir.canonicalPath)
+        availableSpace = FileUtil.determineBytesAvailable(addonsPackageDir.canonicalPath)
         InsufficientSpaceException.throwIfInsufficientSpace(context, requiredMinSpace, availableSpace)
 
         // If space available then unGZip it
@@ -228,9 +228,9 @@ class TgzPackageExtract(private val context: Context) {
 
         try {
             FileInputStream(inputFile).use { inputStream ->
-                ArchiveStreamFactory().createArchiveInputStream("tar", inputStream).use { tarInputStream ->
-                    val tarInputStream1 = tarInputStream as TarArchiveInputStream
-                    var entry: TarArchiveEntry? = tarInputStream1.nextEntry as TarArchiveEntry
+                ArchiveStreamFactory().createArchiveInputStream<TarArchiveInputStream>("tar", inputStream).use { tarInputStream ->
+
+                    var entry = tarInputStream.nextEntry
 
                     while (entry != null) {
                         val outputFile = File(outputDir, entry.name)
@@ -243,7 +243,7 @@ class TgzPackageExtract(private val context: Context) {
                             unTarFile(tarInputStream, entry, outputDir, outputFile)
                         }
 
-                        entry = tarInputStream.nextEntry as? TarArchiveEntry
+                        entry = tarInputStream.nextEntry
                     }
                 }
             }
@@ -347,15 +347,15 @@ class TgzPackageExtract(private val context: Context) {
         var unTarSize: Long = 0
 
         FileInputStream(tarFile).use { inputStream ->
-            ArchiveStreamFactory().createArchiveInputStream("tar", inputStream).use { tarInputStream ->
-                val tarInputStream1 = tarInputStream as TarArchiveInputStream
-                var entry: TarArchiveEntry? = tarInputStream1.nextEntry as TarArchiveEntry
+            ArchiveStreamFactory().createArchiveInputStream<TarArchiveInputStream>("tar", inputStream).use { tarInputStream ->
+
+                var entry = tarInputStream.nextEntry
                 var numOfEntries = 0
 
                 while (entry != null) {
                     numOfEntries++
                     unTarSize += entry.size
-                    entry = tarInputStream.nextEntry as? TarArchiveEntry
+                    entry = tarInputStream.nextEntry
                 }
 
                 if (numOfEntries > TOO_MANY_FILES) {
@@ -374,7 +374,7 @@ class TgzPackageExtract(private val context: Context) {
      * @param outputDir output directory
      */
     private fun enforceSpaceUsedLessThanHalfAvailable(outputDir: File) {
-        val newAvailableSpace: Long = Utils.determineBytesAvailable(outputDir.canonicalPath)
+        val newAvailableSpace: Long = FileUtil.determineBytesAvailable(outputDir.canonicalPath)
         if (newAvailableSpace <= availableSpace / 2) {
             throw ArchiveException(context.getString(R.string.file_extract_exceeds_storage_space))
         }

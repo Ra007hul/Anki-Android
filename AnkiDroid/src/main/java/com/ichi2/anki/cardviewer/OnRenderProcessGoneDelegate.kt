@@ -41,7 +41,7 @@ open class OnRenderProcessGoneDelegate(val target: AbstractFlashcardViewer) {
      * Last card that the WebView Renderer crashed on.
      * If we get 2 crashes on the same card, then we likely have an infinite loop and want to exit gracefully.
      */
-    private var mLastCrashingCardId: CardId? = null
+    private var lastCrashingCardId: CardId? = null
 
     /** Fix: #5780 - WebView Renderer OOM crashes reviewer  */
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -66,7 +66,7 @@ open class OnRenderProcessGoneDelegate(val target: AbstractFlashcardViewer) {
                 !canRecoverFromWebViewRendererCrash() -> {
                     Timber.e("Unrecoverable WebView Render crash")
                     if (!activityIsMinimised()) displayFatalError(detail)
-                    target.finishWithoutAnimation()
+                    target.finish()
                     return true
                 }
                 !activityIsMinimised() -> {
@@ -80,7 +80,7 @@ open class OnRenderProcessGoneDelegate(val target: AbstractFlashcardViewer) {
                     }
 
                     // This logic may need to be better defined. The card could have changed by the time we get here.
-                    mLastCrashingCardId = currentCardId
+                    lastCrashingCardId = currentCardId
                     displayNonFatalError(detail)
                 }
                 else -> Timber.d("WebView crashed while app was minimised - OOM was safe to handle silently")
@@ -127,7 +127,7 @@ open class OnRenderProcessGoneDelegate(val target: AbstractFlashcardViewer) {
 
     @TargetApi(Build.VERSION_CODES.O)
     protected open fun displayRenderLoopDialog(currentCardId: CardId, detail: RenderProcessGoneDetail) {
-        val cardInformation = java.lang.Long.toString(currentCardId)
+        val cardInformation = currentCardId.toString()
         val res = target.resources
         val errorDetails = if (detail.didCrash()) res.getString(R.string.webview_crash_unknwon_detailed) else res.getString(R.string.webview_crash_oom_details)
         AlertDialog.Builder(target).show {
@@ -155,7 +155,7 @@ open class OnRenderProcessGoneDelegate(val target: AbstractFlashcardViewer) {
     }
 
     private fun webViewRendererLastCrashedOnCard(cardId: CardId): Boolean =
-        mLastCrashingCardId != null && mLastCrashingCardId == cardId
+        lastCrashingCardId != null && lastCrashingCardId == cardId
 
     private fun canRecoverFromWebViewRendererCrash(): Boolean =
         // DEFECT
@@ -167,5 +167,5 @@ open class OnRenderProcessGoneDelegate(val target: AbstractFlashcardViewer) {
         // Revisit webViewCrashedOnCard() if changing this. Logic currently assumes we have a card.
         target.currentCard != null
 
-    protected fun onCloseRenderLoopDialog() = target.finishWithoutAnimation()
+    protected fun onCloseRenderLoopDialog() = target.finish()
 }

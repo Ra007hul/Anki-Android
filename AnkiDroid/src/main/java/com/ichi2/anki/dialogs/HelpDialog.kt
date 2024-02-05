@@ -21,6 +21,7 @@ import android.os.Parcel
 import android.os.Parcelable
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
+import androidx.core.os.ParcelCompat
 import androidx.fragment.app.DialogFragment
 import com.ichi2.anki.AnkiActivity
 import com.ichi2.anki.AnkiDroidApp
@@ -28,10 +29,8 @@ import com.ichi2.anki.CrashReportService
 import com.ichi2.anki.R
 import com.ichi2.anki.UIUtils.showThemedToast
 import com.ichi2.anki.analytics.UsageAnalytics
-import com.ichi2.anki.dialogs.HelpDialog.FunctionItem.ActivityConsumer
 import com.ichi2.anki.dialogs.RecursivePictureMenu.Companion.createInstance
 import com.ichi2.anki.dialogs.RecursivePictureMenu.ItemHeader
-import com.ichi2.compat.CompatHelper.Companion.readSerializableCompat
 import com.ichi2.utils.AdaptionUtil.isUserATestClient
 import com.ichi2.utils.IntentUtil.canOpenIntent
 import com.ichi2.utils.IntentUtil.tryOpenIntent
@@ -79,11 +78,11 @@ object HelpDialog {
             ItemHeader(
                 R.string.help_title_community, R.drawable.ic_people_black_24dp, UsageAnalytics.Actions.OPENED_COMMUNITY,
                 LinkItem(R.string.help_item_anki_forums, R.drawable.ic_forum_black_24dp, UsageAnalytics.Actions.OPENED_ANKI_FORUMS, R.string.link_anki_forum),
-                LinkItem(R.string.help_item_reddit, R.drawable.reddit, UsageAnalytics.Actions.OPENED_REDDIT, R.string.link_reddit),
                 LinkItem(R.string.help_item_mailing_list, R.drawable.ic_email_black_24dp, UsageAnalytics.Actions.OPENED_MAILING_LIST, R.string.link_forum),
-                LinkItem(R.string.help_item_discord, R.drawable.discord, UsageAnalytics.Actions.OPENED_DISCORD, R.string.link_discord),
-                LinkItem(R.string.help_item_facebook, R.drawable.facebook, UsageAnalytics.Actions.OPENED_FACEBOOK, R.string.link_facebook),
-                LinkItem(R.string.help_item_twitter, R.drawable.twitter, UsageAnalytics.Actions.OPENED_TWITTER, R.string.link_twitter)
+                LinkItem(R.string.help_item_reddit, R.drawable.ic_link, UsageAnalytics.Actions.OPENED_REDDIT, R.string.link_reddit),
+                LinkItem(R.string.help_item_discord, R.drawable.ic_link, UsageAnalytics.Actions.OPENED_DISCORD, R.string.link_discord),
+                LinkItem(R.string.help_item_facebook, R.drawable.ic_link, UsageAnalytics.Actions.OPENED_FACEBOOK, R.string.link_facebook),
+                LinkItem(R.string.help_item_twitter, R.drawable.ic_link, UsageAnalytics.Actions.OPENED_TWITTER, R.string.link_twitter)
             ),
             ItemHeader(
                 R.string.help_title_privacy,
@@ -135,6 +134,7 @@ object HelpDialog {
 
         companion object {
             @JvmField // required field that makes Parcelables from a Parcel
+            @Suppress("unused")
             val CREATOR: Parcelable.Creator<RateAppItem?> = object : Parcelable.Creator<RateAppItem?> {
                 override fun createFromParcel(source: Parcel): RateAppItem {
                     return RateAppItem(source)
@@ -150,10 +150,10 @@ object HelpDialog {
     @KotlinCleanup("Convert to @Parcelize")
     class LinkItem : RecursivePictureMenu.Item, Parcelable {
         @StringRes
-        private val mUrlLocationRes: Int
+        private val urlLocationRes: Int
 
         constructor(@StringRes titleRes: Int, @DrawableRes iconRes: Int, analyticsRes: String?, @StringRes urlLocation: Int) : super(titleRes, iconRes, analyticsRes) {
-            mUrlLocationRes = urlLocation
+            urlLocationRes = urlLocation
         }
 
         override fun onClicked(activity: AnkiActivity) {
@@ -161,11 +161,11 @@ object HelpDialog {
         }
 
         private fun getUrl(ctx: Context): Uri {
-            return Uri.parse(ctx.getString(mUrlLocationRes))
+            return Uri.parse(ctx.getString(urlLocationRes))
         }
 
         private constructor(source: Parcel) : super(source) {
-            mUrlLocationRes = source.readInt()
+            urlLocationRes = source.readInt()
         }
 
         override fun remove(toRemove: RecursivePictureMenu.Item?) {
@@ -174,11 +174,12 @@ object HelpDialog {
 
         override fun writeToParcel(dest: Parcel, flags: Int) {
             super.writeToParcel(dest, flags)
-            dest.writeInt(mUrlLocationRes)
+            dest.writeInt(urlLocationRes)
         }
 
         companion object {
             @JvmField // required field that makes Parcelables from a Parcel
+            @Suppress("unused")
             val CREATOR: Parcelable.Creator<LinkItem?> = object : Parcelable.Creator<LinkItem?> {
                 override fun createFromParcel(source: Parcel): LinkItem {
                     return LinkItem(source)
@@ -194,18 +195,22 @@ object HelpDialog {
     @KotlinCleanup("Convert to @Parcelize")
     class FunctionItem : RecursivePictureMenu.Item, Parcelable {
 
-        private val mFunc: ActivityConsumer
+        private val func: ActivityConsumer
 
         constructor(@StringRes titleRes: Int, @DrawableRes iconRes: Int, analyticsRes: String?, func: ActivityConsumer) : super(titleRes, iconRes, analyticsRes) {
-            mFunc = func
+            this.func = func
         }
 
         override fun onClicked(activity: AnkiActivity) {
-            mFunc.consume(activity)
+            func.consume(activity)
         }
 
         private constructor(source: Parcel) : super(source) {
-            mFunc = source.readSerializableCompat<ActivityConsumer>()!!
+            func = ParcelCompat.readSerializable(
+                source,
+                ActivityConsumer::class.java.classLoader,
+                ActivityConsumer::class.java
+            )!!
         }
 
         override fun remove(toRemove: RecursivePictureMenu.Item?) {
@@ -214,7 +219,7 @@ object HelpDialog {
 
         override fun writeToParcel(dest: Parcel, flags: Int) {
             super.writeToParcel(dest, flags)
-            dest.writeSerializable(mFunc)
+            dest.writeSerializable(func)
         }
 
         fun interface ActivityConsumer : Serializable {
@@ -223,6 +228,7 @@ object HelpDialog {
 
         companion object {
             @JvmField // required field that makes Parcelables from a Parcel
+            @Suppress("unused")
             val CREATOR: Parcelable.Creator<FunctionItem?> = object : Parcelable.Creator<FunctionItem?> {
                 override fun createFromParcel(source: Parcel): FunctionItem {
                     return FunctionItem(source)
@@ -259,6 +265,7 @@ object HelpDialog {
 
         companion object {
             @JvmField // required field that makes Parcelables from a Parcel
+            @Suppress("unused")
             val CREATOR: Parcelable.Creator<ExceptionReportItem?> = object : Parcelable.Creator<ExceptionReportItem?> {
                 override fun createFromParcel(source: Parcel): ExceptionReportItem {
                     return ExceptionReportItem(source)

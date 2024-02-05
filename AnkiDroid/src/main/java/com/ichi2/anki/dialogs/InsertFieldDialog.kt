@@ -19,14 +19,15 @@ package com.ichi2.anki.dialogs
 import android.os.Bundle
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.core.os.bundleOf
 import androidx.fragment.app.DialogFragment
 import androidx.recyclerview.widget.RecyclerView
-import com.afollestad.materialdialogs.MaterialDialog
-import com.afollestad.materialdialogs.list.customListAdapter
 import com.ichi2.anki.CardTemplateEditor
 import com.ichi2.anki.R
-import java.util.*
+import com.ichi2.utils.customListAdapter
+import com.ichi2.utils.negativeButton
+import com.ichi2.utils.title
 
 /**
  * Dialog fragment used to show the fields that the user can insert in the card editor. This
@@ -35,15 +36,14 @@ import java.util.*
  * @see [CardTemplateEditor.CardTemplateFragment]
  */
 class InsertFieldDialog : DialogFragment() {
-    private lateinit var mDialog: MaterialDialog
-    private lateinit var mFieldList: List<String>
+    private lateinit var fieldList: List<String>
 
     /**
      * A dialog for inserting field in card template editor
      */
-    override fun onCreateDialog(savedInstanceState: Bundle?): MaterialDialog {
+    override fun onCreateDialog(savedInstanceState: Bundle?): AlertDialog {
         super.onCreate(savedInstanceState)
-        mFieldList = requireArguments().getStringArrayList(KEY_FIELD_ITEMS)!!
+        fieldList = requireArguments().getStringArrayList(KEY_FIELD_ITEMS)!!
         val adapter: RecyclerView.Adapter<*> = object : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
             override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
                 val root = layoutInflater.inflate(R.layout.material_dialog_list_item, parent, false)
@@ -52,19 +52,19 @@ class InsertFieldDialog : DialogFragment() {
 
             override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
                 val textView = holder.itemView as TextView
-                textView.text = mFieldList[position]
+                textView.text = fieldList[position]
                 textView.setOnClickListener { selectFieldAndClose(textView) }
             }
 
             override fun getItemCount(): Int {
-                return mFieldList.size
+                return fieldList.size
             }
         }
-        mDialog = MaterialDialog(requireContext())
-            .title(R.string.card_template_editor_select_field)
-            .negativeButton(R.string.dialog_cancel)
-            .customListAdapter(adapter)
-        return mDialog
+        return AlertDialog.Builder(requireContext()).apply {
+            title(R.string.card_template_editor_select_field)
+            negativeButton(R.string.dialog_cancel)
+            customListAdapter(adapter)
+        }.create()
     }
 
     private fun selectFieldAndClose(textView: TextView) {
@@ -72,7 +72,7 @@ class InsertFieldDialog : DialogFragment() {
             REQUEST_FIELD_INSERT,
             bundleOf(KEY_INSERTED_FIELD to textView.text.toString())
         )
-        mDialog.dismiss()
+        dismiss()
     }
 
     companion object {

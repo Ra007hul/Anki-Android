@@ -19,19 +19,21 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.webkit.WebView
+import androidx.core.os.bundleOf
 import com.ichi2.anki.R
+import com.ichi2.anki.SingleFragmentActivity
+import com.ichi2.libanki.CardId
 
 class CardInfo : PageFragment() {
-    override val title = R.string.card_info_title
-    override val pageName = "card-info"
-    override lateinit var webViewClient: PageWebViewClient
-    override var webChromeClient = PageChromeClient()
+    override val title: String
+        get() = resources.getString(R.string.card_info_title)
 
-    override fun onCreate(savedInstanceState: Bundle?) {
+    override val pageName = "card-info"
+
+    override fun onCreateWebViewClient(savedInstanceState: Bundle?): PageWebViewClient {
         val cardId = arguments?.getLong(ARG_CARD_ID)
             ?: throw Exception("missing card ID argument")
-        webViewClient = CardInfoWebClient(cardId)
-        super.onCreate(savedInstanceState)
+        return CardInfoWebClient(cardId)
     }
 
     class CardInfoWebClient(val cardId: Long) : PageWebViewClient() {
@@ -47,11 +49,9 @@ class CardInfo : PageFragment() {
     companion object {
         private const val ARG_CARD_ID = "cardId"
 
-        fun getIntent(context: Context, cardId: Long): Intent {
-            val arguments = Bundle().apply {
-                putLong(ARG_CARD_ID, cardId)
-            }
-            return PagesActivity.getIntent(context, CardInfo::class, arguments)
-        }
+        fun CardInfoDestination.toIntent(context: Context): Intent =
+            SingleFragmentActivity.getIntent(context, CardInfo::class, bundleOf(ARG_CARD_ID to cardId))
     }
 }
+
+data class CardInfoDestination(val cardId: CardId)

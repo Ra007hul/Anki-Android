@@ -1,27 +1,27 @@
-Memorize anything with AnkiDroid!
+Հիշե’ք ամեն ինչ AnkiDroid-ի օգնությամբ։
 
-AnkiDroid lets you learn flashcards very efficiently by showing them just before you will forget. It is fully compatible with the spaced repetition software Anki (including synchronization), which is available for Windows, Linux and MacOS.
+AnkiDroid lets you learn flashcards very efficiently by showing them just before you will forget. Այն համատեղելի է ինտերվալային կրկնության Anki ծրագրի հետ, որը հասանելի է Windows-ի, Linux-ի և macOS-ի համար։
 
-Study all sorts of things wherever and whenever you want. Make good use of idle times on bus trips, in supermarket queues or any other waiting situation!
+Սովորեք որևէ բան` երբ և որտեղ ուզում եք։ Ճիշտ օգտագործեք ավտոբուսում կամ խանութի հերթում սպասելու ժամանակը։
 
 Create your own flashcard decks or download free decks compiled for many languages and topics (more than 6000 available).
 
-Add material through the desktop application Anki or directly through AnkiDroid. The application even supports adding material automatically from a dictionary!
+Ավելացրեք նյութեր համակարգչային Anki ծրագրի միջոցով կամ հենց AnkiDroid-ում։ Ծրագիրը նաև կարող է ավտոմատ կերպով ավելացնել բառարանից նյութեր։
 
 ★ Key features:
-• supported flashcard contents: text, images, sounds, LaTeX
-• spaced repetition (supermemo 2 algorithm)
+• համատեղելի ֆլեշ քարտերի պարունակություն` տեքստ, նկարներ, ձայն, LaTeX
+• ինտերվալային կրկնություն (supermemo 2 ալգորիթմով)
 • text-to-speech integration
-• more than 6000 premade decks
-• progress widget
-• detailed statistics
+• 6000-ից ավել պատրաստի կապուկ
+• առաջընթացի վիջեթ
+• մանրամասն վիճակագրություն
 • syncing with AnkiWeb
-• open source
+• սկզբնական կոդը հասանելի է
 
-★ Additional features:
-• write answers (optional)
-• whiteboard
-• card editor/adder
+Ավելին`
+• գրել պատասխանները
+• գրատախտակ
+• քարտերի խմբագրում/ավելացում
 • card browser
 • tablet layout
 • import existing collection files (via Anki Desktop)

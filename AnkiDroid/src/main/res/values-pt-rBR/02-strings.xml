@@ -52,6 +52,7 @@
     <string name="CardEditorModel">Tipo:</string>
     <string name="CardEditorTags">Tags: %1$s</string>
     <string name="CardEditorCards">Cartões: %1$s</string>
+    <string name="edit_occlusions">Edit Occlusions</string>
     <string name="tag_name">Nome da tag</string>
     <string name="add_new_filter_tags">Adicionar/filtrar tags</string>
     <string name="add_tag">Adicionar tag</string>
@@ -71,7 +72,6 @@
     <string name="replay_audio">Repetir áudio</string>
     <string name="leech_suspend_notification">Cartão marcado como sanguessuga e suspenso</string>
     <string name="leech_notification">Cartão marcado como sanguessuga</string>
-    <string name="corrupt_font">Arquivo de fonte %s danificado</string>
     <string name="webview_crash_unknown">Erro desconhecido</string>
     <string name="webview_crash_unknwon_detailed">Isso foi causado por um erro interno no WebView</string>
     <string name="webview_crash_oom">Memória Insuficiente</string>
@@ -101,8 +101,6 @@
         <item>Criado</item>
         <item>Nota modificada</item>
     </string-array>
-    <!-- Filter Sheet -->
-    <string name="apply_filter">Aplicar</string>
     <string name="filter_by_flags">Bandeiras</string>
     <!-- Custom study options -->
     <string name="custom_study_increase_new_limit">Modificar o limite de novos cards para hoje</string>
@@ -125,7 +123,6 @@
     <string name="save">Salvar</string>
     <string name="close">Fechar</string>
     <string name="select">Selecionar</string>
-    <string name="reordering_cards">Reordenando cards...</string>
     <string name="field_remapping">%1$s (de \'%2$s\')</string>
     <string name="confirm_map_cards_to_nothing">Quaisquer cards não-mapeados serão removidos. Se não houverem cards para uma nota, ela será perdida. Tem certeza de que deseja continuar?</string>
     <!-- Timebox -->
@@ -146,17 +143,11 @@
     <string name="card_editor_reschedule_card" comment="Action to reschedule a card">Reagendar</string>
     <string name="card_editor_preview_card" comment="Button offering to preview some card(s)">Pré-visualizar</string>
     <string name="preview_progress_bar_text" comment="What card we are on out of how many in card previewer progress bar">%1$d de %2$d</string>
-    <string name="error_insufficient_memory">Operação impossível devido a memória insuficiente no dispositivo</string>
     <string name="rename" comment="Confirm that the renaming action should be processed.">Renomear</string>
-    <string name="default_conf_delete_error">O grupo de opções padrão não pode ser removido</string>
-    <plurals name="factadder_cards_added">
-        <item quantity="one">%d card adicionado</item>
-        <item quantity="other">%d cards adicionados</item>
-    </plurals>
+    <string name="checks_action">Check</string>
     <string name="check_db">Verificar banco de dados</string>
     <string name="check_media">Verificar mídia</string>
     <string name="empty_cards">Cards vazios</string>
-    <string name="check_db_message">Verificando banco de dados.\nPor favor Aguarde...</string>
     <string name="empty_card_warning">Este card está vazio. Use a opção \"Cards vazios\" do menu da lista de baralhos.</string>
     <string name="unknown_type_field_warning">Digite a resposta: campo desconhecido %s</string>
     <string name="delete_deck">Excluindo baralho&#8230;</string>
@@ -164,43 +155,17 @@
     <string name="import_title">Importando</string>
     <string name="import_message_add" comment="Adding a new deck to the collection (import)">Adicionar</string>
     <string name="import_message_replace_confirm">Isto irá excluir sua coleção atual e substituí-la pelo conteúdo do arquivo %s</string>
-    <plurals name="import_files_message_add_confirm">
-        <item quantity="one">Adicionar \"%s\" à coleção? Isso pode demorar</item>
-        <item quantity="other">Você quer importar os seguintes arquivos: \n%s\n? Isso pode demorar</item>
-    </plurals>
+    <string name="import_dialog_message_add">Add “%s” to collection? This may take a long time</string>
     <string name="import_log_no_apkg">Este não é um arquivo válido para o Anki</string>
     <string name="import_title_error" comment="Title of error dialog">Erro</string>
-    <string name="import_log_failed_unzip">Falha ao descompactar apkg: %s</string>
-    <string name="import_log_failed_copy_to">Falha ao copiar apkg para %s</string>
-    <string name="import_log_failed_validate">falha na validação do apkg</string>
-    <string name="import_log_insufficient_space_error">Não há espaço suficiente para importar o pacote.\nNecessário - %1$s \nDisponível - %2$s.\n\nTendo problemas? Tente liberar espaço no seu telefone, se possível. Alternativamente, a sincronização usa menos espaço do que a importação. Você pode tentar importar o pacote com um dispositivo com mais espaço (por exemplo, Anki Desktop) e, em seguida, sincronizá-lo com este dispositivo.</string>
-    <string name="import_log_file_cache_cleared">Erro ao importar arquivo, provavelmente um cache foi limpo durante o processamento.\nPor favor, tente novamente</string>
-    <string name="import_succeeded_but_check_database">Importação de dados bem-sucedida, mas a limpeza pós importação falhou. Execute a verificação do banco de dados mais tarde. Causa: %s</string>
-    <string name="import_error_corrupt_zip">O arquivo apkg está corrompido. Por favor delete-o e baixe-o novamente.\n\nCausa raiz: %s</string>
     <string name="import_error_handle_exception">Falha ao importar arquivo\n\n%s</string>
     <string name="import_error_not_apkg_extension">O arquivo \"%s\" não tem a extensão .apkg ou .colpkg</string>
     <string name="import_error_load_imported_database">Substituições do banco de dados do Anki (.anki2) não são ainda suportadas. Por favor, consulte o manual para obter instruções de substituição.</string>
     <string name="import_error_content_provider">O arquivo selecionado não pôde ser importado automaticamente pelo AnkiDroid. Por favor veja o manual do usuário para aprender a importar manualmente arquivos anki: \n%s</string>
     <string name="import_error_copy_to_cache">Falha ao armazenar em cache o arquivo (possivelmente sem espaço de armazenamento)</string>
-    <string name="import_error_multiple_colpkg">Vários arquivos colpkg foram selecionados.</string>
-    <string name="import_error_colpkg_apkg">Tanto arquivos apkg &amp; colpkg foram selecionados de uma vez.</string>
-    <string name="import_stats_error">Ocorreram alguns erros ao importar os seguintes arquivos:\n%s</string>
-    <string name="import_replacing">Substituindo coleção&#8230;</string>
     <string name="import_interrupted">Importação interrompida: AnkiDroid foi fechado</string>
-    <string name="export_include_schedule">Incluir agendamento</string>
-    <string name="export_include_media">Incluir mídia</string>
-    <string name="confirm_apkg_export">Exportar a coleção como arquivo Anki (.apkg)?</string>
-    <string name="confirm_apkg_export_deck">Exportar \"%s\" como arquivo apkg?</string>
-    <plurals name="confirm_apkg_export_selected_cards">
-        <item quantity="one">Exportar cartão selecionado como arquivo apkg?</item>
-        <item quantity="other">Exportar %d cartões selecionados como arquivo apkg?</item>
-    </plurals>
-    <plurals name="confirm_apkg_export_selected_notes">
-        <item quantity="one">Exportar nota selecionada como arquivo apkg?</item>
-        <item quantity="other">Exportar %d notas selecionadas como arquivo apkg?</item>
-    </plurals>
-    <string name="export_preparation_in_progress">Preparing export&#8230;</string>
-    <string name="export_ready_title">Export ready</string>
+    <string name="export_preparation_in_progress">Preparando exportação&#8230;</string>
+    <string name="export_ready_title">Exportação pronta</string>
     <string name="export_send_no_handlers">Nenhum aplicativo disponível para lidar com apkg. Salvando...</string>
     <string name="export_save_apkg_successful">Arquivo Anki (.apkg) salvo com sucesso</string>
     <string name="export_save_apkg_unsuccessful">Arquivo Anki (.apkg) não pode ser salvo</string>
@@ -213,8 +178,8 @@
         [1] %1$s<br/>
         [2] %2$s
         ]]></string>
-    <string name="export_choice_share">Share</string>
-    <string name="export_choice_save_to">Save to</string>
+    <string name="export_choice_share">Compartilhar</string>
+    <string name="export_choice_save_to">Salvar em</string>
     <string name="study_options" comment="Name for a preference category in Filtered deck (aka Cram deck, aka Custom study) options">Opções</string>
     <string name="menu__deck_options">Opções de baralho</string>
     <string name="menu__study_options" comment="Menu item that opens options for a Filtered deck (aka Cram deck, aka Custom study)">Opções de estudo</string>
@@ -224,47 +189,9 @@
     <string name="dyn_deck_desc">Esse é um baralho especial para estudar fora do planejamento normal. Os cards retornarão um a um para os baralhos originais após revisá-los. Ao apagar esse baralho os cards restantes retornarão automaticamente à seus baralhos originais.</string>
     <string name="steps_error">Número de passos deve ser maior do que 0</string>
     <string name="steps_min_error">Pelo menos um passo é necessário</string>
-    <string name="sched_end">(fim)</string>
-    <string name="sched_unbury_action">Para vê-los agora, toque em \"Desenterrar\" no menu.</string>
-    <string name="sched_has_buried">Alguns cards relacionados ou Ocultados foram adiados.</string>
     <string name="tag_editor_add_feedback">Toque \"%2$s\" para confirmar a adição de \"%1$s\"</string>
     <string name="tag_editor_add_feedback_existing">Tag existente \"%1$s\" selecionada</string>
     <!-- Time spans -->
-    <plurals name="time_span_seconds">
-        <item quantity="one">%s segundo</item>
-        <item quantity="other">%s segundos</item>
-    </plurals>
-    <plurals name="time_span_minutes">
-        <item quantity="one">%s minuto</item>
-        <item quantity="other">%s minutos</item>
-    </plurals>
-    <plurals name="time_span_hours">
-        <item quantity="one">%s hora</item>
-        <item quantity="other">%s horas</item>
-    </plurals>
-    <plurals name="time_span_days">
-        <item quantity="one">%s dia</item>
-        <item quantity="other">%s dias</item>
-    </plurals>
-    <plurals name="time_span_months">
-        <item quantity="one">%s mês</item>
-        <item quantity="other">%s meses</item>
-    </plurals>
-    <plurals name="time_span_years">
-        <item quantity="one">%s ano</item>
-        <item quantity="other">%s anos</item>
-    </plurals>
-    <!-- A decimal number of seconds.
-    Please give this a best-effort translation and explain the requirements for
-    formatting decimals in your language in the CrowdIn comments -->
-    <string name="time_span_decimal_seconds">%s segundos</string>
-    <!-- The reason for making a simple “< x” translatable are RTL
-         languages which apparently use the other symbol to mean less
-         than. -->
-    <string name="less_than_time">&lt; %s</string>
-    <string name="decks_rename_exists">Esse baralho já existe.</string>
-    <string name="decks_rename_filtered_nosubdecks">Um baralho filtrado não pode ter sub-baralhos.</string>
-    <string name="filtered_deck_name">Baralho filtrado</string>
     <string name="reminder_title">Não se esqueça de estudar hoje!</string>
     <plurals name="reminder_text">
         <item quantity="one">%2$d novo card para revisar em %1$s</item>
@@ -273,14 +200,11 @@
     <!-- Currently only used if exporting APKG fails -->
     <string name="apk_share_error">Erro ao compartilhar arquivo apkg</string>
     <!-- Import and export v2 feedback -->
-    <string name="export_v2_dummy_note">Este arquivo requer uma versão mais recente do Anki.</string>
     <string name="activity_start_failed">O sistema não tem um aplicativo instalado que possa executar esta ação.</string>
     <string name="multimedia_editor_image_compression_failed"><![CDATA[As imagens da câmera podem ser grandes. Você pode querer comprimir e redimensionar as imagens na pasta de mídia.]]></string>
     <string name="no_browser_notification">Nenhum navegador encontrado, por favor visite a página através de um computador ou celular.</string>
     <string name="web_page_error">Erro ao carregar página: %s</string>
-    <string name="no_outgoing_link_in_cardbrowser">Link de página externa não é suportado no card.</string>
     <!-- The name of the deck which corrupt cards will be moved to -->
-    <string name="check_integrity_recovered_deck_name">Cards Recuperados</string>
     <!-- Deckpicker Background -->
     <string name="background_image_title">Plano de fundo</string>
     <string name="choose_an_image">Escolha uma imagem</string>
@@ -290,9 +214,6 @@
     <string name="basic_answer_sample_text_user" comment="has a typo, so that user sees a highlighted difference in basic answer model     ">ezemplo</string>
     <string name="basic_answer_sample_text">um exemplo</string>
     <string name="reviewer_tts_cloze_spoken_replacement">Vazio</string>
-    <!-- in options menu & Navigation Drawer -->
-    <string name="ankidroid_turn_on_fullscreen_nav_drawer">Por favor ative a tela cheia para usar \"Mostrar Opções de Navegação\" usando JavaScript.</string>
-    <string name="ankidroid_turn_on_fullscreen_options_menu">Por favor, ative a tela cheia para usar \"Mostrar Menu de Opções\" usando JavaScript.</string>
     <!-- Whiteboard save image message in Reviewer -->
     <string name="white_board_image_save_failed">Falha ao salvar imagem do quadro. %s</string>
     <string name="white_board_image_saved">Imagem do quadro branco salva em %s</string>
@@ -311,11 +232,9 @@
     <string name="about_ankidroid_error_copy_debug_info">Erro ao copiar informações de debug para a área de transferência.</string>
     <!-- Card Viewer -->
     <string name="card_viewer_could_not_find_image">Erro de Conteúdo do Card: Falha ao carregar ‘%s\'</string>
-    <string name="card_viewer_media_relative_protocol">Erro de conteúdo do card: Atualização de mídia necessária</string>
     <!-- Deck Picker -->
-    <string name="deck_picker_failed_deck_load">Falha ao carregar o baralho ‘%s\'</string>
     <string name="search_decks">Pesquisar baralhos</string>
-    <string name="show_migration_progress" comment="Title for a button in deck picker\'s toolbar that shows ongoing migration progress.         Usually shown as a tooltip. The button opens a dialog with a more detailed progress information.">Show migration progress</string>
+    <string name="show_migration_progress" comment="Title for a button in deck picker\'s toolbar that shows ongoing migration progress.         Usually shown as a tooltip. The button opens a dialog with a more detailed progress information.">Mostrar progresso da migração</string>
     <string name="ankidroid_init_failed_webview_title">Erro Fatal</string>
     <string name="ankidroid_init_failed_webview">AnkiDroid depende do System WebView que não está disponível. Isso pode acontecer se o sistema está instalando atualizações. Por favor, tente novamente em alguns minutos.\n\n%s</string>
     <!-- A Menu item to change the Font Size (currently in the Note Editor) -->
@@ -328,7 +247,6 @@
     <string name="insert_heading">Inserir título</string>
     <string name="format_font_size">Alterar tamanho da fonte</string>
     <string name="insert_mathjax">Inserir equação MathJax</string>
-    <string name="insert_cloze">Ocultar</string>
     <string name="note_editor_toolbar_icon">Texto do botão</string>
     <string name="before_text">HTML antes da seleção</string>
     <string name="after_text">HTML depois da seleção</string>
@@ -347,7 +265,7 @@
     <string name="plus_sign" comment="Label for increment button in IncrementerNumberRangePreference">+</string>
     <string name="minus_sign" comment="Label for decrement button in IncrementerNumberRangePreference">-</string>
     <!-- Used for credential empty warning message -->
-    <string name="email_id_empty">Endereço de e-mail é necessário</string>
+    <string name="invalid_email">Enter a valid email</string>
     <string name="password_empty">Senha é necessária</string>
     <string name="back_pressed_once">Pressione voltar novamente para sair</string>
     <string name="back_pressed_once_reviewer">Pressione voltar novamente para sair</string>
@@ -364,6 +282,7 @@
     <string name="deck_download_progress_message">Você pode usar outros apps enquanto o download está rodando</string>
     <string name="check_network">Por favor verifique sua conexão de rede</string>
     <string name="search_using_deck_name">Pesquisar usando o nome do baralho</string>
+    <string name="external_storage_unavailable">Transferência abortada, o armazenamento externo não está disponível</string>
     <string name="home">Início</string>
     <!-- Reviewer actions 
     Each of these strings ends with a period, following the notation of Anki Desktop -->
@@ -402,7 +321,6 @@
     <string name="intro_sync_from_ankiweb">Sincronizar do AnkiWeb</string>
     <string name="already_logged_in">Já está logado</string>
     <!-- Deck Creation -->
-    <string name="validation_deck_already_exists">O Baralho existe</string>
     <string name="deck_created">Baralho criado</string>
     <string name="deck_renamed">Baralho renomeado</string>
     <!-- Deck Deletion -->
@@ -419,5 +337,21 @@
     <string name="storage_migration_sync_notification" comment="Appears on a notification after the user has opted into a storage migration and provided consent to sync         and AnkiDroid was minimised when the sync completed">Toque para iniciar a migração de armazenamento.</string>
     <string name="media_sync_required_title">Sincronização de Mídia Necessária</string>
     <string name="media_sync_unavailable_message">A sincronização de mídia está desativada nas configurações. Por favor, sincronize e faça uma cópia de qualquer mídia que ainda não tenha sido sincronizada antes de continuar.</string>
-    <string name="remember_sync_metered_checkbox_msg">Don\'t ask again (this warning can be re-enabled from Sync Settings)</string>
+    <string name="audio_saved">Recording saved</string>
+    <string name="deleting_selected_notes">Deleting selected notes</string>
+    <string name="tts_voices_default_text" comment="The default text to speak when selecting     Text to speech voices">        Tap a voice to listen
+    </string>
+    <string name="tts_voices_selected_voice_should_be_installed" comment="If a voice has been tapped, is installable but not installed, we want to inform the user that they should install it for the best experience There will also be an option to use it without downloading">Voice should be installed before use
+    </string>
+    <string name="tts_voices_use_selected_voice_without_install" comment="A user has been informed that a voice should be installed before use. This is text on a snackbar button which allows them to use the voice without installing it">Use anyway
+    </string>
+    <string name="tts_voices_playback_error_new" comment="an error occurred when playing a text to speech voice. The parameter is a technical error code such as \'ERROR_NOT_INSTALLED_YET\' or \'ERROR_NETWORK_TIMEOUT\'">Text to speech error (%s)</string>
+    <!-- Chips should probably be in a separate file, due to the additional length req -->
+    <string name="tts_voices_chip_filter_to_internet" comment="     Filters a list of text to speech voices, to enable/disable voices which require the internet to     function.     This is on a chip control, so keep the text short, ideally one word">        Internet
+    </string>
+    <string name="tts_voices_chip_filter_to_installable_audio" comment="     Displays a list of Text to Speech voices which should be downloaded/installed before use     This is on a chip control, so keep the text short, ideally one word">        Install
+    </string>
+    <string name="tts_voices_failed_opening_tts_system_settings" comment="error message if opening the system text to speech settings fails">        Failed to open text to speech settings
+    </string>
+    <string name="shared_decks_login_required">Please log in to download more decks</string>
 </resources>

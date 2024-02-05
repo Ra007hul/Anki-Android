@@ -52,6 +52,7 @@
     <string name="CardEditorModel">Төр:</string>
     <string name="CardEditorTags">Тамгалар: %1$s</string>
     <string name="CardEditorCards">Кәртләр: %1$s</string>
+    <string name="edit_occlusions">Edit Occlusions</string>
     <string name="tag_name">Тамга исеме</string>
     <string name="add_new_filter_tags">Тамгалар өстәү/фильтрлау</string>
     <string name="add_tag">Тамга кушу</string>
@@ -71,7 +72,6 @@
     <string name="replay_audio">Аудионы кабатлау</string>
     <string name="leech_suspend_notification">Кәрт бәйләнчек итеп куелган hәм искә алынмас</string>
     <string name="leech_notification">Кәрт бәйләнчек итеп куелган</string>
-    <string name="corrupt_font">%s шрифт файлы бозылган</string>
     <string name="webview_crash_unknown">Билгесез хата</string>
     <string name="webview_crash_unknwon_detailed">Бу WebViewның эчке хатасы аркасында килеп чыкты</string>
     <string name="webview_crash_oom">Хәтер җитми</string>
@@ -101,9 +101,7 @@
         <item>Ясалган</item>
         <item>Язу үзгәртелеше</item>
     </string-array>
-    <!-- Filter Sheet -->
-    <string name="apply_filter">Apply</string>
-    <string name="filter_by_flags">Flags</string>
+    <string name="filter_by_flags">Байраклар</string>
     <!-- Custom study options -->
     <string name="custom_study_increase_new_limit">Бугенге кәрт лимитын үзгәртү</string>
     <string name="custom_study_increase_review_limit">Бугенге кабатланган кәрт лимитын үзгәртү</string>
@@ -125,7 +123,6 @@
     <string name="save">Саклау</string>
     <string name="close">Ябу</string>
     <string name="select">Сайлау</string>
-    <string name="reordering_cards">Кәртләр чираты үзгәртелә...</string>
     <string name="field_remapping">%1$s (\"%2$s\"дан)</string>
     <string name="confirm_map_cards_to_nothing">Бернәрсәгә дә бәйләнмәгән кәртләр сөртелер. Кәртсез калган язулар югалыр. Дәвам итәргә телисезме?</string>
     <!-- Timebox -->
@@ -144,16 +141,11 @@
     <string name="card_editor_reschedule_card" comment="Action to reschedule a card">Вакытын алыштыру</string>
     <string name="card_editor_preview_card" comment="Button offering to preview some card(s)">Карап алу</string>
     <string name="preview_progress_bar_text" comment="What card we are on out of how many in card previewer progress bar">%1$d of %2$d</string>
-    <string name="error_insufficient_memory">Хәтер җитмәгәнгә операцияне эшләп булмый </string>
     <string name="rename" comment="Confirm that the renaming action should be processed.">Исемен үзгәртү</string>
-    <string name="default_conf_delete_error">Стандарт көйләүләр төркемен бетереп булмый</string>
-    <plurals name="factadder_cards_added">
-        <item quantity="other">%d кәрт ясалган</item>
-    </plurals>
+    <string name="checks_action">Check</string>
     <string name="check_db">Мәгълүмәт базасын тикшерү</string>
     <string name="check_media">Медиафайлларны тикшерү</string>
     <string name="empty_cards">Буш кәртләр</string>
-    <string name="check_db_message">Мәгълүмәт базасы тикшерелә...</string>
     <string name="empty_card_warning">Бу кәрт буш. Колода исемлеге менюсыннан \"Буш кәртләр\" опциясен кулланыгыз.</string>
     <string name="unknown_type_field_warning">Беленмәгән юл төре: %s</string>
     <string name="delete_deck">Колода бетерелә...</string>
@@ -161,38 +153,15 @@
     <string name="import_title">Импортлау</string>
     <string name="import_message_add" comment="Adding a new deck to the collection (import)">Кушу</string>
     <string name="import_message_replace_confirm">Бу сезнең хәзерге коллекцияне бетерер hәм аны %s файлы белән алыштырыр</string>
-    <plurals name="import_files_message_add_confirm">
-        <item quantity="other">Do you want to import the following files:\n%s\nThis may take a long time</item>
-    </plurals>
+    <string name="import_dialog_message_add">Add “%s” to collection? This may take a long time</string>
     <string name="import_log_no_apkg">Бу эшли торган Anki файлы түгел</string>
-    <string name="import_title_error" comment="Title of error dialog">Error</string>
-    <string name="import_log_failed_unzip">Бу apkgны ачып булмады: %s</string>
-    <string name="import_log_failed_copy_to">apkgны %sга копияләп булмады</string>
-    <string name="import_log_failed_validate">apkgны тикшереп булмады</string>
-    <string name="import_log_insufficient_space_error">There is not enough space to import the package.\nNeeded - %1$s \nAvailable - %2$s.\n\nHaving Trouble? Try to free space on your phone if possible. Alternatively, sync uses less space than import. You may try importing the package with a device with more space (for example Anki Desktop) and then sync it to this device.</string>
-    <string name="import_log_file_cache_cleared">Файлны импортланганда хата: бәлки, кэш чистартылган иде.\nЯңадан тырышып карагыз</string>
-    <string name="import_succeeded_but_check_database">Импортлау уңышлы үтте, чистарту - уңышсыз. Мәгълүмәт базасын тикшерегез. Төп сәбәп: %s</string>
-    <string name="import_error_corrupt_zip">apkg файлы бозык. Зинhар, аны бетерегез hәм яңадан йөкләгез.\n\nТөп сәбәп: %s</string>
+    <string name="import_title_error" comment="Title of error dialog">Хата</string>
     <string name="import_error_handle_exception">Failed to import file\n\n%s</string>
     <string name="import_error_not_apkg_extension">\"%s\" файлның киңәйтүсе .apkg я .colpkg булырга тиеш</string>
     <string name="import_error_load_imported_database">Anki Database (.anki2) replacements are not yet supported. Please see the manual for replacement instructions.</string>
     <string name="import_error_content_provider">Сайланган файл автомат рәвештә импортлана алмады. Аны кулдан ничек итеп импортларга, җитәкчелектән карагыз: \n%s</string>
     <string name="import_error_copy_to_cache">Failed to cache file (possibly out of storage space)</string>
-    <string name="import_error_multiple_colpkg">Multiple colpkg files were selected.</string>
-    <string name="import_error_colpkg_apkg">Both apkg &amp; colpkg files were selected at once.</string>
-    <string name="import_stats_error">Some errors occurred while importing the following files:\n%s</string>
-    <string name="import_replacing">Коллекция алмаштырыла...</string>
     <string name="import_interrupted">Импорт бүленгән иде</string>
-    <string name="export_include_schedule">Include scheduling</string>
-    <string name="export_include_media">Медиафайллар белән</string>
-    <string name="confirm_apkg_export">Anki пакетына коллекцияне экспортларгамы? </string>
-    <string name="confirm_apkg_export_deck">\"%s\" apkg файлына экспортларгамы? </string>
-    <plurals name="confirm_apkg_export_selected_cards">
-        <item quantity="other">Export %d selected cards as apkg file?</item>
-    </plurals>
-    <plurals name="confirm_apkg_export_selected_notes">
-        <item quantity="other">Export %d selected notes as apkg file?</item>
-    </plurals>
     <string name="export_preparation_in_progress">Preparing export&#8230;</string>
     <string name="export_ready_title">Export ready</string>
     <string name="export_send_no_handlers">apkg файлын укый ала торган кушымталар юк. Саклана... </string>
@@ -200,14 +169,15 @@
     <string name="export_save_apkg_unsuccessful">Anki пакеты саклана алмады</string>
     <string name="export_share_title">Send Anki package using</string>
     <string name="export_email_subject">AnkiDroid экспортланган кәртләр: %s</string>
-    <string name="export_email_text"><![CDATA[        Hi!
+    <string name="export_email_text"><![CDATA[        Сәлам!
         <br/><br/>
-        This is an Anki flashcards deck sent from AnkiDroid[1].
-        Try to open it using one of the available Anki distributions[2] and enjoy easy and efficient learning!<br/><br/>
-        [1] %1$s<br/>
-        [2] %2$s
+        Бу - AnkiDroid кушымтасыннан җибәрелгән Anki кәртләр колодасы[1].
+        Аны ачыр өчен,  Anki кушымтасын көйләгез[2] һәм җиңел һәм уңышлы итеп өйрәнегез!
+<br/><br/>
+        [1]%1$s<br/>
+        [2]%2$s
         ]]></string>
-    <string name="export_choice_share">Share</string>
+    <string name="export_choice_share">Уртаклашу</string>
     <string name="export_choice_save_to">Save to</string>
     <string name="study_options" comment="Name for a preference category in Filtered deck (aka Cram deck, aka Custom study) options">Көйләүләр</string>
     <string name="menu__deck_options">Deck options</string>
@@ -218,41 +188,9 @@
     <string name="dyn_deck_desc">Бу - гадәттәгедән тыш күбрәк уку өчен колода. Кәртләрне карап чыккач, алар үзенең колодаларына кире кайтачаклар. Бу колоданы бетерү аның эчендәге кәртләрнең үзенең колодаларына кайтуына китерер. </string>
     <string name="steps_error">Адымнар 0дән күбрәк сан булырга тиеш</string>
     <string name="steps_min_error">Бер булса да адым кирәк</string>
-    <string name="sched_end">(ахыр)</string>
-    <string name="sched_unbury_action">Аларны күрү өчен менюдагы \"Кайтару\" төймәсенә басыгыз</string>
-    <string name="sched_has_buried">Some related or buried cards were delayed until tomorrow</string>
     <string name="tag_editor_add_feedback">Touch “%2$s” to confirm adding “%1$s”</string>
     <string name="tag_editor_add_feedback_existing">Existing tag “%1$s” selected</string>
     <!-- Time spans -->
-    <plurals name="time_span_seconds">
-        <item quantity="other">%s секунд</item>
-    </plurals>
-    <plurals name="time_span_minutes">
-        <item quantity="other">%s минут</item>
-    </plurals>
-    <plurals name="time_span_hours">
-        <item quantity="other">%s сәгатъ</item>
-    </plurals>
-    <plurals name="time_span_days">
-        <item quantity="other">%s көн</item>
-    </plurals>
-    <plurals name="time_span_months">
-        <item quantity="other">%s ай</item>
-    </plurals>
-    <plurals name="time_span_years">
-        <item quantity="other">%s ел</item>
-    </plurals>
-    <!-- A decimal number of seconds.
-    Please give this a best-effort translation and explain the requirements for
-    formatting decimals in your language in the CrowdIn comments -->
-    <string name="time_span_decimal_seconds">%s секунд</string>
-    <!-- The reason for making a simple “< x” translatable are RTL
-         languages which apparently use the other symbol to mean less
-         than. -->
-    <string name="less_than_time">&lt; %s</string>
-    <string name="decks_rename_exists">That deck already exists</string>
-    <string name="decks_rename_filtered_nosubdecks">A filtered deck cannot have subdecks</string>
-    <string name="filtered_deck_name">Filtered Deck</string>
     <string name="reminder_title">Do not forget to study today!</string>
     <plurals name="reminder_text">
         <item quantity="other">%2$d cards to review in %1$s</item>
@@ -260,14 +198,11 @@
     <!-- Currently only used if exporting APKG fails -->
     <string name="apk_share_error">apkg файлын экспортлаганда хата</string>
     <!-- Import and export v2 feedback -->
-    <string name="export_v2_dummy_note">This file requires a newer version of Anki.</string>
     <string name="activity_start_failed">The system does not have an app installed that can perform this action.</string>
     <string name="multimedia_editor_image_compression_failed"><![CDATA[Camera images may be large. You may wish to compress & resize images in the media directory]]></string>
     <string name="no_browser_notification">No browser found，please visit web page by pc or mobile: </string>
     <string name="web_page_error">Error loading page: %s</string>
-    <string name="no_outgoing_link_in_cardbrowser">External page link in card is not supported.</string>
     <!-- The name of the deck which corrupt cards will be moved to -->
-    <string name="check_integrity_recovered_deck_name">Recovered Cards</string>
     <!-- Deckpicker Background -->
     <string name="background_image_title">Җирлек</string>
     <string name="choose_an_image">Select image</string>
@@ -276,10 +211,7 @@
     <string name="cloze_sample_text">This is a {{%1$s::sample}} cloze deletion.</string>
     <string name="basic_answer_sample_text_user" comment="has a typo, so that user sees a highlighted difference in basic answer model     ">exomple</string>
     <string name="basic_answer_sample_text">an example</string>
-    <string name="reviewer_tts_cloze_spoken_replacement">Blank</string>
-    <!-- in options menu & Navigation Drawer -->
-    <string name="ankidroid_turn_on_fullscreen_nav_drawer">Please turn on fullscreen to use Show Navigation Drawer using JavaScript.</string>
-    <string name="ankidroid_turn_on_fullscreen_options_menu">Please turn on fullscreen to use Show Options Menu using JavaScript.</string>
+    <string name="reviewer_tts_cloze_spoken_replacement">Буш</string>
     <!-- Whiteboard save image message in Reviewer -->
     <string name="white_board_image_save_failed">Failed to save whiteboard image. %s</string>
     <string name="white_board_image_saved">Whiteboard image saved to %s</string>
@@ -298,9 +230,7 @@
     <string name="about_ankidroid_error_copy_debug_info">Error copying debug information to clipboard</string>
     <!-- Card Viewer -->
     <string name="card_viewer_could_not_find_image">Card Content Error: Failed to load ‘%s’</string>
-    <string name="card_viewer_media_relative_protocol">Card Content Error: Media update required</string>
     <!-- Deck Picker -->
-    <string name="deck_picker_failed_deck_load">Failed to load deck ‘%s’</string>
     <string name="search_decks">Search decks</string>
     <string name="show_migration_progress" comment="Title for a button in deck picker\'s toolbar that shows ongoing migration progress.         Usually shown as a tooltip. The button opens a dialog with a more detailed progress information.">Show migration progress</string>
     <string name="ankidroid_init_failed_webview_title">Fatal Error</string>
@@ -314,10 +244,9 @@
     <string name="insert_horizontal_line">Insert Horizontal Line</string>
     <string name="insert_heading">Insert Heading</string>
     <string name="format_font_size">Change Font Size</string>
-    <string name="insert_mathjax">Insert MathJax Equation</string>
-    <string name="insert_cloze">Insert Cloze Deletion</string>
+    <string name="insert_mathjax">MathJax тигезләмәсен өстәү</string>
     <string name="note_editor_toolbar_icon">Button text</string>
-    <string name="before_text">HTML Before Selection</string>
+    <string name="before_text">Сайлау алдыннан HTML</string>
     <string name="after_text">HTML After Selection</string>
     <string name="add_toolbar_item">Create Toolbar Item</string>
     <string name="edit_toolbar_item">Edit Toolbar Item</string>
@@ -334,7 +263,7 @@
     <string name="plus_sign" comment="Label for increment button in IncrementerNumberRangePreference">+</string>
     <string name="minus_sign" comment="Label for decrement button in IncrementerNumberRangePreference">-</string>
     <!-- Used for credential empty warning message -->
-    <string name="email_id_empty">Email address is required</string>
+    <string name="invalid_email">Enter a valid email</string>
     <string name="password_empty">Password is required</string>
     <string name="back_pressed_once">Press back again to exit</string>
     <string name="back_pressed_once_reviewer">Press back again to return</string>
@@ -351,7 +280,8 @@
     <string name="deck_download_progress_message">You can use other apps while the download is running</string>
     <string name="check_network">Please check your network connection</string>
     <string name="search_using_deck_name">Search using deck name</string>
-    <string name="home">Home</string>
+    <string name="external_storage_unavailable">Download aborted, the external storage is not available</string>
+    <string name="home">Баш бит</string>
     <!-- Reviewer actions 
     Each of these strings ends with a period, following the notation of Anki Desktop -->
     <string name="card_buried">Card buried.</string>
@@ -388,13 +318,12 @@
     <string name="intro_sync_from_ankiweb">Sync from AnkiWeb</string>
     <string name="already_logged_in">Already logged in</string>
     <!-- Deck Creation -->
-    <string name="validation_deck_already_exists">Deck exists</string>
     <string name="deck_created">Deck created</string>
     <string name="deck_renamed">Deck renamed</string>
     <!-- Deck Deletion -->
     <string name="deck_shortcut_doesnt_exist">Deck deleted. Please remove the shortcut</string>
     <!-- Browser Options Dialog -->
-    <string name="show_cards" comment="Label for toggle cards button in BrowserOptionsDialog">Cards</string>
+    <string name="show_cards" comment="Label for toggle cards button in BrowserOptionsDialog">Кәртләр</string>
     <string name="show_notes" comment="Label for toggle notes button in BrowserOptionsDialog">Notes</string>
     <string name="toggle_cards_notes">Toggle Cards/Notes</string>
     <string name="toggle_browser_mode_help">Toggle Showing cards or notes in the browser</string>
@@ -405,5 +334,21 @@
     <string name="storage_migration_sync_notification" comment="Appears on a notification after the user has opted into a storage migration and provided consent to sync         and AnkiDroid was minimised when the sync completed">Tap to start storage migration</string>
     <string name="media_sync_required_title">Media Sync Required</string>
     <string name="media_sync_unavailable_message">Media sync is disabled in the settings. Please sync and backup any media which hasn\'t been synced before continuing</string>
-    <string name="remember_sync_metered_checkbox_msg">Don\'t ask again (this warning can be re-enabled from Sync Settings)</string>
+    <string name="audio_saved">Recording saved</string>
+    <string name="deleting_selected_notes">Deleting selected notes</string>
+    <string name="tts_voices_default_text" comment="The default text to speak when selecting     Text to speech voices">        Tap a voice to listen
+    </string>
+    <string name="tts_voices_selected_voice_should_be_installed" comment="If a voice has been tapped, is installable but not installed, we want to inform the user that they should install it for the best experience There will also be an option to use it without downloading">Voice should be installed before use
+    </string>
+    <string name="tts_voices_use_selected_voice_without_install" comment="A user has been informed that a voice should be installed before use. This is text on a snackbar button which allows them to use the voice without installing it">Use anyway
+    </string>
+    <string name="tts_voices_playback_error_new" comment="an error occurred when playing a text to speech voice. The parameter is a technical error code such as \'ERROR_NOT_INSTALLED_YET\' or \'ERROR_NETWORK_TIMEOUT\'">Text to speech error (%s)</string>
+    <!-- Chips should probably be in a separate file, due to the additional length req -->
+    <string name="tts_voices_chip_filter_to_internet" comment="     Filters a list of text to speech voices, to enable/disable voices which require the internet to     function.     This is on a chip control, so keep the text short, ideally one word">        Internet
+    </string>
+    <string name="tts_voices_chip_filter_to_installable_audio" comment="     Displays a list of Text to Speech voices which should be downloaded/installed before use     This is on a chip control, so keep the text short, ideally one word">        Install
+    </string>
+    <string name="tts_voices_failed_opening_tts_system_settings" comment="error message if opening the system text to speech settings fails">        Failed to open text to speech settings
+    </string>
+    <string name="shared_decks_login_required">Please log in to download more decks</string>
 </resources>

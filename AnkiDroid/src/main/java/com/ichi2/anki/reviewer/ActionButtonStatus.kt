@@ -21,27 +21,19 @@ import android.view.Menu
 import android.view.MenuItem
 import androidx.annotation.IdRes
 import com.ichi2.anki.R
-import com.ichi2.themes.Themes
-import com.ichi2.utils.HashUtil.HashMapInit
-import timber.log.Timber
+import com.ichi2.utils.HashUtil.hashMapInit
 
 // loads of unboxing issues, which are safe
-class ActionButtonStatus(private val reviewerUi: ReviewerUi) {
+class ActionButtonStatus {
     /**
      * Custom button allocation
      */
-    protected val mCustomButtons: MutableMap<Int, Int> = HashMapInit(25) // setup's size
-    fun getByMenuResourceId(resourceId: Int): Int? {
-        if (!mCustomButtons.containsKey(resourceId)) {
-            Timber.w("Invalid resource lookup: %d", resourceId)
-            return SHOW_AS_ACTION_NEVER
-        }
-        return mCustomButtons[resourceId]
-    }
+    private val customButtons: MutableMap<Int, Int> = hashMapInit(25) // setup's size
 
     fun setup(preferences: SharedPreferences) {
         // NOTE: the default values below should be in sync with preferences_custom_buttons.xml and reviewer.xml
         setupButton(preferences, R.id.action_undo, "customButtonUndo", SHOW_AS_ACTION_ALWAYS)
+        setupButton(preferences, R.id.action_redo, "customButtonRedo", SHOW_AS_ACTION_IF_ROOM)
         setupButton(preferences, R.id.action_schedule, "customButtonScheduleCard", SHOW_AS_ACTION_NEVER)
         setupButton(preferences, R.id.action_flag, "customButtonFlag", SHOW_AS_ACTION_ALWAYS)
         setupButton(preferences, R.id.action_tag, "customButtonTags", SHOW_AS_ACTION_NEVER)
@@ -54,7 +46,9 @@ class ActionButtonStatus(private val reviewerUi: ReviewerUi) {
         setupButton(preferences, R.id.action_select_tts, "customButtonSelectTts", SHOW_AS_ACTION_NEVER)
         setupButton(preferences, R.id.action_open_deck_options, "customButtonDeckOptions", SHOW_AS_ACTION_NEVER)
         setupButton(preferences, R.id.action_bury, "customButtonBury", SHOW_AS_ACTION_NEVER)
+        setupButton(preferences, R.id.action_bury_card, "customButtonBury", SHOW_AS_ACTION_NEVER)
         setupButton(preferences, R.id.action_suspend, "customButtonSuspend", SHOW_AS_ACTION_NEVER)
+        setupButton(preferences, R.id.action_suspend_card, "customButtonSuspend", SHOW_AS_ACTION_NEVER)
         setupButton(preferences, R.id.action_mark_card, "customButtonMarkCard", SHOW_AS_ACTION_IF_ROOM)
         setupButton(preferences, R.id.action_delete, "customButtonDelete", SHOW_AS_ACTION_NEVER)
         setupButton(preferences, R.id.action_toggle_mic_tool_bar, "customButtonToggleMicToolBar", SHOW_AS_ACTION_NEVER)
@@ -65,34 +59,17 @@ class ActionButtonStatus(private val reviewerUi: ReviewerUi) {
     }
 
     private fun setupButton(preferences: SharedPreferences, @IdRes resourceId: Int, preferenceName: String, showAsActionType: Int) {
-        mCustomButtons[resourceId] = preferences.getString(preferenceName, Integer.toString(showAsActionType))!!.toInt()
+        customButtons[resourceId] = preferences.getString(
+            preferenceName,
+            showAsActionType.toString()
+        )!!.toInt()
     }
 
     fun setCustomButtons(menu: Menu) {
-        for ((itemId, value) in mCustomButtons) {
+        for ((itemId, value) in customButtons) {
             if (value != MENU_DISABLED) {
                 val item = menu.findItem(itemId)
                 item.setShowAsAction(value)
-                val icon = item.icon
-                item.isEnabled = !reviewerUi.isControlBlocked
-                if (icon != null) {
-                    /* Ideally, we want to give feedback to users that
-                    buttons are disabled.  However, some actions are
-                    expected to be so quick that the visual feedback
-                    is useless and is only seen as a flickering.
-
-                    We use a heuristic to decide whether the next card
-                    will appear quickly or slowly.  We change the
-                    color only if the buttons are blocked and we
-                    expect the next card to take time to arrive.
-                    */
-                    val mutableIcon = icon.mutate()
-                    if (reviewerUi.controlBlocked == ReviewerUi.ControlBlock.SLOW) {
-                        mutableIcon.alpha = Themes.ALPHA_ICON_DISABLED_LIGHT
-                    } else {
-                        mutableIcon.alpha = Themes.ALPHA_ICON_ENABLED_LIGHT
-                    }
-                }
             } else {
                 menu.findItem(itemId).isVisible = false
             }
@@ -100,28 +77,32 @@ class ActionButtonStatus(private val reviewerUi: ReviewerUi) {
     }
 
     fun hideWhiteboardIsDisabled(): Boolean {
-        return mCustomButtons[R.id.action_hide_whiteboard] == MENU_DISABLED
+        return customButtons[R.id.action_hide_whiteboard] == MENU_DISABLED
     }
 
     fun toggleStylusIsDisabled(): Boolean {
-        return mCustomButtons[R.id.action_toggle_stylus] == MENU_DISABLED
+        return customButtons[R.id.action_toggle_stylus] == MENU_DISABLED
     }
 
     fun clearWhiteboardIsDisabled(): Boolean {
-        return mCustomButtons[R.id.action_clear_whiteboard] == MENU_DISABLED
+        return customButtons[R.id.action_clear_whiteboard] == MENU_DISABLED
     }
 
     fun selectTtsIsDisabled(): Boolean {
-        return mCustomButtons[R.id.action_select_tts] == MENU_DISABLED
+        return customButtons[R.id.action_select_tts] == MENU_DISABLED
     }
 
     fun saveWhiteboardIsDisabled(): Boolean {
-        return mCustomButtons[R.id.action_save_whiteboard] == MENU_DISABLED
+        return customButtons[R.id.action_save_whiteboard] == MENU_DISABLED
     }
 
     fun whiteboardPenColorIsDisabled(): Boolean {
-        return mCustomButtons[R.id.action_change_whiteboard_pen_color] == MENU_DISABLED
+        return customButtons[R.id.action_change_whiteboard_pen_color] == MENU_DISABLED
     }
+
+    fun suspendIsDisabled(): Boolean = customButtons[R.id.action_suspend] == MENU_DISABLED
+
+    fun buryIsDisabled(): Boolean = customButtons[R.id.action_bury] == MENU_DISABLED
 
     companion object {
         const val SHOW_AS_ACTION_NEVER = MenuItem.SHOW_AS_ACTION_NEVER

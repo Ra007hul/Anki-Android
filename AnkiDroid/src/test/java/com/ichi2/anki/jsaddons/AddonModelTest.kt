@@ -19,8 +19,6 @@ package com.ichi2.anki.jsaddons
 import android.content.SharedPreferences
 import android.os.Looper.getMainLooper
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.ichi2.anki.AnkiSerialization
 import com.ichi2.anki.RobolectricTest
 import com.ichi2.anki.jsaddons.AddonsConst.REVIEWER_ADDON
 import com.ichi2.anki.preferences.sharedPrefs
@@ -41,20 +39,16 @@ class AddonModelTest : RobolectricTest() {
     private lateinit var validNpmPackageJson: String
     private lateinit var notValidNpmPackageJson: String
     private lateinit var addonsPackageListTestJson: String
-    private lateinit var mapper: ObjectMapper
-    private lateinit var mPrefs: SharedPreferences
+    private lateinit var prefs: SharedPreferences
 
     @Before
     fun before() {
-        mPrefs = targetContext.sharedPrefs()
+        prefs = targetContext.sharedPrefs()
     }
 
     @Before
     override fun setUp() {
         super.setUp()
-
-        // for mapping json from assets folder
-        mapper = AnkiSerialization.objectMapper
 
         validNpmPackageJson = FileOperation.getFileResource("valid-ankidroid-js-addon-test.json")
         notValidNpmPackageJson = FileOperation.getFileResource("not-valid-ankidroid-js-addon-test.json")
@@ -74,7 +68,7 @@ class AddonModelTest : RobolectricTest() {
         assertEquals(addon.name, "valid-ankidroid-js-addon-test")
         assertEquals(addon.addonTitle, "Valid AnkiDroid JS Addon")
         assertEquals(addon.version, "1.0.0")
-        assertEquals(addon.ankidroidJsApi, "0.0.1")
+        assertEquals(addon.ankidroidJsApi, "0.0.2")
         assertEquals(addon.addonType, "reviewer")
         assertEquals(addon.icon, "") // reviewer icon is empty
 
@@ -98,25 +92,25 @@ class AddonModelTest : RobolectricTest() {
         shadowOf(getMainLooper()).idle()
 
         // test that prefs hashset for reviewer is empty
-        var reviewerEnabledAddonSet = mPrefs.getStringSet(REVIEWER_ADDON, HashSet())
+        var reviewerEnabledAddonSet = prefs.getStringSet(REVIEWER_ADDON, HashSet())
         assertEquals(0, reviewerEnabledAddonSet?.size)
 
         val result: Pair<AddonModel?, List<String>> = getAddonModelFromJson(validNpmPackageJson)
         val addonModel = result.first!!
 
         // update the prefs make it enabled
-        addonModel.updatePrefs(mPrefs, REVIEWER_ADDON, false)
+        addonModel.updatePrefs(prefs, REVIEWER_ADDON, false)
 
         // test that new prefs added and size is 1 and the prefs hashset contains enabled addons name
-        reviewerEnabledAddonSet = mPrefs.getStringSet(REVIEWER_ADDON, HashSet())
+        reviewerEnabledAddonSet = prefs.getStringSet(REVIEWER_ADDON, HashSet())
         assertEquals(1, reviewerEnabledAddonSet?.size)
         assertTrue(reviewerEnabledAddonSet!!.contains(addonModel.name))
 
         // now remove the addons from prefs
-        addonModel.updatePrefs(mPrefs, REVIEWER_ADDON, true)
+        addonModel.updatePrefs(prefs, REVIEWER_ADDON, true)
 
         // prefs hashset size for reviewer should be zero and prefs will not have addon name
-        reviewerEnabledAddonSet = mPrefs.getStringSet(REVIEWER_ADDON, HashSet())
+        reviewerEnabledAddonSet = prefs.getStringSet(REVIEWER_ADDON, HashSet())
         assertEquals(0, reviewerEnabledAddonSet?.size)
         assertFalse(reviewerEnabledAddonSet!!.contains(addonModel.name))
     }
@@ -129,11 +123,11 @@ class AddonModelTest : RobolectricTest() {
         // first addon name and tgz download url
         val addon1 = result.first[0]
         assertEquals(addon1.name, "ankidroid-js-addon-progress-bar")
-        assertThat(addon1.dist["tarball"], endsWith(".tgz"))
+        assertThat(addon1.dist.tarball, endsWith(".tgz"))
 
         // second addon name and tgz download url
         val addon2 = result.first[1]
         assertEquals(addon2.name, "valid-ankidroid-js-addon-test")
-        assertThat(addon2.dist["tarball"], endsWith(".tgz"))
+        assertThat(addon2.dist.tarball, endsWith(".tgz"))
     }
 }

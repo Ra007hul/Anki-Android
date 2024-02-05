@@ -15,15 +15,10 @@
  ****************************************************************************************/
 package com.ichi2.anki
 
-import android.annotation.TargetApi
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
-import android.content.pm.ShortcutInfo
-import android.content.pm.ShortcutManager
 import android.content.res.Configuration
-import android.graphics.drawable.Icon
-import android.os.Build
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.LayoutInflater
@@ -31,14 +26,19 @@ import android.view.MenuItem
 import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.LayoutRes
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.widget.Toolbar
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.app.ActivityCompat
 import androidx.core.app.TaskStackBuilder
-import androidx.core.content.ContextCompat
+import androidx.core.content.pm.ShortcutInfoCompat
+import androidx.core.content.pm.ShortcutManagerCompat
+import androidx.core.graphics.drawable.IconCompat
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.ClosableDrawerLayout
 import androidx.drawerlayout.widget.DrawerLayout
+import com.google.android.material.color.MaterialColors
 import com.google.android.material.navigation.NavigationView
 import com.ichi2.anim.ActivityTransitionAnimation.Direction.*
 import com.ichi2.anki.dialogs.HelpDialog
@@ -47,10 +47,8 @@ import com.ichi2.anki.preferences.sharedPrefs
 import com.ichi2.anki.workarounds.FullDraggableContainerFix
 import com.ichi2.compat.CompatHelper
 import com.ichi2.libanki.CardId
-import com.ichi2.themes.Themes
 import com.ichi2.utils.HandlerUtils
 import com.ichi2.utils.KotlinCleanup
-import net.ankiweb.rsdroid.BackendFactory
 import timber.log.Timber
 
 @KotlinCleanup("IDE-lint")
@@ -66,7 +64,7 @@ abstract class NavigationDrawerActivity :
 
     // Navigation drawer list item entries
     private lateinit var mDrawerLayout: DrawerLayout
-    private lateinit var mNavigationView: NavigationView
+    private var mNavigationView: NavigationView? = null
     lateinit var drawerToggle: ActionBarDrawerToggle
         private set
 
@@ -109,6 +107,10 @@ abstract class NavigationDrawerActivity :
         return true
     }
 
+    fun navDrawerIsReady(): Boolean {
+        return mNavigationView != null
+    }
+
     // Navigation drawer initialisation
     protected fun initNavigationDrawer(mainView: View) {
         // Create inherited navigation drawer layout here so that it can be used by parent class
@@ -116,16 +118,17 @@ abstract class NavigationDrawerActivity :
         // set a custom shadow that overlays the main content when the drawer opens
         mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START)
         // Force transparent status bar with primary dark color underlaid so that the drawer displays under status bar
-        window.statusBarColor = ContextCompat.getColor(this, R.color.transparent)
+        window.statusBarColor = getColor(R.color.transparent)
         mDrawerLayout.setStatusBarBackgroundColor(
-            Themes.getColorFromAttr(
+            MaterialColors.getColor(
                 this,
-                android.R.attr.colorPrimary
+                R.attr.appBarColor,
+                0
             )
         )
         // Setup toolbar and hamburger
         mNavigationView = mDrawerLayout.findViewById(R.id.navdrawer_items_container)
-        mNavigationView.setNavigationItemSelectedListener(this)
+        mNavigationView!!.setNavigationItemSelectedListener(this)
         val toolbar: Toolbar? = mainView.findViewById(R.id.toolbar)
         if (toolbar != null) {
             setSupportActionBar(toolbar)
@@ -179,7 +182,7 @@ abstract class NavigationDrawerActivity :
      * Sets selected navigation drawer item
      */
     protected fun selectNavigationItem(itemId: Int) {
-        val menu = mNavigationView.menu
+        val menu = mNavigationView!!.menu
         if (itemId == -1) {
             for (i in 0 until menu.size()) {
                 menu.getItem(i).isChecked = false
@@ -251,9 +254,9 @@ abstract class NavigationDrawerActivity :
             if (this is Reviewer && preferences.getBoolean("tts", false)) {
                 // Workaround to kick user back to StudyOptions after opening settings from Reviewer
                 // because onDestroy() of old Activity interferes with TTS in new Activity
-                finishWithoutAnimation()
+                finish()
             } else {
-                recreate()
+                ActivityCompat.recreate(this)
             }
         }
 
@@ -271,9 +274,9 @@ abstract class NavigationDrawerActivity :
      * Called, when navigation button of the action bar is pressed.
      * Design pattern: template method. Subclasses can override this to define their own behaviour.
      */
-    protected open fun onNavigationPressed() {
+    public open fun onNavigationPressed() {
         if (mNavButtonGoesBack) {
-            finishWithAnimation(END)
+            finish()
         } else {
             openDrawer()
         }
@@ -298,7 +301,7 @@ abstract class NavigationDrawerActivity :
                     val deckPicker = Intent(this@NavigationDrawerActivity, DeckPicker::class.java)
                     // opening DeckPicker should use the instance on the back stack & clear back history
                     deckPicker.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                    startActivityWithAnimation(deckPicker, END)
+                    startActivity(deckPicker)
                 }
 
                 R.id.nav_browser -> {
@@ -308,26 +311,14 @@ abstract class NavigationDrawerActivity :
 
                 R.id.nav_stats -> {
                     Timber.i("Navigating to stats")
-                    val intent = if (BackendFactory.defaultLegacySchema) {
-                        Intent(this@NavigationDrawerActivity, Statistics::class.java)
-                    } else {
-                        com.ichi2.anki.pages.Statistics.getIntent(this)
-                    }
-                    startActivityWithAnimation(intent, START)
+                    val intent = com.ichi2.anki.pages.Statistics.getIntent(this)
+                    startActivity(intent)
                 }
 
                 R.id.nav_settings -> {
                     Timber.i("Navigating to settings")
-                    launchActivityForResultWithAnimation(
-                        Intent(
-                            this@NavigationDrawerActivity,
-                            Preferences::class.java
-                        ),
-                        mPreferencesLauncher,
-                        FADE
-                    )
-                    // #6192 - stop crash on changing collection path - cancel tasks if moving to settings
-                    (this as? Statistics)?.finishWithAnimation(FADE)
+                    val intent = Intent(this, Preferences::class.java)
+                    mPreferencesLauncher.launch(intent)
                 }
 
                 R.id.nav_help -> {
@@ -350,7 +341,7 @@ abstract class NavigationDrawerActivity :
         if (currentCardId != null) {
             intent.putExtra("currentCard", currentCardId)
         }
-        startActivityWithAnimation(intent, START)
+        startActivity(intent)
     }
 
     // Override this to specify a specific card id
@@ -370,7 +361,8 @@ abstract class NavigationDrawerActivity :
         mNavButtonGoesBack = false
     }
 
-    val isDrawerOpen: Boolean
+    @VisibleForTesting
+    open val isDrawerOpen: Boolean
         get() = mDrawerLayout.isDrawerOpen(GravityCompat.START)
 
     /**
@@ -383,7 +375,7 @@ abstract class NavigationDrawerActivity :
         val stackBuilder = TaskStackBuilder.create(activity)
         stackBuilder.addNextIntentWithParentStack(intent)
         stackBuilder.startActivities(Bundle())
-        activity.finishWithoutAnimation()
+        activity.finish()
     }
 
     fun toggleDrawer() {
@@ -405,7 +397,7 @@ abstract class NavigationDrawerActivity :
     fun focusNavigation() {
         // mNavigationView.getMenu().getItem(0).setChecked(true);
         selectNavigationItem(R.id.nav_decks)
-        mNavigationView.requestFocus()
+        mNavigationView!!.requestFocus()
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
@@ -426,22 +418,16 @@ abstract class NavigationDrawerActivity :
 
         const val EXTRA_STARTED_WITH_SHORTCUT = "com.ichi2.anki.StartedWithShortcut"
 
-        @TargetApi(Build.VERSION_CODES.N_MR1)
         fun enablePostShortcut(context: Context) {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N_MR1) {
-                return
-            }
-            val shortcutManager = context.getSystemService(ShortcutManager::class.java)
-
             // Review Cards Shortcut
             val intentReviewCards = Intent(context, Reviewer::class.java)
             intentReviewCards.action = Intent.ACTION_VIEW
             intentReviewCards.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK
             intentReviewCards.putExtra(EXTRA_STARTED_WITH_SHORTCUT, true)
-            val reviewCardsShortcut = ShortcutInfo.Builder(context, "reviewCardsShortcutId")
+            val reviewCardsShortcut = ShortcutInfoCompat.Builder(context, "reviewCardsShortcutId")
                 .setShortLabel(context.getString(R.string.studyoptions_start))
                 .setLongLabel(context.getString(R.string.studyoptions_start))
-                .setIcon(Icon.createWithResource(context, R.drawable.ankidroid_logo))
+                .setIcon(IconCompat.createWithResource(context, R.drawable.review_shortcut))
                 .setIntent(intentReviewCards)
                 .build()
 
@@ -450,10 +436,10 @@ abstract class NavigationDrawerActivity :
             intentAddNote.action = Intent.ACTION_VIEW
             intentAddNote.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK
             intentAddNote.putExtra(NoteEditor.EXTRA_CALLER, NoteEditor.CALLER_DECKPICKER)
-            val NoteEditorShortcut = ShortcutInfo.Builder(context, "noteEditorShortcutId")
+            val noteEditorShortcut = ShortcutInfoCompat.Builder(context, "noteEditorShortcutId")
                 .setShortLabel(context.getString(R.string.menu_add))
                 .setLongLabel(context.getString(R.string.menu_add))
-                .setIcon(Icon.createWithResource(context, R.drawable.ankidroid_logo))
+                .setIcon(IconCompat.createWithResource(context, R.drawable.add_shortcut))
                 .setIntent(intentAddNote)
                 .build()
 
@@ -461,16 +447,17 @@ abstract class NavigationDrawerActivity :
             val intentCardBrowser = Intent(context, CardBrowser::class.java)
             intentCardBrowser.action = Intent.ACTION_VIEW
             intentCardBrowser.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK
-            val cardBrowserShortcut = ShortcutInfo.Builder(context, "cardBrowserShortcutId")
+            val cardBrowserShortcut = ShortcutInfoCompat.Builder(context, "cardBrowserShortcutId")
                 .setShortLabel(context.getString(R.string.card_browser))
                 .setLongLabel(context.getString(R.string.card_browser))
-                .setIcon(Icon.createWithResource(context, R.drawable.ankidroid_logo))
+                .setIcon(IconCompat.createWithResource(context, R.drawable.browse_shortcut))
                 .setIntent(intentCardBrowser)
                 .build()
-            shortcutManager.addDynamicShortcuts(
+            ShortcutManagerCompat.addDynamicShortcuts(
+                context,
                 listOf(
                     reviewCardsShortcut,
-                    NoteEditorShortcut,
+                    noteEditorShortcut,
                     cardBrowserShortcut
                 )
             )

@@ -26,11 +26,9 @@ import android.database.SQLException
 import android.database.sqlite.SQLiteDatabase
 import androidx.annotation.WorkerThread
 import androidx.sqlite.db.SupportSQLiteDatabase
-import com.ichi2.anki.BuildConfig
 import com.ichi2.anki.CollectionHelper
 import com.ichi2.anki.CrashReportService.sendExceptionReport
 import com.ichi2.anki.dialogs.DatabaseErrorDialog
-import com.ichi2.utils.DatabaseChangeDecorator
 import com.ichi2.utils.KotlinCleanup
 import net.ankiweb.rsdroid.Backend
 import net.ankiweb.rsdroid.database.AnkiSupportSQLiteDatabase
@@ -40,14 +38,12 @@ import timber.log.Timber
 /**
  * Database layer for AnkiDroid. Wraps an SupportSQLiteDatabase (provided by either the Rust backend
  * or the Android framework), and provides some helpers on top.
+ *
+ * @param database The collection, which is actually a SQLite database.
  */
 @KotlinCleanup("Improve documentation")
 @WorkerThread
-class DB(db: SupportSQLiteDatabase) {
-    /**
-     * The collection, which is actually an SQLite database.
-     */
-    val database: SupportSQLiteDatabase = DatabaseChangeDecorator(db)
+class DB(val database: SupportSQLiteDatabase) {
     var mod = false
 
     /**
@@ -74,7 +70,7 @@ class DB(db: SupportSQLiteDatabase) {
                 "DB.MyDbErrorHandler.onCorruption",
                 "Db has been corrupted: " + db.path
             )
-            CollectionHelper.instance.closeCollection(false, "Database corrupted")
+            CollectionHelper.instance.closeCollection("Database corrupted")
             DatabaseErrorDialog.databaseCorruptFlag = true
         }
     }
@@ -93,15 +89,6 @@ class DB(db: SupportSQLiteDatabase) {
         }
     }
 
-    fun commit() {
-        // SQLiteDatabase db = getDatabase();
-        // while (db.inTransaction()) {
-        // db.setTransactionSuccessful();
-        // db.endTransaction();
-        // }
-        // db.beginTransactionNonExclusive();
-    }
-
     // Allows to avoid using new Object[]
     fun query(@Language("SQL") query: String, vararg selectionArgs: Any): Cursor {
         return database.query(query, selectionArgs)
@@ -114,16 +101,12 @@ class DB(db: SupportSQLiteDatabase) {
      * @return The integer result of the query.
      */
     fun queryScalar(@Language("SQL") query: String, vararg selectionArgs: Any): Int {
-        var cursor: Cursor? = null
         val scalar: Int
-        try {
-            cursor = database.query(query, selectionArgs)
+        database.query(query, selectionArgs).use { cursor ->
             if (!cursor.moveToNext()) {
                 return 0
             }
             scalar = cursor.getInt(0)
-        } finally {
-            cursor?.close()
         }
         return scalar
     }
@@ -186,7 +169,6 @@ class DB(db: SupportSQLiteDatabase) {
         // mark modified?
         for (mo in MOD_SQL_STATEMENTS) {
             if (s.startsWith(mo)) {
-                mod = true
                 break
             }
         }
@@ -200,7 +182,6 @@ class DB(db: SupportSQLiteDatabase) {
      */
     @KotlinCleanup("""Use Kotlin string. Change split so that there is no empty string after last ";".""")
     fun executeScript(@Language("SQL") sql: String) {
-        mod = true
         @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
         val queries = java.lang.String(sql).split(";")
         for (query in queries) {
@@ -215,35 +196,12 @@ class DB(db: SupportSQLiteDatabase) {
         whereClause: String? = null,
         whereArgs: Array<String>? = null
     ): Int {
-        mod = true
         return database.update(table, SQLiteDatabase.CONFLICT_NONE, values, whereClause, whereArgs)
     }
 
     /** insert must always be called via DB in order to mark the db as changed  */
     fun insert(table: String, values: ContentValues): Long {
-        mod = true
         return database.insert(table, SQLiteDatabase.CONFLICT_NONE, values)
-    }
-
-    fun executeMany(@Language("SQL") sql: String, list: List<Array<out Any?>>) {
-        mod = true
-        if (BuildConfig.DEBUG) {
-            if (list.size <= 1) {
-                Timber.w(
-                    "Query %s called with a list of at most one element. Usually that's not expected.",
-                    sql
-                )
-            }
-        }
-        executeInTransaction { executeManyNoTransaction(sql, list) }
-    }
-
-    /** Use this executeMany version with external transaction management  */
-    fun executeManyNoTransaction(@Language("SQL") sql: String, list: List<Array<out Any?>>) {
-        mod = true
-        for (o in list) {
-            database.execSQL(sql, o)
-        }
     }
 
     /**
@@ -251,30 +209,6 @@ class DB(db: SupportSQLiteDatabase) {
      */
     val path: String
         get() = database.path ?: ":memory:"
-
-    fun <T> executeInTransaction(r: () -> T): T {
-        // Ported from code which started the transaction outside the try..finally
-        database.beginTransaction()
-        try {
-            val result = r()
-            if (database.inTransaction()) {
-                try {
-                    database.setTransactionSuccessful()
-                } catch (e: Exception) {
-                    // Unsure if this can happen - copied the structure from endTransaction()
-                    Timber.w(e)
-                }
-            } else {
-                Timber.w("Not in a transaction. Cannot mark transaction successful.")
-            }
-            return result
-        } finally {
-            database.safeEndInTransaction()
-        }
-    }
-    fun safeEndInTransaction() {
-        database.safeEndInTransaction()
-    }
 
     companion object {
         private val MOD_SQL_STATEMENTS = arrayOf("insert", "update", "delete")
@@ -299,19 +233,6 @@ class DB(db: SupportSQLiteDatabase) {
          */
         fun withRustBackend(backend: Backend): DB {
             return DB(AnkiSupportSQLiteDatabase.withRustBackend(backend))
-        }
-
-        fun SupportSQLiteDatabase.safeEndInTransaction() {
-            if (inTransaction()) {
-                try {
-                    endTransaction()
-                } catch (e: Exception) {
-                    // endTransaction throws about invalid transaction even when you check first!
-                    Timber.w(e)
-                }
-            } else {
-                Timber.w("Not in a transaction. Cannot end transaction.")
-            }
         }
     }
 }

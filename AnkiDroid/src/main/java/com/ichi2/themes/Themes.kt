@@ -21,10 +21,13 @@ package com.ichi2.themes
 import android.content.Context
 import android.content.SharedPreferences
 import android.content.res.Configuration
+import android.graphics.Color
 import androidx.annotation.AttrRes
 import androidx.annotation.ColorInt
-import androidx.core.content.ContextCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
+import com.google.android.material.color.MaterialColors
 import com.ichi2.anki.AnkiDroidApp
 import com.ichi2.anki.R
 import com.ichi2.anki.preferences.sharedPrefs
@@ -106,17 +109,10 @@ object Themes {
 
     @JvmStatic // tests failed when removing, maybe try later
     @ColorInt
-    fun getColorFromAttr(context: Context?, colorAttr: Int): Int {
-        val attrs = intArrayOf(colorAttr)
-        return getColorFromAttr(context!!, attrs)[0]
-    }
-
-    @JvmStatic // tests failed when removing, maybe try later
-    @ColorInt
     fun getColorFromAttr(context: Context, attrs: IntArray): IntArray {
         val ta = context.obtainStyledAttributes(attrs)
         for (i in attrs.indices) {
-            attrs[i] = ta.getColor(i, ContextCompat.getColor(context, R.color.white))
+            attrs[i] = ta.getColor(i, context.getColor(R.color.white))
         }
         ta.recycle()
         return attrs
@@ -127,7 +123,7 @@ object Themes {
      */
     @ColorInt
     fun Fragment.getColorFromAttr(@AttrRes attribute: Int): Int {
-        return getColorFromAttr(requireContext(), attribute)
+        return MaterialColors.getColor(requireContext(), attribute, 0)
     }
 
     /**
@@ -141,4 +137,10 @@ object Themes {
         return context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK ==
             Configuration.UI_MODE_NIGHT_YES
     }
+}
+
+fun FragmentActivity.setTransparentStatusBar() {
+    WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars =
+        !Themes.currentTheme.isNightMode
+    window.statusBarColor = Color.TRANSPARENT
 }
